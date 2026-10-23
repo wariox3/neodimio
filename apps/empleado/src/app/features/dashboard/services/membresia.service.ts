@@ -20,9 +20,15 @@ export class MembresiaService extends BaseHttpService {
   readonly cargadas = computed(() => this._membresias() !== null);
   readonly tieneEmpresa = computed(() => (this._membresias()?.length ?? 0) > 0);
 
-  /** Consulta las membresías, aunque ya estén cargadas. */
+  /**
+   * Consulta las membresías, aunque ya estén cargadas. Con `empleado=true` el
+   * backend solo devuelve las empresas donde el usuario tiene empleado
+   * asignado: sin empleado, el portal no tiene nada que mostrarle ahí.
+   */
   cargar(): Observable<Membresia[]> {
-    this.enCurso$ ??= this.get<PaginatedResponse<Membresia>>('/mas/user-tenant/lista').pipe(
+    this.enCurso$ ??= this.get<PaginatedResponse<Membresia>>('/mas/user-tenant/lista', {
+      empleado: true,
+    }).pipe(
       map((res) => res?.items ?? []),
       tap((membresias) => this._membresias.set(membresias)),
       finalize(() => (this.enCurso$ = null)),
