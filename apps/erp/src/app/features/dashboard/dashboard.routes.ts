@@ -44,6 +44,7 @@ export const DASHBOARD_ROUTES: Routes = [
       },
       {
         path: 'configuracion',
+        canActivate: [propietarioGuard],
         data: { area: 'configuracion' satisfies DashboardArea },
         children: [
           { path: '', redirectTo: 'formato', pathMatch: 'full' },

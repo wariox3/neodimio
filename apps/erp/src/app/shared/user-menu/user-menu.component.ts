@@ -72,32 +72,28 @@ export class UserMenuComponent {
 
   /**
    * Opciones sobre la empresa activa. Sin empresa (en la lista de contenedores)
-   * no hay a dónde llevarlas, así que el grupo entero desaparece. Mi empresa y
-   * Seguridad son del propietario; las mismas reglas aplican sus rutas.
+   * no hay a dónde llevarlas, así que el grupo entero desaparece. Todas son
+   * del propietario; las mismas reglas aplican sus rutas.
    */
   private readonly empresaItems = computed<MenuItem[]>(() => {
-    if (!this.activeTenant()) return [];
-    const items: MenuItem[] = [];
-    if (this.esPropietario()) {
-      items.push(
-        {
-          label: 'Mi empresa',
-          icon: 'pi pi-building',
-          command: () => this.router.navigateByUrl(ROUTE_PATHS.dashboard.empresa),
-        },
-        {
-          label: 'Seguridad',
-          icon: 'pi pi-shield',
-          command: () => this.router.navigateByUrl(ROUTE_PATHS.dashboard.seguridad.root),
-        },
-      );
-    }
-    items.push({
-      label: 'Configuración',
-      icon: 'pi pi-cog',
-      command: () => this.router.navigateByUrl(ROUTE_PATHS.dashboard.configuracion.root),
-    });
-    return items;
+    if (!this.activeTenant() || !this.esPropietario()) return [];
+    return [
+      {
+        label: 'Mi empresa',
+        icon: 'pi pi-building',
+        command: () => this.router.navigateByUrl(ROUTE_PATHS.dashboard.empresa),
+      },
+      {
+        label: 'Seguridad',
+        icon: 'pi pi-shield',
+        command: () => this.router.navigateByUrl(ROUTE_PATHS.dashboard.seguridad.root),
+      },
+      {
+        label: 'Configuración',
+        icon: 'pi pi-cog',
+        command: () => this.router.navigateByUrl(ROUTE_PATHS.dashboard.configuracion.root),
+      },
+    ];
   });
 
   readonly items = computed<MenuItem[]>(() => [
