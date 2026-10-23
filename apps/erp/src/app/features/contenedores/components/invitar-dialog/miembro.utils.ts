@@ -12,9 +12,14 @@ export function nombreCompleto(persona: PersonaNombrable): string {
 
 /** Hasta dos iniciales del nombre, o la primera letra del correo. */
 export function iniciales(persona: PersonaNombrable): string {
-  const nombre = nombreCompleto(persona);
-  if (!nombre) return persona.email.charAt(0).toUpperCase();
-  return nombre
+  return inicialesDe(nombreCompleto(persona), persona.email);
+}
+
+/** Hasta dos iniciales de `nombre`; sin nombre, la primera letra de `email`. */
+export function inicialesDe(nombre: string | null, email: string): string {
+  const limpio = nombre?.trim();
+  if (!limpio) return email.charAt(0).toUpperCase();
+  return limpio
     .split(/\s+/)
     .slice(0, 2)
     .map((parte) => parte.charAt(0).toUpperCase())

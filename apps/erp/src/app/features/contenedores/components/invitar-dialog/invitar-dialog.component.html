@@ -30,7 +30,7 @@
 
   @if (visible() && contenedor(); as c) {
     <div class="invitar-body">
-      <app-invitar-form [contenedor]="c" />
+      <app-invitar-form [contenedor]="c" (invited)="onInvited()" />
 
       <p-tabs [value]="activeTab()" (valueChange)="activeTab.set($any($event))">
         <p-tablist>
@@ -40,10 +40,23 @@
               <span class="invitar-tab-count">({{ miembrosCount() }})</span>
             }
           </p-tab>
+          <p-tab value="invitaciones">
+            Invitaciones
+            @if (invitacionesCount() !== null) {
+              <span class="invitar-tab-count">({{ invitacionesCount() }})</span>
+            }
+          </p-tab>
         </p-tablist>
         <p-tabpanels>
           <p-tabpanel value="miembros">
             <app-miembros-list [contenedor]="c" (countChange)="miembrosCount.set($event)" />
+          </p-tabpanel>
+          <p-tabpanel value="invitaciones">
+            <app-invitaciones-list
+              [contenedor]="c"
+              [refreshToken]="refreshToken()"
+              (countChange)="invitacionesCount.set($event)"
+            />
           </p-tabpanel>
         </p-tabpanels>
       </p-tabs>

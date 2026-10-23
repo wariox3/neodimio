@@ -1,10 +1,10 @@
-<div class="miembros">
+<div class="lista">
   @if (loading()) {
-    <ul class="miembros__list">
+    <ul class="lista__list">
       @for (item of skeletonItems; track $index) {
-        <li class="miembro">
+        <li class="persona">
           <p-skeleton shape="square" size="2.25rem" borderRadius="8px" />
-          <div class="miembro__texto">
+          <div class="persona__texto">
             <p-skeleton width="40%" height="0.8rem" />
             <p-skeleton width="60%" height="0.7rem" />
           </div>
@@ -14,36 +14,36 @@
   } @else if (errorMessage()) {
     <app-error-alert [message]="errorMessage()!" [retryable]="true" (retry)="recargar()" />
   } @else if (miembros().length === 0) {
-    <div class="miembros__empty">
+    <div class="lista__empty">
       <i class="pi pi-users" aria-hidden="true"></i>
-      <p class="miembros__empty-title">Sin miembros</p>
-      <p class="miembros__empty-sub">Invita a alguien para que se una a la empresa.</p>
+      <p class="lista__empty-title">Sin miembros</p>
+      <p class="lista__empty-sub">Invita a alguien para que se una a la empresa.</p>
     </div>
   } @else {
-    <ul class="miembros__list">
+    <ul class="lista__list">
       @for (miembro of miembrosOrdenados(); track miembro.id) {
-        <li class="miembro" [class.miembro--propietario]="miembro.control">
-          <span class="miembro__avatar" aria-hidden="true">{{ iniciales(miembro) }}</span>
+        <li class="persona" [class.persona--destacada]="miembro.control">
+          <span class="persona__avatar" aria-hidden="true">{{ iniciales(miembro) }}</span>
 
-          <div class="miembro__texto">
-            <span class="miembro__nombre">
-              <span class="miembro__nombre-text">
+          <div class="persona__texto">
+            <span class="persona__nombre">
+              <span class="persona__nombre-text">
                 {{ nombreCompleto(miembro) || miembro.email }}
               </span>
               @if (esTu(miembro)) {
-                <span class="miembro__tu">Tú</span>
+                <span class="persona__tu">Tú</span>
               }
             </span>
             @if (nombreCompleto(miembro)) {
-              <span class="miembro__email">{{ miembro.email }}</span>
+              <span class="persona__email">{{ miembro.email }}</span>
             }
           </div>
 
-          <div class="miembro__tags">
+          <div class="persona__tags">
             @if (!miembro.activo) {
-              <span class="miembro-tag miembro-tag--inactivo">Inactivo</span>
+              <span class="tag tag--peligro">Inactivo</span>
             }
-            <span class="miembro-tag" [class.miembro-tag--propietario]="miembro.control">
+            <span class="tag" [class.tag--primario]="miembro.control">
               {{ miembro.control ? 'Propietario' : 'Miembro' }}
             </span>
           </div>

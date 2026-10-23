@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -9,11 +9,8 @@ import {
   AutoCompleteSelectEvent,
 } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
-import { MessageModule } from 'primeng/message';
 import { ToastService, extractErrorMessage } from '../../../../core';
-import { AuthService } from '../../../auth/services/auth.service';
-import { UsuarioListItem } from '../../../usuarios/models/usuario.model';
-import { Contenedor } from '../../models/contenedor.model';
+import { Contenedor, UsuarioSeleccionar } from '../../models/contenedor.model';
 import { InvitacionService } from '../../services/invitacion.service';
 import { nombreCompleto, iniciales } from './miembro.utils';
 
@@ -26,7 +23,7 @@ const ERRORES_VALIDACION = [400, 404, 422];
 @Component({
   selector: 'app-invitar-form',
   standalone: true,
-  imports: [FormsModule, AutoCompleteModule, ButtonModule, MessageModule],
+  imports: [FormsModule, AutoCompleteModule, ButtonModule],
   templateUrl: './invitar-form.component.html',
   styleUrl: './invitar-form.component.scss',
 })
@@ -34,19 +31,19 @@ export class InvitarFormComponent {
   private readonly invitacionService = inject(InvitacionService);
   private readonly toastService = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly authService = inject(AuthService);
 
   readonly contenedor = input.required<Contenedor>();
+  readonly invited = output<void>();
 
   /**
-   * La búsqueda usa `/auth/user/lista`, que solo responde a administradores.
-   * Sin ese rol el formulario se muestra deshabilitado con un aviso.
+   * Solo el propietario de la empresa puede invitar. Se toma de la membresía
+   * del usuario (`control` en `/mas/user-tenant/lista`), no del rol global.
    */
-  readonly puedeBuscar = computed(() => this.authService.currentUser()?.role === 'admin');
+  readonly esPropietario = computed(() => this.contenedor().control && this.contenedor().activo);
 
   readonly minBusqueda = MIN_BUSQUEDA;
-  readonly valor = signal<UsuarioListItem | string>('');
-  readonly sugerencias = signal<UsuarioListItem[]>([]);
+  readonly valor = signal<UsuarioSeleccionar | string>('');
+  readonly sugerencias = signal<UsuarioSeleccionar[]>([]);
   readonly enviando = signal(false);
 
   readonly usuarioSeleccionado = computed(() => {
@@ -63,10 +60,10 @@ export class InvitarFormComponent {
   constructor() {
     this.busqueda$
       .pipe(
-        switchMap((email) =>
+        switchMap((termino) =>
           this.invitacionService
-            .buscarUsuarios(email)
-            .pipe(catchError(() => of<UsuarioListItem[]>([]))),
+            .buscarUsuarios(termino)
+            .pipe(catchError(() => of<UsuarioSeleccionar[]>([]))),
         ),
         tap((usuarios) => this.sugerencias.set(usuarios)),
         takeUntilDestroyed(this.destroyRef),
@@ -84,12 +81,12 @@ export class InvitarFormComponent {
   }
 
   seleccionar(event: AutoCompleteSelectEvent): void {
-    this.valor.set(event.value as UsuarioListItem);
+    this.valor.set(event.value as UsuarioSeleccionar);
   }
 
   enviar(): void {
     const usuario = this.usuarioSeleccionado();
-    if (!usuario || this.enviando()) return;
+    if (!usuario || !this.esPropietario() || this.enviando()) return;
 
     this.enviando.set(true);
     this.invitacionService
@@ -104,6 +101,7 @@ export class InvitarFormComponent {
           );
           this.valor.set('');
           this.sugerencias.set([]);
+          this.invited.emit();
         },
         error: (err: unknown) => {
           this.enviando.set(false);

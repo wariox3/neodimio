@@ -1,12 +1,6 @@
 <form class="invitar-form" (ngSubmit)="enviar()" autocomplete="off">
-  @if (!puedeBuscar()) {
-    <p-message severity="info" size="small" icon="pi pi-info-circle">
-      La búsqueda de usuarios solo está disponible para administradores.
-    </p-message>
-  }
-
   <div class="invitar-form__field">
-    <label for="invitar-usuario" class="invitar-form__label">Correo del usuario</label>
+    <label for="invitar-usuario" class="invitar-form__label">Usuario</label>
     <p-autocomplete
       inputId="invitar-usuario"
       name="usuario"
@@ -19,8 +13,8 @@
       [forceSelection]="true"
       [minLength]="minBusqueda"
       [delay]="300"
-      [disabled]="!puedeBuscar() || enviando()"
-      placeholder="Escribe al menos 3 letras del correo..."
+      [disabled]="!esPropietario() || enviando()"
+      placeholder="Busca por nombre o correo (mínimo 3 letras)..."
       emptyMessage="No se encontraron usuarios verificados"
       appendTo="body"
       [style]="{ width: '100%' }"
@@ -55,7 +49,7 @@
       icon="pi pi-send"
       [label]="enviando() ? 'Enviando...' : 'Enviar invitación'"
       [loading]="enviando()"
-      [disabled]="!usuarioSeleccionado() || enviando()"
+      [disabled]="!esPropietario() || !usuarioSeleccionado() || enviando()"
     />
   </div>
 </form>

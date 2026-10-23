@@ -29,6 +29,8 @@
         </p>
       </div>
 
+      <app-invitaciones-pendientes (aceptada)="loadContenedores()" />
+
       @if (!loading() && !errorMessage() && contenedores().length > 0) {
         <p-iconfield class="contenedores__search">
           <p-inputicon class="pi pi-search" />
@@ -119,22 +121,20 @@
                   }
                 </button>
 
-                @if (hayAcciones()) {
-                  @if (tieneAcciones(contenedor)) {
-                    <button
-                      type="button"
-                      class="contenedor-item__menu"
-                      aria-label="Opciones de la empresa"
-                      title="Opciones de la empresa"
-                      (click)="abrirMenu($event, contenedor)"
-                    >
-                      <i class="pi pi-cog" aria-hidden="true"></i>
-                    </button>
+                <button
+                  type="button"
+                  class="contenedor-item__menu"
+                  aria-label="Opciones de la empresa"
+                  title="Opciones de la empresa"
+                  [disabled]="saliendoId() === contenedor.id"
+                  (click)="abrirMenu($event, contenedor)"
+                >
+                  @if (saliendoId() === contenedor.id) {
+                    <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
                   } @else {
-                    <!-- Reserva la columna para que las filas queden alineadas. -->
-                    <span class="contenedor-item__menu-placeholder" aria-hidden="true"></span>
+                    <i class="pi pi-cog" aria-hidden="true"></i>
                   }
-                }
+                </button>
               </li>
             }
           </ul>
@@ -145,6 +145,8 @@
 </div>
 
 <p-menu #rowMenu [model]="rowMenuItems" [popup]="true" appendTo="body" />
+
+<p-confirmdialog [style]="{ width: '420px' }" [breakpoints]="{ '575px': '95vw' }" />
 
 @if (invitarVisible()) {
   <app-invitar-dialog

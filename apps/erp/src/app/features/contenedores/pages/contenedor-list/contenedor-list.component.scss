@@ -153,14 +153,10 @@
   align-items: center;
   padding-right: 0.75rem;
 
-  &__menu,
-  &__menu-placeholder {
+  &__menu {
     width: 2.25rem;
     height: 2.25rem;
     flex-shrink: 0;
-  }
-
-  &__menu {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -173,15 +169,28 @@
       background 0.15s ease,
       color 0.15s ease;
 
-    &:hover {
+    &:hover:not(:disabled) {
       background: var(--p-surface-100);
       color: var(--p-text-color);
+    }
+
+    &:disabled {
+      cursor: default;
     }
 
     &:focus-visible {
       outline: 2px solid var(--p-primary-color);
       outline-offset: 2px;
     }
+  }
+}
+
+// El menú se pinta en `body` (appendTo) con la plantilla de PrimeNG, fuera del
+// host: la regla tiene que ser global. La clase llega vía `styleClass`.
+::ng-deep .contenedor-menu__peligro .p-menu-item-link {
+  .p-menu-item-icon,
+  .p-menu-item-label {
+    color: var(--p-red-600);
   }
 }
 
