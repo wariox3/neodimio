@@ -7,13 +7,10 @@ export interface Usuario extends BaseUsuario {
   name: string;
   apellidos: string | null;
   numero_identificacion: string | null;
-  tenant_id: number | null;
-  empleado_id: number | null;
-  tenant_nombre: string | null;
 }
 
+/** Cuerpo de `POST /mas/user-tenant/asociar`: el usuario sale de la sesión. */
 export interface AsociarEmpresaRequest {
-  usuario_id: number;
   tenant_id: number;
 }
 

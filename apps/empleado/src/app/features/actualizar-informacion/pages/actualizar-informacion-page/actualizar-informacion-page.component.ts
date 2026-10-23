@@ -127,9 +127,9 @@ export class ActualizarInformacionPageComponent implements OnInit {
   }
 
   private loadEmpleadoDetalle(): void {
-    const user = this.authService.currentUser();
+    const empleadoId = this.authService.empleadoId();
 
-    if (!user?.empleado_id) {
+    if (empleadoId === null) {
       this.isLoading.set(false);
       return;
     }
@@ -137,7 +137,7 @@ export class ActualizarInformacionPageComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    this.actualizarInfoService.getEmpleadoDetalle(user.empleado_id).subscribe({
+    this.actualizarInfoService.getEmpleadoDetalle(empleadoId).subscribe({
       next: (detalle) => {
         this.detalle.set(detalle);
         this.form.patchValue({

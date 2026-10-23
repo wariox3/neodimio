@@ -4,18 +4,20 @@ import { DialogModule } from 'primeng/dialog';
 import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
-import { ToastService, extractErrorMessage } from '@semantica/core';
+import { ActiveTenantService, ToastService, extractErrorMessage } from '@semantica/core';
 import { AuthService } from '../../../auth/services/auth.service';
 import { Tenant } from '../../../dashboard/models/tenant.model';
+import { MembresiaService } from '../../../dashboard/services/membresia.service';
 
 type Step = 'select' | 'confirm';
 
 /**
- * Permite a un usuario ya vinculado cambiar de empresa.
+ * Asociar otra empresa: un usuario ya vinculado agrega una empresa más a su
+ * cuenta. Las que ya tiene se conservan; luego la elige con "Cambiar empresa"
+ * en el menú del usuario.
  *
- * Reutiliza la busqueda de tenants y el endpoint de asociacion de `AuthService`,
- * pero con un flujo en dos pasos (seleccionar -> confirmar) porque cambiar de
- * empresa reescribe el `empleado_id` y el contexto laboral del usuario.
+ * Reutiliza la búsqueda de tenants y el endpoint de asociación de `AuthService`,
+ * con un flujo en dos pasos (seleccionar -> confirmar).
  */
 @Component({
   selector: 'app-cambiar-empresa-dialog',
@@ -27,6 +29,8 @@ type Step = 'select' | 'confirm';
 export class CambiarEmpresaDialogComponent {
   private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
+  private readonly activeTenant = inject(ActiveTenantService).tenant;
+  private readonly membresiaService = inject(MembresiaService);
 
   readonly visible = model(false);
   readonly cambiada = output<void>();
@@ -39,12 +43,16 @@ export class CambiarEmpresaDialogComponent {
 
   selectedTenant: Tenant | null = null;
 
-  /** Empresa a la que el usuario esta vinculado actualmente. */
+  /** Empresa elegida actualmente. */
   readonly empresaActual = computed(() => {
-    const user = this.authService.currentUser();
-    if (!user?.tenant_id) return null;
-    return { id: user.tenant_id, nombre: user.tenant_nombre ?? `Empresa #${user.tenant_id}` };
+    const tenant = this.activeTenant();
+    return tenant ? { id: tenant.id, nombre: tenant.nombre } : null;
   });
+
+  /** Empresas a las que el usuario ya pertenece: no se puede asociar de nuevo. */
+  private readonly empresasAsociadas = computed(
+    () => new Set((this.membresiaService.membresias() ?? []).map((m) => m.tenant_id)),
+  );
 
   onSearch(event: AutoCompleteCompleteEvent): void {
     const query = event.query.trim();
@@ -57,9 +65,9 @@ export class CambiarEmpresaDialogComponent {
     this.searching.set(true);
     this.authService.buscarTenants(query).subscribe({
       next: (res) => {
-        // La empresa actual se excluye: no tiene sentido "cambiar" a la misma.
-        const actualId = this.empresaActual()?.id;
-        this.suggestions.set(res.items.filter((t) => t.id !== actualId));
+        // Se excluyen las empresas a las que ya pertenece: el backend las rechazaría.
+        const asociadas = this.empresasAsociadas();
+        this.suggestions.set(res.items.filter((t) => !asociadas.has(t.id)));
         this.searching.set(false);
       },
       error: () => {
@@ -82,7 +90,7 @@ export class CambiarEmpresaDialogComponent {
       return;
     }
 
-    if (this.selectedTenant.id === this.empresaActual()?.id) {
+    if (this.empresasAsociadas().has(this.selectedTenant.id)) {
       this.errorMessage.set('Ya estás vinculado a esa empresa. Selecciona una diferente.');
       return;
     }
@@ -105,7 +113,7 @@ export class CambiarEmpresaDialogComponent {
     this.authService.asociarEmpresa(this.selectedTenant.id).subscribe({
       next: () => {
         this.submitting.set(false);
-        this.toastService.success('Empresa actualizada correctamente.');
+        this.toastService.success('Empresa asociada correctamente.');
         this.cambiada.emit();
         this.visible.set(false);
       },
@@ -114,7 +122,7 @@ export class CambiarEmpresaDialogComponent {
         this.errorMessage.set(
           extractErrorMessage(
             err,
-            'No se pudo cambiar la empresa. Verifica la selección e intenta de nuevo.',
+            'No se pudo asociar la empresa. Verifica la selección e intenta de nuevo.',
           ),
         );
       },

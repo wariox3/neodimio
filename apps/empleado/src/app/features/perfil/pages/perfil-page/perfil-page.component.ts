@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin, switchMap } from 'rxjs';
@@ -8,11 +8,17 @@ import { MessageModule } from 'primeng/message';
 import { AvatarModule } from 'primeng/avatar';
 import { DividerModule } from 'primeng/divider';
 import { PageHeaderComponent, TrimInputDirective } from '@semantica/ui';
-import { ToastService, extractErrorMessage, trimFormValues } from '@semantica/core';
+import {
+  ActiveTenantService,
+  ToastService,
+  extractErrorMessage,
+  trimFormValues,
+} from '@semantica/core';
 import { PerfilService } from '../../services/perfil.service';
 import { PerfilDetalle, UpdatePerfilRequest } from '../../models/perfil.model';
 import { AuthService } from '../../../auth/services/auth.service';
 import { CambiarEmpresaDialogComponent } from '../../components/cambiar-empresa-dialog/cambiar-empresa-dialog.component';
+import { MembresiaService } from '../../../dashboard/services/membresia.service';
 
 @Component({
   selector: 'app-perfil-page',
@@ -37,6 +43,8 @@ export class PerfilPageComponent implements OnInit {
   private readonly toastService = inject(ToastService);
   private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly activeTenant = inject(ActiveTenantService).tenant;
+  private readonly membresiaService = inject(MembresiaService);
 
   readonly isLoading = signal(true);
   readonly isSaving = signal(false);
@@ -47,12 +55,8 @@ export class PerfilPageComponent implements OnInit {
 
   readonly hasTenant = this.authService.hasTenant;
 
-  /** Empresa a la que el usuario está vinculado actualmente. */
-  readonly empresaActual = computed(() => {
-    const user = this.authService.currentUser();
-    if (!user?.tenant_id) return null;
-    return user.tenant_nombre ?? `Empresa #${user.tenant_id}`;
-  });
+  /** Empresa elegida actualmente. */
+  readonly empresaActual = computed(() => this.activeTenant()?.nombre ?? null);
 
   readonly userInitials = computed(() => {
     const d = this.detalle();
@@ -70,7 +74,13 @@ export class PerfilPageComponent implements OnInit {
 
   readonly userEmail = computed(() => this.detalle()?.email ?? '');
 
-  readonly isIdentificacionLocked = computed(() => !!this.detalle()?.empleado_id);
+  /**
+   * El documento identifica al usuario como empleado (así lo asocia el backend):
+   * si ya está vinculado como empleado en alguna empresa, no se puede cambiar.
+   */
+  readonly isIdentificacionLocked = computed(() =>
+    (this.membresiaService.membresias() ?? []).some((m) => m.empleado_id !== null),
+  );
 
   readonly form = this.fb.group({
     nombres: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
@@ -89,6 +99,16 @@ export class PerfilPageComponent implements OnInit {
 
   get identificacionControl() {
     return this.form.controls.numero_identificacion;
+  }
+
+  constructor() {
+    // El bloqueo depende de las membresías, que pueden llegar después del
+    // detalle (entrada directa al perfil): el campo sigue al estado actual.
+    effect(() => {
+      const control = this.form.controls.numero_identificacion;
+      if (this.isIdentificacionLocked()) control.disable();
+      else control.enable();
+    });
   }
 
   ngOnInit(): void {
@@ -128,9 +148,6 @@ export class PerfilPageComponent implements OnInit {
       numero_identificacion: detalle.numero_identificacion ?? '',
       email: detalle.email,
     });
-    if (detalle.empleado_id) {
-      this.form.controls.numero_identificacion.disable();
-    }
     this.form.markAsPristine();
   }
 

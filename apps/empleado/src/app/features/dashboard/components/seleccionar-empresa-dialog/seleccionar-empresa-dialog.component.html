@@ -1,0 +1,38 @@
+<p-dialog
+  header="Selecciona una empresa"
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="closable()"
+  [closeOnEscape]="closable()"
+  [dismissableMask]="closable()"
+  [style]="{ width: '460px' }"
+  [breakpoints]="{ '500px': '90vw' }"
+>
+  <p class="seleccionar__desc">Elige la empresa con la que quieres continuar.</p>
+
+  <ul class="seleccionar__list">
+    @for (membresia of membresias(); track membresia.id) {
+      <li>
+        <button
+          type="button"
+          class="empresa-opcion"
+          [class.empresa-opcion--actual]="membresia.tenant_id === actualId()"
+          [disabled]="!membresia.activo"
+          (click)="seleccionar(membresia)"
+        >
+          <span class="empresa-opcion__avatar" aria-hidden="true">{{ inicial(membresia) }}</span>
+          <span class="empresa-opcion__nombre">{{ nombre(membresia) }}</span>
+          @if (!membresia.activo) {
+            <span class="empresa-opcion__tag empresa-opcion__tag--inactivo">Inactiva</span>
+          } @else if (membresia.tenant_id === actualId()) {
+            <span class="empresa-opcion__tag">Actual</span>
+          } @else {
+            <i class="pi pi-arrow-right empresa-opcion__flecha" aria-hidden="true"></i>
+          }
+        </button>
+      </li>
+    }
+  </ul>
+</p-dialog>

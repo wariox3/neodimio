@@ -88,8 +88,8 @@ export class SolicitudCreateDialogComponent implements OnInit {
       return;
     }
 
-    const user = this.authService.currentUser();
-    if (!user?.empleado_id) return;
+    const empleadoId = this.authService.empleadoId();
+    if (empleadoId === null) return;
 
     this.submitting.set(true);
     const { codigo_solicitud_empleado_tipo_fk, fecha_desde, fecha_hasta, comentario } =
@@ -97,7 +97,7 @@ export class SolicitudCreateDialogComponent implements OnInit {
 
     this.solicitudesService
       .crearSolicitud({
-        codigo_empleado_fk: user.empleado_id,
+        codigo_empleado_fk: empleadoId,
         codigo_solicitud_empleado_tipo_fk,
         fecha_desde: fecha_desde!.toISOString(),
         fecha_hasta: fecha_hasta!.toISOString(),

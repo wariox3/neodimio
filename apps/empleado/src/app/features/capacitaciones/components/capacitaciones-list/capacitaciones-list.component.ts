@@ -44,9 +44,9 @@ export class CapacitacionesListComponent implements OnInit {
   }
 
   loadCapacitaciones(): void {
-    const user = this.authService.currentUser();
+    const empleadoId = this.authService.empleadoId();
 
-    if (!user?.empleado_id) {
+    if (empleadoId === null) {
       this.loading.set(false);
       return;
     }
@@ -56,7 +56,7 @@ export class CapacitacionesListComponent implements OnInit {
 
     this.capacitacionesService
       .getCapacitacionDetalles({
-        empleado_id: user.empleado_id,
+        empleado_id: empleadoId,
         page: this.page(),
         size: this.size(),
       })

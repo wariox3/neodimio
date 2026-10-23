@@ -15,19 +15,19 @@
         <div class="user-menu-trigger" (click)="userMenu.toggle($event)">
           <div class="user-avatar">{{ avatarLabel() }}</div>
           <div class="user-details">
-            @if (currentUser()!.tenant_nombre) {
-              <span class="user-empresa">{{ currentUser()!.tenant_nombre }}</span>
+            @if (activeTenant(); as tenant) {
+              <span class="user-empresa">{{ tenant.nombre }}</span>
             }
             <span class="user-name">{{ currentUser()!.name || currentUser()!.email }}</span>
           </div>
           <i class="pi pi-chevron-down user-chevron"></i>
         </div>
-        <p-menu #userMenu [model]="userMenuItems" [popup]="true" appendTo="body" />
+        <p-menu #userMenu [model]="userMenuItems()" [popup]="true" appendTo="body" />
       }
     </div>
   </header>
 
-  @if (!hasTenant()) {
+  @if (sinEmpresa()) {
     <div class="tenant-banner">
       <i class="pi pi-info-circle"></i>
       <span>Tu cuenta no está asociada a ninguna empresa.</span>
@@ -118,3 +118,12 @@
 </ng-template>
 
 <app-asociar-empresa-dialog [(visible)]="dialogVisible" />
+
+<app-seleccionar-empresa-dialog
+  [visible]="seleccionVisible()"
+  (visibleChange)="onSeleccionVisibleChange($event)"
+  [membresias]="membresias()"
+  [actualId]="activeTenant()?.id ?? null"
+  [closable]="!seleccionObligatoria()"
+  (seleccionada)="onEmpresaSeleccionada($event)"
+/>

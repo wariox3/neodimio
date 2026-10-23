@@ -73,9 +73,9 @@ export class SolicitudesListComponent implements OnInit {
   }
 
   loadSolicitudes(page: number): void {
-    const user = this.authService.currentUser();
+    const empleadoId = this.authService.empleadoId();
 
-    if (!user?.empleado_id) {
+    if (empleadoId === null) {
       this.loading.set(false);
       return;
     }
@@ -84,7 +84,7 @@ export class SolicitudesListComponent implements OnInit {
     this.error.set(null);
 
     this.solicitudesService
-      .getSolicitudes({ page, size: this.pageSize(), empleado_id: user.empleado_id })
+      .getSolicitudes({ page, size: this.pageSize(), empleado_id: empleadoId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {

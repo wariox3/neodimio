@@ -10,10 +10,12 @@ export const API_ENDPOINTS = {
     resetPassword: '/auth/user/restablecer-clave',
     register: '/auth/user/registrar',
     verifyEmail: '/auth/user/verificar',
-    asociarEmpresa: '/auth/user/asociar',
     resendVerification: '/auth/user/reenviar-verificacion',
   },
   tenant: {
-    buscar: '/auth/tenant/seleccionar',
+    buscar: '/mas/tenant/seleccionar',
+  },
+  userTenant: {
+    asociar: '/mas/user-tenant/asociar',
   },
 } as const;

@@ -55,13 +55,11 @@ export class ProgramacionesListComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    const user = this.authService.currentUser();
-    if (!user?.empleado_id) {
+    const id = this.authService.empleadoId();
+    if (id === null) {
       this.loading.set(false);
       return;
     }
-
-    const id = user.empleado_id;
 
     forkJoin({
       actual: this.programacionesService.getProgramacionEmpleado(id, this.anioActual, this.mesActual),

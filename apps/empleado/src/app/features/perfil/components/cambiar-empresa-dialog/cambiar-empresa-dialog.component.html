@@ -1,5 +1,5 @@
 <p-dialog
-  [header]="step() === 'select' ? 'Cambiar empresa' : 'Confirmar cambio'"
+  [header]="step() === 'select' ? 'Asociar otra empresa' : 'Confirmar asociación'"
   [(visible)]="visible"
   [modal]="true"
   [draggable]="false"
@@ -18,7 +18,7 @@
       }
 
       <p class="cambiar-form__desc">
-        Busca la empresa a la que quieres vincular tu cuenta.
+        Busca la empresa que quieres agregar a tu cuenta. Tus empresas actuales se conservan.
       </p>
 
       @if (errorMessage()) {
@@ -26,7 +26,7 @@
       }
 
       <div class="form-field">
-        <label for="empresa-nueva">Nueva empresa</label>
+        <label for="empresa-nueva">Empresa a asociar</label>
         <p-autocomplete
           id="empresa-nueva"
           [(ngModel)]="selectedTenant"
@@ -49,21 +49,16 @@
       }
 
       <div class="cambiar-confirm__flow">
-        <div class="empresa-chip empresa-chip--from">
-          <span class="empresa-chip__label">Empresa actual</span>
-          <span class="empresa-chip__name">{{ empresaActual()?.nombre }}</span>
-        </div>
-        <i class="pi pi-arrow-down cambiar-confirm__arrow"></i>
         <div class="empresa-chip empresa-chip--to">
-          <span class="empresa-chip__label">Nueva empresa</span>
+          <span class="empresa-chip__label">Empresa a asociar</span>
           <span class="empresa-chip__name">{{ selectedTenant?.nombre }}</span>
         </div>
       </div>
 
       <p-message
-        severity="warn"
+        severity="info"
         styleClass="w-full"
-        text="Al cambiar de empresa se actualizará tu información laboral asociada."
+        text="Se agregará a tus empresas. Podrás elegirla con «Cambiar empresa» en el menú de usuario."
       />
     </div>
   }
@@ -88,7 +83,7 @@
         [disabled]="submitting()"
       />
       <p-button
-        label="Confirmar cambio"
+        label="Asociar empresa"
         icon="pi pi-check"
         (click)="onConfirm()"
         [loading]="submitting()"

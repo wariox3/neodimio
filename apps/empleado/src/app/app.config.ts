@@ -74,6 +74,7 @@ import {
   ROUTE_PATHS as ROUTE_PATHS_TOKEN,
   AUTH_SERVICE,
   AUTH_SKIP_URLS,
+  tenantInterceptor,
 } from '@semantica/core';
 import { AuthService } from './features/auth/services/auth.service';
 import { environment } from '../environments/environment';
@@ -85,7 +86,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
+    provideHttpClient(withInterceptors([authInterceptor, tenantInterceptor, errorInterceptor])),
     MessageService,
     { provide: ENVIRONMENT, useValue: environment },
     {
@@ -106,7 +107,6 @@ export const appConfig: ApplicationConfig = {
         API_ENDPOINTS.auth.forgotPassword,
         API_ENDPOINTS.auth.resetPassword,
         API_ENDPOINTS.auth.register,
-        API_ENDPOINTS.auth.asociarEmpresa,
       ],
     },
     provideAppInitializer(() => {
