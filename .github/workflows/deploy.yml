@@ -11,8 +11,8 @@ jobs:
   check-affected:
     runs-on: ubuntu-latest
     outputs:
-      portal: ${{ steps.check.outputs.portal }}
-      seguridad: ${{ steps.check.outputs.seguridad }}
+      empleado: ${{ steps.check.outputs.empleado }}
+      erp: ${{ steps.check.outputs.erp }}
 
     steps:
       - name: Checkout
@@ -36,12 +36,12 @@ jobs:
         id: check
         run: |
           AFFECTED=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
-          echo "portal=$(echo "$AFFECTED" | grep -q "^portal$" && echo true || echo false)" >> $GITHUB_OUTPUT
-          echo "seguridad=$(echo "$AFFECTED" | grep -q "^seguridad$" && echo true || echo false)" >> $GITHUB_OUTPUT
+          echo "empleado=$(echo "$AFFECTED" | grep -q "^empleado$" && echo true || echo false)" >> $GITHUB_OUTPUT
+          echo "erp=$(echo "$AFFECTED" | grep -q "^erp$" && echo true || echo false)" >> $GITHUB_OUTPUT
 
-  deploy-portal:
+  deploy-empleado:
     needs: check-affected
-    if: needs.check-affected.outputs.portal == 'true'
+    if: needs.check-affected.outputs.empleado == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -59,11 +59,11 @@ jobs:
 
       - name: Build (staging)
         if: github.ref == 'refs/heads/dev'
-        run: npx nx build portal --configuration=staging
+        run: npx nx build empleado --configuration=staging
 
       - name: Build (prod)
         if: github.ref == 'refs/heads/main'
-        run: npx nx build portal --configuration=production
+        run: npx nx build empleado --configuration=production
 
       - name: Set deploy variables (dev)
         if: github.ref == 'refs/heads/dev'
@@ -101,16 +101,16 @@ jobs:
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
-            dist/portal/browser/ \
+            dist/empleado/browser/ \
             ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${{ env.DEPLOY_PATH }}/
 
       - name: Cleanup SSH key
         if: always()
         run: rm -f ~/.ssh/deploy_key
 
-  deploy-seguridad:
+  deploy-erp:
     needs: check-affected
-    if: needs.check-affected.outputs.seguridad == 'true'
+    if: needs.check-affected.outputs.erp == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -128,11 +128,11 @@ jobs:
 
       - name: Build (staging)
         if: github.ref == 'refs/heads/dev'
-        run: npx nx build seguridad --configuration=staging
+        run: npx nx build erp --configuration=staging
 
       - name: Build (prod)
         if: github.ref == 'refs/heads/main'
-        run: npx nx build seguridad --configuration=production
+        run: npx nx build erp --configuration=production
 
       - name: Set deploy variables (dev)
         if: github.ref == 'refs/heads/dev'
@@ -170,7 +170,7 @@ jobs:
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
-            dist/seguridad/browser/ \
+            dist/erp/browser/ \
             ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${{ env.DEPLOY_PATH }}/
 
       - name: Cleanup SSH key

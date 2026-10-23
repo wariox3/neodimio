@@ -6,15 +6,15 @@ Monorepo para las aplicaciones frontend de Semantica, construido con **Angular 2
 
 | App | Descripcion | Puerto |
 | --- | --- | --- |
-| **Portal** | Portal de empleados (pagos, turnos, reclamos, certificados, etc.) | `4200` |
-| **Seguridad** | Administracion de API keys y seguridad | `4200` |
+| **Empleado** | Portal de empleados (pagos, turnos, reclamos, certificados, etc.) | `4200` |
+| **ERP** | Administracion de API keys y seguridad | `4200` |
 
 ## Estructura del proyecto
 
 ```
 apps/
-  portal/           — Portal de empleados
-  seguridad/        — Admin de seguridad
+  empleado/         — Portal de empleados
+  erp/              — Admin de seguridad
 libs/
   core/             — @semantica/core (guards, interceptors, servicios, utilidades)
   ui/               — @semantica/ui (componentes compartidos)
@@ -40,19 +40,19 @@ npm install
 
 ```bash
 # Servir una app (dev server con proxy en http://localhost:4200)
-npx nx serve portal
-npx nx serve seguridad
+npx nx serve empleado
+npx nx serve erp
 ```
 
 ### Build
 
 ```bash
 # Build de produccion
-npx nx build portal
-npx nx build seguridad
+npx nx build empleado
+npx nx build erp
 
 # Build de staging
-npx nx build portal --configuration=staging
+npx nx build empleado --configuration=staging
 
 # Build solo lo que cambio
 npx nx affected -t build
@@ -65,8 +65,8 @@ npx nx run-many -t build
 
 ```bash
 # Lint por app
-npx nx lint portal
-npx nx lint seguridad
+npx nx lint empleado
+npx nx lint erp
 
 # Lint de todo lo afectado
 npx nx affected -t lint
@@ -79,8 +79,8 @@ npx prettier --check "**/*.{ts,html,scss,json}"
 
 ```bash
 # Tests por app
-npx nx test portal
-npx nx test seguridad
+npx nx test empleado
+npx nx test erp
 
 # Tests de lo afectado
 npx nx affected -t test
@@ -129,8 +129,8 @@ Estilos SCSS globales:
 ## Grafo de dependencias
 
 ```
-portal    → @semantica/core, @semantica/ui
-seguridad → @semantica/core, @semantica/ui
+empleado  → @semantica/core, @semantica/ui
+erp       → @semantica/core, @semantica/ui
 ui        → @semantica/core
 ```
 

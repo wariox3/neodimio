@@ -1,23 +1,23 @@
 {
-  "name": "portal",
+  "name": "empleado",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "prefix": "app",
-  "sourceRoot": "apps/portal/src",
-  "tags": ["scope:portal", "type:app"],
+  "sourceRoot": "apps/empleado/src",
+  "tags": ["scope:empleado", "type:app"],
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputPath": "dist/apps/portal",
+      "outputPath": "dist/apps/empleado",
       "options": {
-        "browser": "apps/portal/src/main.ts",
+        "browser": "apps/empleado/src/main.ts",
         "polyfills": ["zone.js"],
-        "tsConfig": "apps/portal/tsconfig.app.json",
+        "tsConfig": "apps/empleado/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
           {
             "glob": "**/*",
-            "input": "apps/portal/public"
+            "input": "apps/empleado/public"
           },
           {
             "glob": "*.woff2",
@@ -25,7 +25,7 @@
             "output": "fonts/geist"
           }
         ],
-        "styles": ["apps/portal/src/styles.scss"],
+        "styles": ["apps/empleado/src/styles.scss"],
         "stylePreprocessorOptions": {
           "includePaths": ["libs/styles/src"]
         }
@@ -47,8 +47,8 @@
           "outputHashing": "all",
           "fileReplacements": [
             {
-              "replace": "apps/portal/src/environments/environment.ts",
-              "with": "apps/portal/src/environments/environment.prod.ts"
+              "replace": "apps/empleado/src/environments/environment.ts",
+              "with": "apps/empleado/src/environments/environment.prod.ts"
             }
           ]
         },
@@ -68,8 +68,8 @@
           "outputHashing": "all",
           "fileReplacements": [
             {
-              "replace": "apps/portal/src/environments/environment.ts",
-              "with": "apps/portal/src/environments/environment.staging.ts"
+              "replace": "apps/empleado/src/environments/environment.ts",
+              "with": "apps/empleado/src/environments/environment.staging.ts"
             }
           ]
         },
@@ -85,11 +85,11 @@
       "executor": "@angular/build:dev-server",
       "configurations": {
         "production": {
-          "buildTarget": "portal:build:production"
+          "buildTarget": "empleado:build:production"
         },
         "development": {
-          "buildTarget": "portal:build:development",
-          "proxyConfig": "apps/portal/proxy.conf.json"
+          "buildTarget": "empleado:build:development",
+          "proxyConfig": "apps/empleado/proxy.conf.json"
         }
       },
       "defaultConfiguration": "development"
@@ -98,12 +98,12 @@
       "executor": "@angular/build:karma",
       "options": {
         "polyfills": ["zone.js", "zone.js/testing"],
-        "tsConfig": "apps/portal/tsconfig.spec.json",
+        "tsConfig": "apps/empleado/tsconfig.spec.json",
         "inlineStyleLanguage": "scss",
         "assets": [
           {
             "glob": "**/*",
-            "input": "apps/portal/public"
+            "input": "apps/empleado/public"
           },
           {
             "glob": "*.woff2",
@@ -111,7 +111,7 @@
             "output": "fonts/geist"
           }
         ],
-        "styles": ["apps/portal/src/styles.scss"],
+        "styles": ["apps/empleado/src/styles.scss"],
         "stylePreprocessorOptions": {
           "includePaths": ["libs/styles/src"]
         }

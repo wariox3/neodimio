@@ -25,12 +25,12 @@ export default [
               onlyDependOnLibsWithTags: ['scope:shared'],
             },
             {
-              sourceTag: 'scope:portal',
-              onlyDependOnLibsWithTags: ['scope:portal', 'scope:shared'],
+              sourceTag: 'scope:empleado',
+              onlyDependOnLibsWithTags: ['scope:empleado', 'scope:shared'],
             },
             {
-              sourceTag: 'scope:seguridad',
-              onlyDependOnLibsWithTags: ['scope:seguridad', 'scope:shared'],
+              sourceTag: 'scope:erp',
+              onlyDependOnLibsWithTags: ['scope:erp', 'scope:shared'],
             },
             {
               sourceTag: 'scope:shop',

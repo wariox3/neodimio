@@ -28,7 +28,7 @@ export function buildHttpParams(params: Record<string, ParamValue>): HttpParams 
  * Servicio base que provee utilidades HTTP comunes.
  *
  * Usa el token `ENVIRONMENT` para obtener la URL base, lo que permite
- * que tanto portal como seguridad inyecten su propio entorno.
+ * que tanto empleado como erp inyecten su propio entorno.
  *
  * @example
  * ```ts
