@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Serve an app (dev server at http://localhost:4200 with proxy)
-npx nx serve portal
-npx nx serve seguridad
+npx nx serve empleado
+npx nx serve erp
 
 # Build
-npx nx build portal                          # Production build
-npx nx build portal --configuration=staging  # Staging build
-npx nx build seguridad
+npx nx build empleado                        # Production build
+npx nx build empleado --configuration=staging # Staging build
+npx nx build erp
 
 # Build/test only what changed
 npx nx affected -t build
@@ -24,8 +24,8 @@ npx nx run-many -t build
 npx nx run-many -t test
 
 # Lint & format
-npx nx lint portal
-npx nx lint seguridad
+npx nx lint empleado
+npx nx lint erp
 npx prettier --check "**/*.{ts,html,scss,json}"
 
 # Show project dependency graph
@@ -44,8 +44,8 @@ Prettier is configured in `.prettierrc.json` (printWidth 100, singleQuote, angul
 
 ```
 apps/
-  portal/       — Employee HR portal (pagos, reclamos, turnos, etc.)
-  seguridad/    — API keys & security admin (api-keys, formatos)
+  empleado/     — Employee HR portal (pagos, reclamos, turnos, etc.)
+  erp/          — API keys & security admin (api-keys, formatos)
 libs/
   core/         — @semantica/core (guards, interceptors, services, utils, BaseAuthService)
   ui/           — @semantica/ui (shared UI components)
@@ -92,16 +92,16 @@ libs/
 ### Dependency graph
 
 ```
-portal    → @semantica/core, @semantica/ui
-seguridad → @semantica/core, @semantica/ui
+empleado  → @semantica/core, @semantica/ui
+erp       → @semantica/core, @semantica/ui
 ui        → @semantica/core (solo para ENVIRONMENT token en Turnstile)
 ```
 
 ### Auth pattern
 
 Each app's `AuthService` extends `BaseAuthService<TUser>` from `@semantica/core`:
-- Portal adds: `register()`, `asociarEmpresa()`, `hasTenant` computed
-- Seguridad adds: `forceLogout()`, overrides `logout()`
+- Empleado adds: `register()`, `asociarEmpresa()`, `hasTenant` computed
+- ERP adds: `forceLogout()`, overrides `logout()`
 
 Injection tokens connect shared libs to app-specific code:
 ```typescript

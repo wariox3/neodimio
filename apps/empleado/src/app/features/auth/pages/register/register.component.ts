@@ -15,8 +15,9 @@ import { MessageModule } from 'primeng/message';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { AuthService } from '../../services/auth.service';
-import { ENVIRONMENT, extractErrorMessage } from '@semantica/core';
+import { ENVIRONMENT, extractErrorMessage, trimFormValues } from '@semantica/core';
 import { TurnstileComponent } from '../../../../shared';
+import { TrimInputDirective } from '@semantica/ui';
 
 function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value;
@@ -40,6 +41,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
     CheckboxModule,
     DialogModule,
     TurnstileComponent,
+    TrimInputDirective,
   ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
@@ -73,6 +75,8 @@ export class RegisterComponent {
   );
 
   onSubmit(): void {
+    trimFormValues(this.form);
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

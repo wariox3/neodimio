@@ -5,10 +5,11 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { MessageModule } from 'primeng/message';
-import { AuthService } from '../../services/auth.service';
-import { extractErrorMessage } from '@semantica/core';
-import { ROUTE_PATHS } from '../../../../core/constants/route-paths.constants';
-import { TurnstileComponent } from '../../../../shared';
+import { AuthService } from '../services/auth.service';
+import { isSafeReturnUrl, extractErrorMessage, ROUTE_PATHS } from '../../../core';
+import { TurnstileComponent } from '../../../shared';
+import { TrimInputDirective } from '@semantica/ui';
+import { trimFormValues } from '@semantica/core';
 
 @Component({
   selector: 'app-login',
@@ -21,6 +22,7 @@ import { TurnstileComponent } from '../../../../shared';
     PasswordModule,
     MessageModule,
     TurnstileComponent,
+    TrimInputDirective,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
@@ -32,10 +34,9 @@ export class LoginComponent {
   private readonly route = inject(ActivatedRoute);
 
   private readonly turnstile = viewChild(TurnstileComponent);
-
+  readonly captchaToken = signal<string | null>(null);
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
-  readonly captchaToken = signal<string | null>(null);
 
   readonly form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -43,6 +44,8 @@ export class LoginComponent {
   });
 
   onSubmit(): void {
+    trimFormValues(this.form);
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -63,10 +66,9 @@ export class LoginComponent {
       .subscribe({
         next: () => {
           this.turnstile()?.reset();
-          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-          const safeUrl =
-            returnUrl?.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/dashboard';
-          this.router.navigateByUrl(safeUrl);
+          const raw = this.route.snapshot.queryParamMap.get('returnUrl');
+          const returnUrl = isSafeReturnUrl(raw) ? raw! : ROUTE_PATHS.dashboard.root;
+          this.router.navigateByUrl(returnUrl);
         },
         error: (err) => {
           this.turnstile()?.reset();
@@ -74,7 +76,7 @@ export class LoginComponent {
 
           if (err.error?.error?.is_verified === false) {
             this.router.navigate([ROUTE_PATHS.auth.resendVerification], {
-              queryParams: { email: this.form.getRawValue().email, unverified: true },
+              queryParams: { email: this.form.getRawValue().email },
             });
             return;
           }

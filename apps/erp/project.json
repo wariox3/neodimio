@@ -1,23 +1,23 @@
 {
-  "name": "seguridad",
+  "name": "erp",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "prefix": "app",
-  "sourceRoot": "apps/seguridad/src",
-  "tags": ["scope:seguridad", "type:app"],
+  "sourceRoot": "apps/erp/src",
+  "tags": ["scope:erp", "type:app"],
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputPath": "dist/apps/seguridad",
+      "outputPath": "dist/apps/erp",
       "options": {
-        "browser": "apps/seguridad/src/main.ts",
+        "browser": "apps/erp/src/main.ts",
         "polyfills": ["zone.js"],
-        "tsConfig": "apps/seguridad/tsconfig.app.json",
+        "tsConfig": "apps/erp/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [
           {
             "glob": "**/*",
-            "input": "apps/seguridad/public"
+            "input": "apps/erp/public"
           },
           {
             "glob": "*.woff2",
@@ -25,7 +25,7 @@
             "output": "fonts/geist"
           }
         ],
-        "styles": ["apps/seguridad/src/styles.scss"],
+        "styles": ["apps/erp/src/styles.scss"],
         "stylePreprocessorOptions": {
           "includePaths": ["libs/styles/src"]
         }
@@ -47,8 +47,8 @@
           "outputHashing": "all",
           "fileReplacements": [
             {
-              "replace": "apps/seguridad/src/environments/environment.ts",
-              "with": "apps/seguridad/src/environments/environment.prod.ts"
+              "replace": "apps/erp/src/environments/environment.ts",
+              "with": "apps/erp/src/environments/environment.prod.ts"
             }
           ]
         },
@@ -56,8 +56,8 @@
           "outputHashing": "all",
           "fileReplacements": [
             {
-              "replace": "apps/seguridad/src/environments/environment.ts",
-              "with": "apps/seguridad/src/environments/environment.staging.ts"
+              "replace": "apps/erp/src/environments/environment.ts",
+              "with": "apps/erp/src/environments/environment.staging.ts"
             }
           ]
         },
@@ -73,11 +73,11 @@
       "executor": "@angular/build:dev-server",
       "configurations": {
         "production": {
-          "buildTarget": "seguridad:build:production"
+          "buildTarget": "erp:build:production"
         },
         "development": {
-          "buildTarget": "seguridad:build:development",
-          "proxyConfig": "apps/seguridad/proxy.conf.json"
+          "buildTarget": "erp:build:development",
+          "proxyConfig": "apps/erp/proxy.conf.json"
         }
       },
       "defaultConfiguration": "development"
@@ -86,12 +86,12 @@
       "executor": "@angular/build:karma",
       "options": {
         "polyfills": ["zone.js", "zone.js/testing"],
-        "tsConfig": "apps/seguridad/tsconfig.spec.json",
+        "tsConfig": "apps/erp/tsconfig.spec.json",
         "inlineStyleLanguage": "scss",
         "assets": [
           {
             "glob": "**/*",
-            "input": "apps/seguridad/public"
+            "input": "apps/erp/public"
           },
           {
             "glob": "*.woff2",
@@ -99,7 +99,7 @@
             "output": "fonts/geist"
           }
         ],
-        "styles": ["apps/seguridad/src/styles.scss"],
+        "styles": ["apps/erp/src/styles.scss"],
         "stylePreprocessorOptions": {
           "includePaths": ["libs/styles/src"]
         }

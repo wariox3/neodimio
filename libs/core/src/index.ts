@@ -47,6 +47,7 @@ export {
 export { MESES_ES, getMesAnioLabel, getSiguienteMes } from './lib/utils/date.utils';
 export { downloadBlob } from './lib/utils/download.utils';
 export { createCooldown, type CooldownController } from './lib/utils/cooldown.util';
+export { trimFormValues, type TrimFormValuesOptions } from './lib/utils/form.utils';
 
 // Pipes
 export { TruncatePipe } from './lib/pipes/truncate.pipe';

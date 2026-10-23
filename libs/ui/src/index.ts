@@ -4,3 +4,4 @@ export { LoadingSpinnerComponent } from './lib/loading-spinner/loading-spinner.c
 export { PageHeaderComponent } from './lib/page-header/page-header.component';
 export { TurnstileComponent } from './lib/turnstile/turnstile.component';
 export { FicherosDialogComponent } from './lib/ficheros-dialog/ficheros-dialog.component';
+export { TrimInputDirective } from './lib/directives/trim-input.directive';

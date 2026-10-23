@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.27](https://github.com/wariox3/neodimio/compare/v0.0.26...v0.0.27) (2026-10-23)
+
+
+### Features
+
+* **forms:** recortar espacios en campos de texto de login, registro y perfil ([e347324](https://github.com/wariox3/neodimio/commit/e347324af4c148fde136da3cb3bee45c258cf99e))
+
+
+### Refactoring
+
+* renombrar apps portal a empleado y seguridad a erp ([374f882](https://github.com/wariox3/neodimio/commit/374f882bcb5a98492f322c37f25afbe73bd45e2a))
+
 ## [0.0.26](https://github.com/tamerlantian/semantica-nx/compare/v0.0.25...v0.0.26) (2026-07-10)
 
 

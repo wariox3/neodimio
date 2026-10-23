@@ -6,8 +6,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { SelectFilterEvent, SelectModule } from 'primeng/select';
-import { PageHeaderComponent } from '@semantica/ui';
-import { ToastService, extractErrorMessage } from '@semantica/core';
+import { PageHeaderComponent, TrimInputDirective } from '@semantica/ui';
+import { ToastService, extractErrorMessage, trimFormValues } from '@semantica/core';
 import { ActualizarInformacionService } from '../../services/actualizar-informacion.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import {
@@ -26,6 +26,7 @@ import {
     MessageModule,
     SelectModule,
     PageHeaderComponent,
+    TrimInputDirective,
   ],
   templateUrl: './actualizar-informacion-page.component.html',
   styleUrl: './actualizar-informacion-page.component.scss',
@@ -103,13 +104,8 @@ export class ActualizarInformacionPageComponent implements OnInit {
         next: (res) => {
           let items = res.items;
           const selectedCityId = this.form.value.codigo_ciudad_fk;
-          if (
-            selectedCityId != null &&
-            !items.some((c) => c.codigo_ciudad_pk === selectedCityId)
-          ) {
-            const selectedCity = this.ciudades().find(
-              (c) => c.codigo_ciudad_pk === selectedCityId,
-            );
+          if (selectedCityId != null && !items.some((c) => c.codigo_ciudad_pk === selectedCityId)) {
+            const selectedCity = this.ciudades().find((c) => c.codigo_ciudad_pk === selectedCityId);
             if (selectedCity) {
               items = [selectedCity, ...items];
             }
@@ -165,6 +161,8 @@ export class ActualizarInformacionPageComponent implements OnInit {
   }
 
   onSubmit(): void {
+    trimFormValues(this.form);
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

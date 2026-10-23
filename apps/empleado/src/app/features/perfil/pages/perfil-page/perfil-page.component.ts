@@ -7,8 +7,8 @@ import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { AvatarModule } from 'primeng/avatar';
 import { DividerModule } from 'primeng/divider';
-import { PageHeaderComponent } from '@semantica/ui';
-import { ToastService, extractErrorMessage } from '@semantica/core';
+import { PageHeaderComponent, TrimInputDirective } from '@semantica/ui';
+import { ToastService, extractErrorMessage, trimFormValues } from '@semantica/core';
 import { PerfilService } from '../../services/perfil.service';
 import { PerfilDetalle, UpdatePerfilRequest } from '../../models/perfil.model';
 import { AuthService } from '../../../auth/services/auth.service';
@@ -26,6 +26,7 @@ import { CambiarEmpresaDialogComponent } from '../../components/cambiar-empresa-
     DividerModule,
     PageHeaderComponent,
     CambiarEmpresaDialogComponent,
+    TrimInputDirective,
   ],
   templateUrl: './perfil-page.component.html',
   styleUrl: './perfil-page.component.scss',
@@ -134,6 +135,8 @@ export class PerfilPageComponent implements OnInit {
   }
 
   onSubmit(): void {
+    trimFormValues(this.form);
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
