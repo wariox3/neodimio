@@ -1,0 +1,55 @@
+<form class="invitar-form" (ngSubmit)="enviar()" autocomplete="off">
+  <div class="invitar-form__field">
+    <label for="invitar-usuario" class="invitar-form__label">Usuario</label>
+    <p-autocomplete
+      inputId="invitar-usuario"
+      name="usuario"
+      [ngModel]="valor()"
+      (ngModelChange)="valor.set($event)"
+      [suggestions]="sugerencias()"
+      (completeMethod)="buscar($event)"
+      (onSelect)="seleccionar($event)"
+      optionLabel="email"
+      [forceSelection]="true"
+      [minLength]="minBusqueda"
+      [delay]="300"
+      [disabled]="!esPropietario() || enviando()"
+      placeholder="Busca por nombre o correo (mínimo 3 letras)..."
+      emptyMessage="No se encontraron usuarios verificados"
+      appendTo="body"
+      [style]="{ width: '100%' }"
+      [inputStyle]="{ width: '100%' }"
+    >
+      <ng-template pTemplate="item" let-usuario>
+        <div class="invitar-sugerencia">
+          <span class="invitar-sugerencia__avatar">{{ iniciales(usuario) }}</span>
+          <div class="invitar-sugerencia__texto">
+            <span class="invitar-sugerencia__nombre">
+              {{ nombreCompleto(usuario) || usuario.email }}
+            </span>
+            @if (nombreCompleto(usuario)) {
+              <span class="invitar-sugerencia__email">{{ usuario.email }}</span>
+            }
+          </div>
+        </div>
+      </ng-template>
+    </p-autocomplete>
+    @if (!usuarioSeleccionado() && valor()) {
+      <span class="invitar-form__error">
+        <i class="pi pi-times-circle" aria-hidden="true"></i>
+        Selecciona un usuario de la lista.
+      </span>
+    }
+  </div>
+
+  <div class="invitar-form__actions">
+    <p-button
+      type="submit"
+      size="small"
+      icon="pi pi-send"
+      [label]="enviando() ? 'Enviando...' : 'Enviar invitación'"
+      [loading]="enviando()"
+      [disabled]="!esPropietario() || !usuarioSeleccionado() || enviando()"
+    />
+  </div>
+</form>

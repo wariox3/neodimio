@@ -1,8 +1,10 @@
-import { Injectable, computed } from '@angular/core';
+import { Injectable, computed, inject } from '@angular/core';
 import { Observable, switchMap } from 'rxjs';
-import { BaseAuthService, AuthApiEndpoints } from '@semantica/core';
+import { ActiveTenantService, BaseAuthService, AuthApiEndpoints } from '@semantica/core';
 import { PaginatedResponse } from '../../../core';
 import { Tenant } from '../../dashboard/models/tenant.model';
+import { Membresia } from '../../dashboard/models/membresia.model';
+import { MembresiaService } from '../../dashboard/services/membresia.service';
 import {
   AsociarEmpresaRequest,
   RegisterRequest,
@@ -27,23 +29,42 @@ export class AuthService extends BaseAuthService<Usuario> {
 
   protected readonly loginRoute = ROUTE_PATHS.auth.login;
 
-  readonly hasTenant = computed(() => !!this.currentUser()?.tenant_id);
+  private readonly membresiaService = inject(MembresiaService);
+  private readonly activeTenant = inject(ActiveTenantService);
+
+  /** Hay una empresa elegida: los módulos trabajan sobre ella (`X-Tenant-ID`). */
+  readonly hasTenant = computed(() => this.activeTenant.hasTenant());
+
+  /** Membresía del usuario en la empresa elegida. */
+  readonly membresiaActiva = computed(() => {
+    const tenantId = this.activeTenant.tenantId();
+    return this.membresiaService.membresias()?.find((m) => m.tenant_id === tenantId) ?? null;
+  });
 
   /**
-   * Asocia al usuario autenticado con una empresa (tenant).
-   * Tras la asociacion, refresca el usuario para obtener el empleado_id.
+   * Empleado del usuario en la empresa elegida. Ya no viene en `/me`: cada
+   * empresa tiene su propio empleado, guardado en la membresía.
    */
-  asociarEmpresa(tenantId: number): Observable<Usuario | null> {
-    const userId = this.currentUser()?.id;
+  readonly empleadoId = computed(() => this.membresiaActiva()?.empleado_id ?? null);
 
-    if (!userId) {
-      throw new Error('No se puede asociar empresa sin un usuario autenticado.');
-    }
+  /** Además de la sesión, olvida las empresas del usuario y la empresa elegida. */
+  override clearSession(): void {
+    this.membresiaService.limpiar();
+    this.activeTenant.clear();
+    super.clearSession();
+  }
 
-    const body: AsociarEmpresaRequest = { usuario_id: userId, tenant_id: tenantId };
+  /**
+   * Asocia al usuario autenticado con una empresa (tenant). El backend toma el
+   * usuario de la sesión y lo vincula si existe como empleado en esa empresa
+   * (mismo documento y correo). Después recarga sus empresas, que es de donde
+   * sale el `empleado_id`.
+   */
+  asociarEmpresa(tenantId: number): Observable<Membresia[]> {
+    const body: AsociarEmpresaRequest = { tenant_id: tenantId };
     return this.http
-      .post<void>(`${this.environment.apiUrl}${API_ENDPOINTS.auth.asociarEmpresa}`, body)
-      .pipe(switchMap(() => this.me()));
+      .post<void>(`${this.environment.apiUrl}${API_ENDPOINTS.userTenant.asociar}`, body)
+      .pipe(switchMap(() => this.membresiaService.cargar()));
   }
 
   /**

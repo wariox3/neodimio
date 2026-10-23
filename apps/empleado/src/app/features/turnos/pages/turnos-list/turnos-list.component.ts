@@ -40,14 +40,14 @@ export class TurnosListComponent implements OnInit {
   readonly selectedTurno = signal<TurnoDelDia | null>(null);
 
   ngOnInit(): void {
-    const user = this.authService.currentUser();
-    if (!user) {
+    const empleadoId = this.authService.empleadoId();
+    if (empleadoId === null) {
       this.loading.set(false);
       this.loadingVencimientos.set(false);
       return;
     }
 
-    this.turnosService.getDetalleVencimiento(user.empleado_id!).subscribe({
+    this.turnosService.getDetalleVencimiento(empleadoId).subscribe({
       next: (data) => {
         this.vencimientos.set(data);
         this.loadingVencimientos.set(false);
@@ -55,7 +55,7 @@ export class TurnosListComponent implements OnInit {
       error: () => this.loadingVencimientos.set(false),
     });
 
-    obtenerTurnosHoyManana(this.turnosService, user.empleado_id!).subscribe({
+    obtenerTurnosHoyManana(this.turnosService, empleadoId).subscribe({
       next: ({ turnoHoy, turnoManana, programaciones }) => {
         this.programaciones.set(programaciones);
         this.loading.set(false);

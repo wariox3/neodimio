@@ -49,9 +49,9 @@ export class PagosListComponent implements OnInit {
   }
 
   loadPagos(page: number): void {
-    const user = this.authService.currentUser();
+    const empleadoId = this.authService.empleadoId();
 
-    if (!user) {
+    if (empleadoId === null) {
       this.loading.set(false);
       return;
     }
@@ -60,7 +60,7 @@ export class PagosListComponent implements OnInit {
     this.error.set(null);
 
     this.pagosService
-      .getPagos({ page, size: this.pageSize(), empleado_id: user.empleado_id! })
+      .getPagos({ page, size: this.pageSize(), empleado_id: empleadoId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {

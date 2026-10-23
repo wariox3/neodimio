@@ -1,13 +1,10 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { BaseHttpService, API_ENDPOINTS } from '../../../core';
 import { ApiKey, CreateApiKeyRequest, CreateApiKeyResponse } from '../models/api-key.model';
-import { AuthService } from '../../auth/services/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class ApiKeyService extends BaseHttpService {
-  private readonly authService = inject(AuthService);
-
   private readonly _apiKeys = signal<ApiKey[]>([]);
   readonly apiKeys = this._apiKeys.asReadonly();
 
@@ -15,8 +12,8 @@ export class ApiKeyService extends BaseHttpService {
     this._apiKeys.set([]);
   }
 
-  getApiKeys(): Observable<ApiKey[]> {
-    const tenantId = this.authService.currentUser()?.tenant_id;
+  /** API keys de la empresa. El backend solo responde a su propietario (`control`). */
+  getApiKeys(tenantId: number): Observable<ApiKey[]> {
     return this.get<ApiKey[]>(API_ENDPOINTS.apiKey.list, { tenant_id: tenantId }).pipe(
       tap((keys) => this._apiKeys.set(keys)),
     );

@@ -13,5 +13,5 @@ import { ReportesTableComponent } from '../../components/reportes-table/reportes
 export class ReportesProgramacionListComponent {
   private readonly authService = inject(AuthService);
 
-  readonly empleadoId = computed(() => this.authService.currentUser()?.empleado_id ?? 0);
+  readonly empleadoId = computed(() => this.authService.empleadoId() ?? 0);
 }

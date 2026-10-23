@@ -1,0 +1,49 @@
+<div class="lista">
+  @if (loading()) {
+    <ul class="lista__list">
+      @for (item of skeletonItems; track $index) {
+        <li class="persona">
+          <p-skeleton shape="square" size="2.25rem" borderRadius="8px" />
+          <div class="persona__texto">
+            <p-skeleton width="40%" height="0.8rem" />
+            <p-skeleton width="60%" height="0.7rem" />
+          </div>
+        </li>
+      }
+    </ul>
+  } @else if (errorMessage()) {
+    <app-error-alert [message]="errorMessage()!" [retryable]="true" (retry)="recargar()" />
+  } @else if (invitaciones().length === 0) {
+    <div class="lista__empty">
+      <i class="pi pi-envelope" aria-hidden="true"></i>
+      <p class="lista__empty-title">Sin invitaciones</p>
+      <p class="lista__empty-sub">Las invitaciones que envíes aparecerán aquí.</p>
+    </div>
+  } @else {
+    <ul class="lista__list">
+      @for (invitacion of invitaciones(); track invitacion.id) {
+        <li class="persona">
+          <span class="persona__avatar" aria-hidden="true">{{ iniciales(invitacion) }}</span>
+
+          <div class="persona__texto">
+            <span class="persona__nombre">
+              <span class="persona__nombre-text">
+                {{ invitacion.usuario_invitado_nombre || invitacion.usuario_invitado_email }}
+              </span>
+            </span>
+            @if (invitacion.usuario_invitado_nombre) {
+              <span class="persona__email">{{ invitacion.usuario_invitado_email }}</span>
+            }
+          </div>
+
+          <div class="persona__tags persona__tags--columna">
+            <span [class]="'tag ' + estadoTag(invitacion.estado)">
+              {{ estadoLabel(invitacion.estado) }}
+            </span>
+            <span class="persona__meta">{{ invitacion.fecha | date: 'dd/MM/yyyy' }}</span>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

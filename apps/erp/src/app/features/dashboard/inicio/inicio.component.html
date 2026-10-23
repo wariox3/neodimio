@@ -1,29 +1,3 @@
 <div class="page-container">
-  <app-page-header
-    title="Inicio"
-    subtitle="Accede rápidamente a los módulos de seguridad desde aquí."
-  />
-
-  @for (section of sections; track section.label) {
-    <div class="inicio__section">
-      <h2 class="inicio__section-title">
-        <i [class]="section.icon"></i>
-        {{ section.label }}
-      </h2>
-      <div class="inicio__grid">
-        @for (item of section.items; track item.route) {
-          <a [routerLink]="item.route" class="card">
-            <div class="card__icon">
-              <i [class]="item.icon"></i>
-            </div>
-            <h3 class="card__title">{{ item.label }}</h3>
-            <p class="card__desc">{{ item.description }}</p>
-            <span class="card__arrow">
-              <i class="pi pi-arrow-right"></i>
-            </span>
-          </a>
-        }
-      </div>
-    </div>
-  }
+  <app-page-header title="Inicio" [subtitle]="activeTenant()?.nombre ?? ''" />
 </div>

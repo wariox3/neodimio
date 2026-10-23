@@ -62,9 +62,9 @@ export class ReclamosListComponent implements OnInit {
   }
 
   loadReclamos(page: number): void {
-    const user = this.authService.currentUser();
+    const empleadoId = this.authService.empleadoId();
 
-    if (!user) {
+    if (empleadoId === null) {
       this.loading.set(false);
       return;
     }
@@ -73,7 +73,7 @@ export class ReclamosListComponent implements OnInit {
     this.error.set(null);
 
     this.reclamosService
-      .getReclamos({ page, size: this.pageSize(), empleado_id: user.empleado_id! })
+      .getReclamos({ page, size: this.pageSize(), empleado_id: empleadoId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {

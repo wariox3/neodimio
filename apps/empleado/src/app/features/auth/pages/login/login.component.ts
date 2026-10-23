@@ -6,7 +6,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { MessageModule } from 'primeng/message';
 import { AuthService } from '../../services/auth.service';
-import { extractErrorMessage, trimFormValues } from '@semantica/core';
+import { ActiveTenantService, extractErrorMessage, trimFormValues } from '@semantica/core';
 import { ROUTE_PATHS } from '../../../../core/constants/route-paths.constants';
 import { TurnstileComponent } from '../../../../shared';
 import { TrimInputDirective } from '@semantica/ui';
@@ -32,6 +32,7 @@ export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly activeTenant = inject(ActiveTenantService);
 
   private readonly turnstile = viewChild(TurnstileComponent);
 
@@ -67,6 +68,8 @@ export class LoginComponent {
       .subscribe({
         next: () => {
           this.turnstile()?.reset();
+          // Cada inicio de sesión elige empresa de nuevo (modal del dashboard).
+          this.activeTenant.clear();
           const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
           const safeUrl =
             returnUrl?.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/dashboard';

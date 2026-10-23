@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { catchError, of } from 'rxjs';
-import { BaseAuthService, AuthApiEndpoints } from '@semantica/core';
+import { ActiveTenantService, BaseAuthService, AuthApiEndpoints } from '@semantica/core';
 import { Usuario } from '../models/auth.model';
 import { API_ENDPOINTS, ROUTE_PATHS } from '../../../core';
 
@@ -19,6 +19,8 @@ export class AuthService extends BaseAuthService<Usuario> {
 
   protected readonly loginRoute = ROUTE_PATHS.auth.login;
 
+  private readonly activeTenant = inject(ActiveTenantService);
+
   /**
    * Cierra la sesion del usuario.
    * A diferencia del base, hace el HTTP call primero y limpia la sesion al completar.
@@ -36,5 +38,14 @@ export class AuthService extends BaseAuthService<Usuario> {
    */
   forceLogout(): void {
     this.clearSession();
+  }
+
+  /**
+   * Además de la sesión, suelta la empresa activa: el próximo login
+   * debe volver a pasar por la selección de empresa.
+   */
+  override clearSession(): void {
+    this.activeTenant.clear();
+    super.clearSession();
   }
 }

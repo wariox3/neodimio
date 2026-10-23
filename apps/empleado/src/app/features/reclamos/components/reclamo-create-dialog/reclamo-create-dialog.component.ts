@@ -59,15 +59,15 @@ export class ReclamoCreateDialogComponent {
       return;
     }
 
-    const user = this.authService.currentUser();
-    if (!user?.empleado_id) return;
+    const empleadoId = this.authService.empleadoId();
+    if (empleadoId === null) return;
 
     this.submitting.set(true);
     const { codigo_reclamo_concepto_fk, descripcion } = this.form.getRawValue();
 
     this.reclamosService
       .createReclamo({
-        codigo_empleado_fk: user.empleado_id,
+        codigo_empleado_fk: empleadoId,
         codigo_reclamo_concepto_fk,
         descripcion,
       })

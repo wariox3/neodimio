@@ -25,3 +25,15 @@ export const ENVIRONMENT = new InjectionToken<SemanticaEnvironment>('SemanticaEn
 export const ROUTE_PATHS = new InjectionToken<RoutePaths>('RoutePaths');
 export const AUTH_SERVICE = new InjectionToken<AuthServiceContract>('AuthService');
 export const AUTH_SKIP_URLS = new InjectionToken<string[]>('AuthSkipUrls');
+
+/**
+ * Prefijos de ruta del API (sin `apiUrl`) que no llevan `X-Tenant-ID`:
+ * autenticación (`/auth/`) y datos maestros (`/mas/`) no dependen de la empresa.
+ */
+export const TENANT_EXCLUDED_PATHS = new InjectionToken<readonly string[]>('TenantExcludedPaths', {
+  providedIn: 'root',
+  factory: () => ['/auth/', '/mas/'],
+});
+
+/** Ruta de la pantalla de selección de empresa (usada por `activeTenantGuard`). */
+export const TENANT_SELECTION_PATH = new InjectionToken<string>('TenantSelectionPath');

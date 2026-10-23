@@ -10,7 +10,7 @@ import {
   EmptyStateComponent,
 } from '../../../../shared';
 import { FormatoService } from '../../services/formato.service';
-import { extractErrorMessage } from '../../../../core';
+import { ROUTE_PATHS, extractErrorMessage } from '../../../../core';
 
 @Component({
   selector: 'app-formato-list',
@@ -48,7 +48,7 @@ export class FormatoListComponent implements OnInit {
   }
 
   editFormato(id: number): void {
-    this.router.navigate(['/dashboard/formato/editar', id]);
+    this.router.navigateByUrl(ROUTE_PATHS.dashboard.configuracion.formatoEditar(id));
   }
 
   private loadFormatos(page: number, size: number): void {

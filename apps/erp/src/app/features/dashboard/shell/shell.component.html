@@ -2,41 +2,28 @@
   <!-- Navbar -->
   <header class="shell-navbar">
     <div class="navbar-start">
-      <button class="hamburger-btn" (click)="toggleDrawer()" aria-label="Abrir menú">
-        <i class="pi pi-bars"></i>
-      </button>
-      <div class="navbar-brand">
+      @if (hasSidebar()) {
+        <button class="hamburger-btn" (click)="toggleDrawer()" aria-label="Abrir menú">
+          <i class="pi pi-bars"></i>
+        </button>
+      }
+      <a class="navbar-brand" [routerLink]="inicioRoute" aria-label="Ir al inicio">
         <img src="fondo_transparente.png" alt="Semantica Seguridad" class="navbar-logo-img" />
-      </div>
+      </a>
     </div>
 
     <div class="navbar-end">
-      @if (currentUser()) {
-        <div class="user-info">
-          <div class="user-avatar">{{ currentUser()!.email.charAt(0).toUpperCase() }}</div>
-          <div class="user-details">
-            @if (currentUser()!.tenant_nombre) {
-              <span class="user-empresa">{{ currentUser()!.tenant_nombre }}</span>
-            }
-            <span class="user-name">{{ currentUser()!.email }}</span>
-          </div>
-        </div>
-        <div class="navbar-divider"></div>
-      }
-      <button class="logout-btn" (click)="logout()" title="Cerrar sesión">
-        <i class="pi pi-sign-out"></i>
-        <span>Salir</span>
-      </button>
+      <app-user-menu />
     </div>
   </header>
 
   <div class="shell-body">
-    <!-- Sidebar desktop -->
-    <aside class="shell-sidebar">
-      <nav class="sidebar-nav">
-        <ng-container *ngTemplateOutlet="navTpl; context: { $implicit: navItems() }" />
-      </nav>
-    </aside>
+    <!-- Sidebar desktop: cada área pinta sus propias opciones -->
+    @if (hasSidebar()) {
+      <aside class="shell-sidebar">
+        <ng-container *ngTemplateOutlet="navTpl" />
+      </aside>
+    }
 
     <!-- Main content -->
     <main class="shell-content">
@@ -50,45 +37,29 @@
   [visible]="drawerVisible()"
   (visibleChange)="drawerVisible.set($event)"
   position="left"
-  header="Menú"
+  [header]="areaConfig().title ?? 'Menú'"
 >
-  <nav class="sidebar-nav">
-    <ng-container *ngTemplateOutlet="navTpl; context: { $implicit: navItems() }" />
-  </nav>
+  <ng-container *ngTemplateOutlet="navTpl" />
 </p-drawer>
 
 <!-- Template compartido para la navegación -->
-<ng-template #navTpl let-items>
-  @for (item of items; track item.label) {
-    @if (isNavGroup(item)) {
-      <!-- Grupo colapsable -->
-      <button
-        class="nav-group-header"
-        [class.expanded]="isExpanded(item.label)"
-        (click)="toggleGroup(item.label)"
-        [attr.aria-expanded]="isExpanded(item.label)"
-      >
-        <i [class]="item.icon"></i>
-        <span>{{ item.label }}</span>
-        <i class="nav-group-chevron pi pi-chevron-right"></i>
-      </button>
-      @if (isExpanded(item.label)) {
-        <div class="nav-children">
-          @for (child of item.children; track child.route) {
-            <a
-              class="nav-item nav-item--child"
-              [routerLink]="child.route"
-              routerLinkActive="active"
-              (click)="drawerVisible.set(false)"
-            >
-              <i [class]="child.icon"></i>
-              <span>{{ child.label }}</span>
-            </a>
-          }
-        </div>
-      }
-    } @else {
-      <!-- Ítem directo -->
+<ng-template #navTpl>
+  @if (showBack()) {
+    <a class="sidebar-back" [routerLink]="inicioRoute" (click)="drawerVisible.set(false)">
+      <i class="pi pi-arrow-left" aria-hidden="true"></i>
+      <span>Volver al inicio</span>
+    </a>
+  }
+
+  @if (areaConfig().title) {
+    <p class="sidebar-title">
+      <i [class]="areaConfig().icon" aria-hidden="true"></i>
+      {{ areaConfig().title }}
+    </p>
+  }
+
+  <nav class="sidebar-nav">
+    @for (item of navItems(); track item.route) {
       <a
         class="nav-item"
         [routerLink]="item.route"
@@ -99,5 +70,5 @@
         <span>{{ item.label }}</span>
       </a>
     }
-  }
+  </nav>
 </ng-template>

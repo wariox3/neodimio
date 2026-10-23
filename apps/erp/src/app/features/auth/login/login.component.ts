@@ -67,7 +67,7 @@ export class LoginComponent {
         next: () => {
           this.turnstile()?.reset();
           const raw = this.route.snapshot.queryParamMap.get('returnUrl');
-          const returnUrl = isSafeReturnUrl(raw) ? raw! : ROUTE_PATHS.dashboard.root;
+          const returnUrl = isSafeReturnUrl(raw) ? raw! : ROUTE_PATHS.contenedores.root;
           this.router.navigateByUrl(returnUrl);
         },
         error: (err) => {

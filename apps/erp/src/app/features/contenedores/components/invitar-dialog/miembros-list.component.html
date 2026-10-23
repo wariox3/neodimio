@@ -1,0 +1,54 @@
+<div class="lista">
+  @if (loading()) {
+    <ul class="lista__list">
+      @for (item of skeletonItems; track $index) {
+        <li class="persona">
+          <p-skeleton shape="square" size="2.25rem" borderRadius="8px" />
+          <div class="persona__texto">
+            <p-skeleton width="40%" height="0.8rem" />
+            <p-skeleton width="60%" height="0.7rem" />
+          </div>
+        </li>
+      }
+    </ul>
+  } @else if (errorMessage()) {
+    <app-error-alert [message]="errorMessage()!" [retryable]="true" (retry)="recargar()" />
+  } @else if (miembros().length === 0) {
+    <div class="lista__empty">
+      <i class="pi pi-users" aria-hidden="true"></i>
+      <p class="lista__empty-title">Sin miembros</p>
+      <p class="lista__empty-sub">Invita a alguien para que se una a la empresa.</p>
+    </div>
+  } @else {
+    <ul class="lista__list">
+      @for (miembro of miembrosOrdenados(); track miembro.id) {
+        <li class="persona" [class.persona--destacada]="miembro.control">
+          <span class="persona__avatar" aria-hidden="true">{{ iniciales(miembro) }}</span>
+
+          <div class="persona__texto">
+            <span class="persona__nombre">
+              <span class="persona__nombre-text">
+                {{ nombreCompleto(miembro) || miembro.email }}
+              </span>
+              @if (esTu(miembro)) {
+                <span class="persona__tu">Tú</span>
+              }
+            </span>
+            @if (nombreCompleto(miembro)) {
+              <span class="persona__email">{{ miembro.email }}</span>
+            }
+          </div>
+
+          <div class="persona__tags">
+            @if (!miembro.activo) {
+              <span class="tag tag--peligro">Inactivo</span>
+            }
+            <span class="tag" [class.tag--primario]="miembro.control">
+              {{ miembro.control ? 'Propietario' : 'Miembro' }}
+            </span>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

@@ -47,9 +47,9 @@ export class CertificadoLaboralListComponent implements OnInit {
   }
 
   loadContratos(page: number): void {
-    const user = this.authService.currentUser();
+    const empleadoId = this.authService.empleadoId();
 
-    if (!user) {
+    if (empleadoId === null) {
       this.loading.set(false);
       return;
     }
@@ -58,7 +58,7 @@ export class CertificadoLaboralListComponent implements OnInit {
     this.error.set(null);
 
     this.certificadoLaboralService
-      .getContratos({ page, size: this.pageSize(), empleado_id: user.empleado_id! })
+      .getContratos({ page, size: this.pageSize(), empleado_id: empleadoId })
       .subscribe({
         next: (res) => {
           this.contratos.set(res.items);

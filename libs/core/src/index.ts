@@ -4,6 +4,8 @@ export {
   ROUTE_PATHS,
   AUTH_SERVICE,
   AUTH_SKIP_URLS,
+  TENANT_SELECTION_PATH,
+  TENANT_EXCLUDED_PATHS,
   type SemanticaEnvironment,
   type RoutePaths,
   type AuthServiceContract,
@@ -17,6 +19,13 @@ export { roleGuard } from './lib/guards/role.guard';
 // Interceptors
 export { authInterceptor } from './lib/interceptors/auth.interceptor';
 export { errorInterceptor } from './lib/interceptors/error.interceptor';
+export { tenantInterceptor } from './lib/interceptors/tenant.interceptor';
+
+// Tenant
+export { ActiveTenantService, type ActiveTenant } from './lib/tenant/active-tenant.service';
+export { activeTenantGuard } from './lib/tenant/active-tenant.guard';
+export { clearActiveTenantGuard } from './lib/tenant/clear-active-tenant.guard';
+export { propietarioGuard } from './lib/tenant/propietario.guard';
 
 // Services
 export {

@@ -1,0 +1,298 @@
+// ─── Layout ───────────────────────────────────────────────────────────────────
+
+.contenedores-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--p-surface-50);
+}
+
+.contenedores-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 60px;
+  padding: 0 1.25rem;
+  background: var(--p-surface-0);
+  border-bottom: 1px solid var(--p-surface-200);
+  flex-shrink: 0;
+
+  &__logo {
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+  }
+}
+
+// ─── Panel ────────────────────────────────────────────────────────────────────
+
+.contenedores {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+
+  &__panel {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--p-text-color);
+  }
+
+  &__subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__search {
+    display: block;
+    width: 100%;
+
+    ::ng-deep .p-iconfield {
+      display: block;
+      width: 100%;
+    }
+
+    input {
+      width: 100%;
+    }
+  }
+
+  &__body {
+    background: var(--p-surface-0);
+    border: 1px solid var(--p-surface-200);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    > li + li {
+      border-top: 1px solid var(--p-surface-100);
+    }
+  }
+}
+
+// ─── Fila de empresa ──────────────────────────────────────────────────────────
+
+.contenedor-item {
+  display: flex;
+  align-items: center;
+  padding-right: 0.75rem;
+
+  &__menu {
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      background: var(--p-surface-100);
+      color: var(--p-text-color);
+    }
+
+    &:disabled {
+      cursor: default;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--p-primary-color);
+      outline-offset: 2px;
+    }
+  }
+}
+
+// El menú se pinta en `body` (appendTo) con la plantilla de PrimeNG, fuera del
+// host: la regla tiene que ser global. La clase llega vía `styleClass`.
+::ng-deep .contenedor-menu__peligro .p-menu-item-link {
+  .p-menu-item-icon,
+  .p-menu-item-label {
+    color: var(--p-red-600);
+  }
+}
+
+.contenedor-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+  padding: 1rem 1.25rem;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--p-surface-50);
+
+    .contenedor-row__cta {
+      background: var(--p-primary-color);
+      color: var(--p-primary-contrast-color);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-primary-color);
+    outline-offset: -2px;
+  }
+
+  &--skeleton {
+    cursor: default;
+  }
+
+  &--inactivo {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &__avatar {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--p-primary-color) 20%, transparent);
+    color: var(--p-primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  &__main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  &__nombre {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    padding: 0.5rem 0.875rem;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--p-primary-color);
+    background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+
+    .pi {
+      font-size: 0.8rem;
+    }
+  }
+
+  &__lock {
+    flex-shrink: 0;
+    color: var(--p-text-muted-color);
+  }
+}
+
+.contenedor-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  border: 1px solid var(--p-surface-200);
+  background: var(--p-surface-50);
+  color: var(--p-text-muted-color);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+
+  .pi {
+    font-size: 0.625rem;
+  }
+
+  &--admin {
+    color: var(--p-primary-color);
+    background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+    border-color: color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+  }
+
+  &--inactivo {
+    color: var(--p-red-600);
+    background: var(--p-red-50);
+    border-color: var(--p-red-200);
+  }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+
+@media (max-width: 576px) {
+  .contenedores {
+    padding: 1.5rem 1rem;
+
+    &__title {
+      font-size: 1.25rem;
+    }
+  }
+
+  .contenedor-item {
+    padding-right: 0.5rem;
+  }
+
+  .contenedor-row {
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+
+    // En móvil el CTA queda solo con la flecha.
+    &__cta {
+      padding: 0.5rem;
+    }
+
+    &__cta-label {
+      display: none;
+    }
+  }
+}

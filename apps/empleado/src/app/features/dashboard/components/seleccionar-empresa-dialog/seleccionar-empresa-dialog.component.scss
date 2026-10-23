@@ -1,0 +1,108 @@
+.seleccionar__desc {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+.seleccionar__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 360px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.empresa-opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--p-surface-200);
+  border-radius: 10px;
+  background: var(--p-surface-0);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--p-primary-color);
+    background: color-mix(in srgb, var(--p-primary-color) 4%, transparent);
+
+    .empresa-opcion__flecha {
+      color: var(--p-primary-color);
+      transform: translateX(2px);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-primary-color);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &--actual {
+    border-color: color-mix(in srgb, var(--p-primary-color) 40%, transparent);
+  }
+
+  &__avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
+    color: var(--p-primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  &__nombre {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__tag {
+    flex-shrink: 0;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--p-primary-color) 25%, transparent);
+    background: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
+    color: var(--p-primary-color);
+    font-size: 0.6875rem;
+    font-weight: 600;
+
+    &--inactivo {
+      border-color: var(--p-red-200);
+      background: var(--p-red-50);
+      color: var(--p-red-600);
+    }
+  }
+
+  &__flecha {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+    transition:
+      color 0.15s ease,
+      transform 0.15s ease;
+  }
+}

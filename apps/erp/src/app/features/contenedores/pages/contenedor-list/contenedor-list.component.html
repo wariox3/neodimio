@@ -1,0 +1,143 @@
+<div class="contenedores-layout">
+  <header class="contenedores-navbar">
+    <img src="fondo_transparente.png" alt="Semantica" class="contenedores-navbar__logo" />
+
+    <app-user-menu />
+  </header>
+
+  <main class="contenedores">
+    <section class="contenedores__panel">
+      <div class="contenedores__header">
+        <h1 class="contenedores__title">Tus empresas</h1>
+        <p class="contenedores__subtitle">
+          @if (!loading() && !errorMessage() && contenedores().length > 0) {
+            {{ summary() }}
+          } @else {
+            Selecciona una empresa para continuar
+          }
+        </p>
+      </div>
+
+      <app-invitaciones-pendientes (aceptada)="loadContenedores()" />
+
+      @if (!loading() && !errorMessage() && contenedores().length > 0) {
+        <p-iconfield class="contenedores__search">
+          <p-inputicon class="pi pi-search" />
+          <input
+            pInputText
+            type="text"
+            placeholder="Buscar empresa..."
+            aria-label="Buscar empresa"
+            [value]="searchQuery()"
+            (input)="searchQuery.set($any($event.target).value)"
+          />
+        </p-iconfield>
+      }
+
+      <div class="contenedores__body">
+        @if (loading()) {
+          <ul class="contenedores__list">
+            @for (item of skeletonItems; track $index) {
+              <li class="contenedor-row contenedor-row--skeleton">
+                <p-skeleton shape="square" size="2.75rem" borderRadius="10px" />
+                <div class="contenedor-row__main">
+                  <p-skeleton width="60%" height="1rem" />
+                  <p-skeleton width="35%" height="0.75rem" />
+                </div>
+              </li>
+            }
+          </ul>
+        } @else if (errorMessage()) {
+          <app-error-alert
+            [message]="errorMessage()!"
+            [retryable]="true"
+            (retry)="loadContenedores()"
+          />
+        } @else if (contenedores().length === 0) {
+          <app-empty-state
+            icon="pi pi-building"
+            title="Sin empresas"
+            message="Aún no tienes ninguna empresa asignada. Solicita una invitación al administrador."
+          />
+        } @else if (filteredContenedores().length === 0) {
+          <app-empty-state
+            icon="pi pi-search"
+            title="Sin resultados"
+            message="No encontramos empresas que coincidan con tu búsqueda."
+          />
+        } @else {
+          <ul class="contenedores__list">
+            @for (contenedor of filteredContenedores(); track contenedor.id) {
+              <li class="contenedor-item">
+                <button
+                  type="button"
+                  class="contenedor-row"
+                  [class.contenedor-row--inactivo]="!contenedor.activo"
+                  [disabled]="!contenedor.activo"
+                  (click)="ingresar(contenedor)"
+                >
+                  <span class="contenedor-row__avatar" aria-hidden="true">
+                    {{ inicial(contenedor) }}
+                  </span>
+
+                  <span class="contenedor-row__main">
+                    <span class="contenedor-row__nombre">{{ nombre(contenedor) }}</span>
+                    <span class="contenedor-row__tags">
+                      @if (contenedor.control) {
+                        <span class="contenedor-tag contenedor-tag--admin">
+                          <i class="pi pi-crown" aria-hidden="true"></i>
+                          Propietario
+                        </span>
+                      } @else {
+                        <span class="contenedor-tag">Miembro</span>
+                      }
+                      @if (!contenedor.activo) {
+                        <span class="contenedor-tag contenedor-tag--inactivo">Inactivo</span>
+                      }
+                    </span>
+                  </span>
+
+                  @if (contenedor.activo) {
+                    <span class="contenedor-row__cta">
+                      <span class="contenedor-row__cta-label">Ingresar</span>
+                      <i class="pi pi-arrow-right" aria-hidden="true"></i>
+                    </span>
+                  } @else {
+                    <i class="pi pi-lock contenedor-row__lock" aria-hidden="true"></i>
+                  }
+                </button>
+
+                <button
+                  type="button"
+                  class="contenedor-item__menu"
+                  aria-label="Opciones de la empresa"
+                  title="Opciones de la empresa"
+                  [disabled]="saliendoId() === contenedor.id"
+                  (click)="abrirMenu($event, contenedor)"
+                >
+                  @if (saliendoId() === contenedor.id) {
+                    <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+                  } @else {
+                    <i class="pi pi-cog" aria-hidden="true"></i>
+                  }
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </section>
+  </main>
+</div>
+
+<p-menu #rowMenu [model]="rowMenuItems" [popup]="true" appendTo="body" />
+
+<p-confirmdialog [style]="{ width: '420px' }" [breakpoints]="{ '575px': '95vw' }" />
+
+@if (invitarVisible()) {
+  <app-invitar-dialog
+    [visible]="invitarVisible()"
+    [contenedor]="contenedorAInvitar()"
+    (visibleChange)="onInvitarVisibleChange($event)"
+  />
+}
