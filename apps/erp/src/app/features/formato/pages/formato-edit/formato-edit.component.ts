@@ -7,7 +7,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { FormatoService } from '../../services/formato.service';
 import { Formato } from '../../models/formato.model';
-import { extractErrorMessage } from '../../../../core';
+import { ROUTE_PATHS, extractErrorMessage } from '../../../../core';
 import { FormatoImagenComponent } from './formato-imagen/formato-imagen.component';
 
 @Component({
@@ -44,7 +44,7 @@ export class FormatoEditComponent implements OnInit {
           summary: 'Error',
           detail: extractErrorMessage(err, 'No se pudo cargar el formato.'),
         });
-        this.router.navigate(['/dashboard/formato/lista']);
+        this.router.navigateByUrl(ROUTE_PATHS.dashboard.configuracion.formatos);
       },
     });
   }
@@ -62,7 +62,7 @@ export class FormatoEditComponent implements OnInit {
           summary: 'Guardado',
           detail: 'El contenido del formato fue actualizado.',
         });
-        this.router.navigate(['/dashboard/formato/lista']);
+        this.router.navigateByUrl(ROUTE_PATHS.dashboard.configuracion.formatos);
       },
       error: (err: unknown) => {
         this.saving.set(false);
@@ -76,6 +76,6 @@ export class FormatoEditComponent implements OnInit {
   }
 
   cancel(): void {
-    this.router.navigate(['/dashboard/formato/lista']);
+    this.router.navigateByUrl(ROUTE_PATHS.dashboard.configuracion.formatos);
   }
 }

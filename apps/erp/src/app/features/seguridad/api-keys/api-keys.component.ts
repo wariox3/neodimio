@@ -11,8 +11,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { PageHeaderComponent, LoadingSpinnerComponent, EmptyStateComponent } from '../../../shared';
 import { ApiKeyService } from '../services/api-key.service';
 import { ApiKey } from '../models/api-key.model';
-import { AuthService } from '../../auth/services/auth.service';
-import { extractErrorMessage } from '../../../core';
+import { ActiveTenantService, extractErrorMessage } from '../../../core';
 
 @Component({
   selector: 'app-api-keys',
@@ -37,7 +36,8 @@ import { extractErrorMessage } from '../../../core';
 export class ApiKeysComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly apiKeyService = inject(ApiKeyService);
-  private readonly authService = inject(AuthService);
+  /** Empresa activa: el dashboard no se abre sin ella (`activeTenantGuard`). */
+  private readonly tenantId = inject(ActiveTenantService).tenantId;
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
 
@@ -52,7 +52,6 @@ export class ApiKeysComponent implements OnInit {
 
   readonly createForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
-    tenant_id: [null as number | null, Validators.required],
   });
 
   ngOnInit(): void {
@@ -60,8 +59,11 @@ export class ApiKeysComponent implements OnInit {
   }
 
   loadKeys(): void {
+    const tenantId = this.tenantId();
+    if (tenantId === null) return;
+
     this.loading.set(true);
-    this.apiKeyService.getApiKeys().subscribe({
+    this.apiKeyService.getApiKeys(tenantId).subscribe({
       next: () => this.loading.set(false),
       error: (err: unknown) => {
         this.loading.set(false);
@@ -75,33 +77,21 @@ export class ApiKeysComponent implements OnInit {
   }
 
   openCreateDialog(): void {
-    const tenantId = this.authService.currentUser()?.tenant_id ?? null;
-
-    if (!tenantId) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Tenant requerido',
-        detail:
-          'Tu cuenta no tiene un tenant asignado. Contacta al administrador para poder crear API Keys.',
-        life: 6000,
-      });
-      return;
-    }
-
-    this.createForm.reset({ tenant_id: tenantId });
+    this.createForm.reset();
     this.createDialogVisible.set(true);
   }
 
   submitCreate(): void {
-    if (this.createForm.invalid) {
+    const tenantId = this.tenantId();
+    if (this.createForm.invalid || tenantId === null) {
       this.createForm.markAllAsTouched();
       return;
     }
 
     this.submitting.set(true);
-    const { name, tenant_id } = this.createForm.getRawValue();
+    const { name } = this.createForm.getRawValue();
 
-    this.apiKeyService.createApiKey({ name: name!, tenant_id: tenant_id! }).subscribe({
+    this.apiKeyService.createApiKey({ name: name!, tenant_id: tenantId }).subscribe({
       next: (res) => {
         this.submitting.set(false);
         this.createDialogVisible.set(false);

@@ -2,18 +2,7 @@
   <header class="contenedores-navbar">
     <img src="fondo_transparente.png" alt="Semantica" class="contenedores-navbar__logo" />
 
-    <div class="contenedores-navbar__end">
-      @if (currentUser(); as user) {
-        <div class="contenedores-navbar__user">
-          <div class="contenedores-navbar__avatar">{{ user.email.charAt(0).toUpperCase() }}</div>
-          <span class="contenedores-navbar__email">{{ user.email }}</span>
-        </div>
-      }
-      <button class="contenedores-navbar__logout" (click)="logout()" title="Cerrar sesión">
-        <i class="pi pi-sign-out"></i>
-        <span>Salir</span>
-      </button>
-    </div>
+    <app-user-menu />
   </header>
 
   <main class="contenedores">
@@ -101,9 +90,6 @@
                         </span>
                       } @else {
                         <span class="contenedor-tag">Miembro</span>
-                      }
-                      @if (contenedor.tenant_id === activeTenantId()) {
-                        <span class="contenedor-tag contenedor-tag--actual">Actual</span>
                       }
                       @if (!contenedor.activo) {
                         <span class="contenedor-tag contenedor-tag--inactivo">Inactivo</span>

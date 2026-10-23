@@ -1,110 +1,76 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  NavigationEnd,
+  Router,
+  RouterOutlet,
+  RouterLink,
+  RouterLinkActive,
+} from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
 import { DrawerModule } from 'primeng/drawer';
+import { ROUTE_PATHS } from '../../../core';
 import { AuthService } from '../../auth/services/auth.service';
-import { ApiKeyService } from '../../../features/seguridad/services/api-key.service';
-import { ActiveTenantService, ROUTE_PATHS } from '../../../core';
-
-interface NavChild {
-  label: string;
-  icon: string;
-  route: string;
-  roles?: string[];
-}
-
-interface NavGroup {
-  label: string;
-  icon: string;
-  children: NavChild[];
-  roles?: string[];
-}
-
-type NavItem = NavChild | NavGroup;
-
-export function isNavGroup(item: NavItem): item is NavGroup {
-  return 'children' in item;
-}
+import { UserMenuComponent } from '../../../shared/user-menu/user-menu.component';
+import { DASHBOARD_AREAS, DashboardArea } from './dashboard-areas';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [NgTemplateOutlet, RouterOutlet, RouterLink, RouterLinkActive, DrawerModule],
+  imports: [
+    NgTemplateOutlet,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    DrawerModule,
+    UserMenuComponent,
+  ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
 })
 export class ShellComponent {
   private readonly authService = inject(AuthService);
-  private readonly apiKeyService = inject(ApiKeyService);
+  private readonly router = inject(Router);
 
-  readonly currentUser = this.authService.currentUser;
-  readonly activeTenant = inject(ActiveTenantService).tenant;
-  readonly contenedoresRoute = ROUTE_PATHS.contenedores.root;
   readonly drawerVisible = signal(false);
+  readonly inicioRoute = ROUTE_PATHS.dashboard.inicio;
 
-  /** Conjuntos de labels de grupos actualmente expandidos */
-  readonly expandedGroups = signal<Set<string>>(new Set(['Seguridad', 'Configuración']));
+  /** Área de la ruta activa: la última `data.area` declarada en el árbol de rutas. */
+  readonly area = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => this.resolveArea()),
+    ),
+    { initialValue: this.resolveArea() },
+  );
 
-  private readonly rawNavItems: NavItem[] = [
-    {
-      label: 'Inicio',
-      icon: 'pi pi-home',
-      route: '/dashboard/inicio',
-    },
-    {
-      label: 'Seguridad',
-      icon: 'pi pi-shield',
-      children: [
-        {
-          label: 'Usuarios',
-          icon: 'pi pi-users',
-          route: '/dashboard/usuarios/lista',
-          roles: ['admin'],
-        },
-        { label: 'API Keys', icon: 'pi pi-key', route: '/dashboard/seguridad/api-keys' },
-      ],
-    },
-    {
-      label: 'Configuración',
-      icon: 'pi pi-cog',
-      children: [{ label: 'Formatos', icon: 'pi pi-file', route: '/dashboard/formato/lista' }],
-    },
-  ];
+  readonly areaConfig = computed(() => DASHBOARD_AREAS[this.area()]);
 
+  /** Opciones del área filtradas por el rol global del usuario. */
   readonly navItems = computed(() => {
-    const role = this.currentUser()?.role;
-    const allowed = (item: NavChild | NavGroup) => !item.roles || item.roles.includes(role ?? '');
-    return this.rawNavItems
-      .filter(allowed)
-      .map((item) =>
-        isNavGroup(item) ? { ...item, children: item.children.filter(allowed) } : item,
-      );
+    const role = this.authService.currentUser()?.role ?? '';
+    return this.areaConfig().items.filter((item) => !item.roles || item.roles.includes(role));
   });
 
-  readonly isNavGroup = isNavGroup;
+  readonly hasSidebar = computed(() => this.navItems().length > 0);
 
-  isExpanded(label: string): boolean {
-    return this.expandedGroups().has(label);
-  }
-
-  toggleGroup(label: string): void {
-    this.expandedGroups.update((set) => {
-      const next = new Set(set);
-      if (next.has(label)) {
-        next.delete(label);
-      } else {
-        next.add(label);
-      }
-      return next;
-    });
-  }
+  /** Fuera de Inicio, el menú lateral ofrece volver. */
+  readonly showBack = computed(() => this.area() !== 'inicio');
 
   toggleDrawer(): void {
     this.drawerVisible.update((v) => !v);
   }
 
-  logout(): void {
-    this.apiKeyService.clearCache();
-    this.authService.logout();
+  private resolveArea(): DashboardArea {
+    let area: DashboardArea = 'inicio';
+    let route: ActivatedRouteSnapshot | null = this.router.routerState.snapshot.root;
+    while (route) {
+      const declared = route.data['area'] as DashboardArea | undefined;
+      if (declared) area = declared;
+      route = route.firstChild;
+    }
+    return area;
   }
 }

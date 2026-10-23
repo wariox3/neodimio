@@ -1,0 +1,29 @@
+<button
+  type="button"
+  class="user-menu__trigger"
+  aria-haspopup="menu"
+  [attr.aria-label]="'Menú de usuario, ' + displayName()"
+  (click)="toggle($event)"
+>
+  <span class="user-menu__avatar" aria-hidden="true">{{ initials() }}</span>
+</button>
+
+<p-menu #menu [popup]="true" [model]="items()" appendTo="body" styleClass="user-menu__menu">
+  <ng-template #start>
+    <div class="user-menu__header">
+      <span class="user-menu__header-avatar" aria-hidden="true">{{ initials() }}</span>
+      <div class="user-menu__header-texto">
+        <p class="user-menu__name">{{ displayName() }}</p>
+        @if (displayName() !== email()) {
+          <p class="user-menu__email">{{ email() }}</p>
+        }
+        @if (activeTenant(); as tenant) {
+          <p class="user-menu__tenant">
+            <i class="pi pi-building" aria-hidden="true"></i>
+            {{ tenant.nombre }}
+          </p>
+        }
+      </div>
+    </div>
+  </ng-template>
+</p-menu>

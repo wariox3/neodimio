@@ -23,65 +23,6 @@
     width: auto;
     object-fit: contain;
   }
-
-  &__end {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    min-width: 0;
-  }
-
-  &__user {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    min-width: 0;
-  }
-
-  &__avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
-    color: var(--p-primary-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8125rem;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  &__email {
-    max-width: 220px;
-    font-size: 0.8125rem;
-    color: var(--p-text-muted-color);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__logout {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    border-radius: 8px;
-    color: var(--p-text-muted-color);
-    padding: 0.375rem 0.625rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    transition:
-      background 0.15s ease,
-      color 0.15s ease;
-
-    &:hover {
-      background: var(--p-surface-100);
-      color: var(--p-text-color);
-    }
-  }
 }
 
 // ─── Panel ────────────────────────────────────────────────────────────────────
@@ -319,12 +260,6 @@
     border-color: color-mix(in srgb, var(--p-primary-color) 25%, transparent);
   }
 
-  &--actual {
-    color: var(--p-green-700);
-    background: var(--p-green-50);
-    border-color: var(--p-green-200);
-  }
-
   &--inactivo {
     color: var(--p-red-600);
     background: var(--p-red-50);
@@ -341,11 +276,6 @@
     &__title {
       font-size: 1.25rem;
     }
-  }
-
-  .contenedores-navbar__email,
-  .contenedores-navbar__logout span {
-    display: none;
   }
 
   .contenedor-item {

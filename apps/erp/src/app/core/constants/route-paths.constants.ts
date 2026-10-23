@@ -12,7 +12,16 @@ export const ROUTE_PATHS = {
   dashboard: {
     root: '/dashboard',
     inicio: '/dashboard/inicio',
-    apiKeys: '/dashboard/seguridad/api-keys',
-    formatos: '/dashboard/formato/lista',
+    empresa: '/dashboard/empresa',
+    seguridad: {
+      root: '/dashboard/seguridad',
+      usuarios: '/dashboard/seguridad/usuarios/lista',
+      apiKeys: '/dashboard/seguridad/api-keys',
+    },
+    configuracion: {
+      root: '/dashboard/configuracion',
+      formatos: '/dashboard/configuracion/formato/lista',
+      formatoEditar: (id: number) => `/dashboard/configuracion/formato/editar/${id}`,
+    },
   },
 } as const;

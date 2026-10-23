@@ -4,6 +4,8 @@ import { Injectable, computed, signal } from '@angular/core';
 export interface ActiveTenant {
   id: number;
   nombre: string;
+  /** El usuario es propietario de la empresa (`control` de su membresía). */
+  propietario: boolean;
 }
 
 const STORAGE_KEY = 'semantica-active-tenant';
@@ -22,6 +24,7 @@ export class ActiveTenantService {
   readonly tenant = this._tenant.asReadonly();
   readonly tenantId = computed(() => this._tenant()?.id ?? null);
   readonly hasTenant = computed(() => this._tenant() !== null);
+  readonly isPropietario = computed(() => this._tenant()?.propietario === true);
 
   set(tenant: ActiveTenant): void {
     this._tenant.set(tenant);
@@ -55,6 +58,6 @@ export class ActiveTenantService {
 
 function isActiveTenant(value: unknown): value is ActiveTenant {
   if (value === null || typeof value !== 'object') return false;
-  const { id, nombre } = value as Record<string, unknown>;
-  return typeof id === 'number' && typeof nombre === 'string';
+  const { id, nombre, propietario } = value as Record<string, unknown>;
+  return typeof id === 'number' && typeof nombre === 'string' && typeof propietario === 'boolean';
 }

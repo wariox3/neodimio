@@ -21,6 +21,8 @@ export {
   tenantInterceptor,
   ActiveTenantService,
   activeTenantGuard,
+  clearActiveTenantGuard,
+  propietarioGuard,
 } from '@semantica/core';
 export type {
   ApiError,

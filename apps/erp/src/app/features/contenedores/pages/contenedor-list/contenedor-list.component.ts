@@ -16,8 +16,7 @@ import {
   extractErrorMessage,
 } from '../../../../core';
 import { EmptyStateComponent, ErrorAlertComponent } from '../../../../shared';
-import { AuthService } from '../../../auth/services/auth.service';
-import { ApiKeyService } from '../../../seguridad/services/api-key.service';
+import { UserMenuComponent } from '../../../../shared/user-menu/user-menu.component';
 import { InvitacionesPendientesComponent } from '../../components/invitaciones-pendientes/invitaciones-pendientes.component';
 import { InvitarDialogComponent } from '../../components/invitar-dialog/invitar-dialog.component';
 import { Contenedor } from '../../models/contenedor.model';
@@ -38,6 +37,7 @@ import { ContenedorService } from '../../services/contenedor.service';
     ErrorAlertComponent,
     InvitarDialogComponent,
     InvitacionesPendientesComponent,
+    UserMenuComponent,
   ],
   providers: [ConfirmationService],
   templateUrl: './contenedor-list.component.html',
@@ -46,14 +46,9 @@ import { ContenedorService } from '../../services/contenedor.service';
 export class ContenedorListComponent {
   private readonly contenedorService = inject(ContenedorService);
   private readonly activeTenant = inject(ActiveTenantService);
-  private readonly authService = inject(AuthService);
-  private readonly apiKeyService = inject(ApiKeyService);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
   private readonly confirmationService = inject(ConfirmationService);
-
-  readonly currentUser = this.authService.currentUser;
-  readonly activeTenantId = this.activeTenant.tenantId;
 
   readonly contenedores = signal<Contenedor[]>([]);
   readonly loading = signal(true);
@@ -105,7 +100,11 @@ export class ContenedorListComponent {
   /** Fija la empresa activa y entra al dashboard. */
   ingresar(contenedor: Contenedor): void {
     if (!contenedor.activo) return;
-    this.activeTenant.set({ id: contenedor.tenant_id, nombre: this.nombre(contenedor) });
+    this.activeTenant.set({
+      id: contenedor.tenant_id,
+      nombre: this.nombre(contenedor),
+      propietario: contenedor.control,
+    });
     this.router.navigateByUrl(ROUTE_PATHS.dashboard.root);
   }
 
@@ -171,8 +170,6 @@ export class ContenedorListComponent {
     this.contenedorService.salir(contenedor.id).subscribe({
       next: () => {
         this.saliendoId.set(null);
-        // Si era la empresa elegida, se suelta para que el dashboard no la siga usando.
-        if (contenedor.tenant_id === this.activeTenantId()) this.activeTenant.clear();
         this.contenedores.update((lista) => lista.filter((c) => c.id !== contenedor.id));
         this.toastService.success('Saliste de la empresa', `Ya no tienes acceso a ${nombre}.`);
       },
@@ -196,10 +193,5 @@ export class ContenedorListComponent {
 
   inicial(contenedor: Contenedor): string {
     return this.nombre(contenedor).charAt(0).toUpperCase();
-  }
-
-  logout(): void {
-    this.apiKeyService.clearCache();
-    this.authService.logout();
   }
 }
