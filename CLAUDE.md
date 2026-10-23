@@ -9,6 +9,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npx nx serve empleado
 npx nx serve erp
 
+# Serve against the local backend (http://localhost:8000) instead of staging
+npx nx serve empleado --proxy-config=apps/empleado/proxy.conf.local.json
+npx nx serve erp --proxy-config=apps/erp/proxy.conf.local.json
+
 # Build
 npx nx build empleado                        # Production build
 npx nx build empleado --configuration=staging # Staging build

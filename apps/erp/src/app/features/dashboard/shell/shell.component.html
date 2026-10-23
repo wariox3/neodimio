@@ -15,14 +15,18 @@
         <div class="user-info">
           <div class="user-avatar">{{ currentUser()!.email.charAt(0).toUpperCase() }}</div>
           <div class="user-details">
-            @if (currentUser()!.tenant_nombre) {
-              <span class="user-empresa">{{ currentUser()!.tenant_nombre }}</span>
+            @if (activeTenant(); as tenant) {
+              <span class="user-empresa">{{ tenant.nombre }}</span>
             }
             <span class="user-name">{{ currentUser()!.email }}</span>
           </div>
         </div>
         <div class="navbar-divider"></div>
       }
+      <a class="logout-btn" [routerLink]="contenedoresRoute" title="Cambiar empresa">
+        <i class="pi pi-building"></i>
+        <span>Cambiar empresa</span>
+      </a>
       <button class="logout-btn" (click)="logout()" title="Cerrar sesión">
         <i class="pi pi-sign-out"></i>
         <span>Salir</span>

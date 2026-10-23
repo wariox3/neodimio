@@ -17,6 +17,10 @@ export {
   ROUTE_PATHS as ROUTE_PATHS_TOKEN,
   AUTH_SERVICE,
   AUTH_SKIP_URLS,
+  TENANT_SELECTION_PATH,
+  tenantInterceptor,
+  ActiveTenantService,
+  activeTenantGuard,
 } from '@semantica/core';
 export type {
   ApiError,
@@ -31,6 +35,7 @@ export type {
   AuthResponse,
   ResendVerificationRequest,
   ParamValue,
+  ActiveTenant,
 } from '@semantica/core';
 
 // App-specific exports

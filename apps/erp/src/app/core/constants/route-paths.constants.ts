@@ -6,6 +6,9 @@ export const ROUTE_PATHS = {
     forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/restablecer-clave',
   },
+  contenedores: {
+    root: '/contenedores',
+  },
   dashboard: {
     root: '/dashboard',
     inicio: '/dashboard/inicio',

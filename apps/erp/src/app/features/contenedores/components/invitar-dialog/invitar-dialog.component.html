@@ -1,0 +1,56 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '600px' }"
+  [breakpoints]="{ '575px': '95vw' }"
+  styleClass="invitar-dialog"
+>
+  <ng-template pTemplate="header">
+    <div class="invitar-header">
+      <span class="invitar-header__icon">
+        <i class="pi pi-send" aria-hidden="true"></i>
+      </span>
+      <div class="invitar-header__texto">
+        <h2 class="invitar-header__title">
+          Invitar usuario
+          @if (contenedor(); as c) {
+            <span class="invitar-header__empresa">· {{ c.tenant_nombre }}</span>
+          }
+        </h2>
+        <p class="invitar-header__subtitle">
+          El usuario recibirá una invitación para unirse a la empresa.
+        </p>
+      </div>
+    </div>
+  </ng-template>
+
+  @if (visible() && contenedor(); as c) {
+    <div class="invitar-body">
+      <app-invitar-form [contenedor]="c" />
+
+      <p-tabs [value]="activeTab()" (valueChange)="activeTab.set($any($event))">
+        <p-tablist>
+          <p-tab value="miembros">
+            Miembros
+            @if (miembrosCount() !== null) {
+              <span class="invitar-tab-count">({{ miembrosCount() }})</span>
+            }
+          </p-tab>
+        </p-tablist>
+        <p-tabpanels>
+          <p-tabpanel value="miembros">
+            <app-miembros-list [contenedor]="c" (countChange)="miembrosCount.set($event)" />
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cerrar" [outlined]="true" severity="secondary" (onClick)="cerrar()" />
+  </ng-template>
+</p-dialog>

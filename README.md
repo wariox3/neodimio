@@ -42,6 +42,10 @@ npm install
 # Servir una app (dev server con proxy en http://localhost:4200)
 npx nx serve empleado
 npx nx serve erp
+
+# Servir contra el backend local (http://localhost:8000) en vez de staging
+npx nx serve empleado --proxy-config=apps/empleado/proxy.conf.local.json
+npx nx serve erp --proxy-config=apps/erp/proxy.conf.local.json
 ```
 
 ### Build

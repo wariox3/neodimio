@@ -4,6 +4,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { DrawerModule } from 'primeng/drawer';
 import { AuthService } from '../../auth/services/auth.service';
 import { ApiKeyService } from '../../../features/seguridad/services/api-key.service';
+import { ActiveTenantService, ROUTE_PATHS } from '../../../core';
 
 interface NavChild {
   label: string;
@@ -37,6 +38,8 @@ export class ShellComponent {
   private readonly apiKeyService = inject(ApiKeyService);
 
   readonly currentUser = this.authService.currentUser;
+  readonly activeTenant = inject(ActiveTenantService).tenant;
+  readonly contenedoresRoute = ROUTE_PATHS.contenedores.root;
   readonly drawerVisible = signal(false);
 
   /** Conjuntos de labels de grupos actualmente expandidos */
