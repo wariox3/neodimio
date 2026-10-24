@@ -113,6 +113,11 @@
           [loading]="isLoading()"
           [disabled]="isLoading() || !captchaToken()"
         />
+
+        <p class="form-footer">
+          ¿No tienes cuenta?
+          <a routerLink="/auth/register" class="form-footer__link">Regístrate</a>
+        </p>
       </form>
     </div>
   </div>

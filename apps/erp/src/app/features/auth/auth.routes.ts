@@ -20,6 +20,11 @@ export const AUTH_ROUTES: Routes = [
       import('./reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
   },
   {
+    path: 'register',
+    canActivate: [publicGuard],
+    loadComponent: () => import('./register/register.component').then((m) => m.RegisterComponent),
+  },
+  {
     path: 'verify-email',
     canActivate: [publicGuard],
     loadComponent: () =>

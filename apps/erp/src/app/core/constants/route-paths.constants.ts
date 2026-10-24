@@ -5,6 +5,7 @@ export const ROUTE_PATHS = {
     resendVerification: '/auth/resend-verification',
     forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/restablecer-clave',
+    register: '/auth/register',
   },
   contenedores: {
     root: '/contenedores',
