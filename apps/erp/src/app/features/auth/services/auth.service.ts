@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { catchError, of } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 import { ActiveTenantService, BaseAuthService, AuthApiEndpoints } from '@semantica/core';
-import { Usuario } from '../models/auth.model';
+import { RegisterRequest, RegisterResponse, Usuario } from '../models/auth.model';
 import { API_ENDPOINTS, ROUTE_PATHS } from '../../../core';
 
 @Injectable({ providedIn: 'root' })
@@ -30,6 +30,16 @@ export class AuthService extends BaseAuthService<Usuario> {
       .post(`${this.environment.apiUrl}${this.apiEndpoints.logout}`, {})
       .pipe(catchError(() => of(null)))
       .subscribe({ complete: () => this.clearSession() });
+  }
+
+  /**
+   * Registra un nuevo usuario. El backend envía el correo de verificación.
+   */
+  register(data: RegisterRequest): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(
+      `${this.environment.apiUrl}${API_ENDPOINTS.auth.register}`,
+      data,
+    );
   }
 
   /**

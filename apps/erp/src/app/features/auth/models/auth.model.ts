@@ -1,4 +1,9 @@
-import { BaseUsuario, LoginRequest, AuthResponse, ResendVerificationRequest } from '@semantica/core';
+import {
+  BaseUsuario,
+  LoginRequest,
+  AuthResponse,
+  ResendVerificationRequest,
+} from '@semantica/core';
 
 // Re-export for backward compatibility
 export type { LoginRequest, AuthResponse, ResendVerificationRequest };
@@ -6,4 +11,29 @@ export type { LoginRequest, AuthResponse, ResendVerificationRequest };
 export interface Usuario extends BaseUsuario {
   tenant_id: number | null;
   tenant_nombre: string | null;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  nombres: string;
+  apellidos: string;
+  numero_identificacion: string;
+  turnstile_token?: string;
+}
+
+export interface RegisteredUser {
+  id: number;
+  email: string;
+  role: string;
+  tenant_id: number;
+  nombres: string;
+  apellidos: string;
+  numero_identificacion: string;
+  is_verified: boolean;
+}
+
+export interface RegisterResponse {
+  user: RegisteredUser;
+  verification_link: string;
 }

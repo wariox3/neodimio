@@ -252,6 +252,25 @@
   }
 }
 
+// ─── Footer del formulario ────────────────────────────────────────────────────
+.form-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--brand-muted);
+  margin: 0;
+
+  &__link {
+    font-weight: 600;
+    color: var(--brand-blue);
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.75;
+    }
+  }
+}
+
 // ─── Animations ──────────────────────────────────────────────────────────────
 @keyframes fadeUp {
   from {

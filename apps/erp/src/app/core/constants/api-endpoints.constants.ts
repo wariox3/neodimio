@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
     resendVerification: `${USER}/reenviar-verificacion`,
     forgotPassword: `${USER}/recuperar-clave`,
     resetPassword: `${USER}/restablecer-clave`,
+    register: `${USER}/registrar`,
   },
   apiKey: {
     list: '/auth/api-key/lista',

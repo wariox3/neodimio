@@ -1,0 +1,357 @@
+<div class="login-layout">
+  <!-- ── Panel de marca ─────────────────────────────── -->
+  <div class="brand-panel" aria-hidden="true">
+    <div class="brand-panel__bg">
+      <div class="brand-panel__orb brand-panel__orb--1"></div>
+      <div class="brand-panel__orb brand-panel__orb--2"></div>
+      <div class="brand-panel__grid"></div>
+    </div>
+
+    <div class="brand-panel__content">
+      <div class="brand-panel__logo"></div>
+
+      <div class="brand-panel__bottom">
+        <div class="brand-panel__body">
+          <h1 class="brand-panel__title">Semantica<br />ERP</h1>
+          <p class="brand-panel__desc">
+            Gestione su ERP, controle los accesos y administre su empresa desde un solo lugar.
+          </p>
+        </div>
+
+        <div class="brand-panel__chips">
+          <div class="brand-chip"><i class="pi pi-shield"></i> Acceso seguro</div>
+          <div class="brand-chip"><i class="pi pi-lock"></i> HTTP-only cookies</div>
+          <div class="brand-chip"><i class="pi pi-verified"></i> Sesión cifrada</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Panel de formulario ────────────────────────── -->
+  <div class="form-panel">
+    <div class="form-panel__inner">
+      <div class="form-panel__logo">
+        <img src="fondo_transparente.png" alt="Semantica ERP" class="form-panel__logo-img" />
+      </div>
+
+      <a routerLink="/auth/login" class="form-panel__back">
+        <i class="pi pi-arrow-left"></i>
+        Volver al login
+      </a>
+
+      @if (!submitted()) {
+        <div class="form-panel__header">
+          <h2 class="form-panel__title">Crear cuenta</h2>
+          <p class="form-panel__subtitle">Completa tus datos para registrarte en el ERP.</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="auth-form">
+          @if (errorMessage()) {
+            <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+          }
+
+          <div class="field">
+            <label for="nombres" class="field__label">Nombres</label>
+            <input
+              pInputText
+              id="nombres"
+              type="text"
+              formControlName="nombres"
+              fluid
+              placeholder="Juan"
+              [invalid]="nombresControl.invalid && nombresControl.touched"
+              aria-describedby="nombres-error"
+            />
+            @if (nombresControl.invalid && nombresControl.touched) {
+              <small id="nombres-error" class="field__error">
+                @if (nombresControl.hasError('required')) {
+                  Los nombres son requeridos.
+                } @else if (nombresControl.hasError('minlength')) {
+                  Mínimo 2 caracteres.
+                }
+              </small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="apellidos" class="field__label">Apellidos</label>
+            <input
+              pInputText
+              id="apellidos"
+              type="text"
+              formControlName="apellidos"
+              fluid
+              placeholder="Pérez"
+              [invalid]="apellidosControl.invalid && apellidosControl.touched"
+              aria-describedby="apellidos-error"
+            />
+            @if (apellidosControl.invalid && apellidosControl.touched) {
+              <small id="apellidos-error" class="field__error">
+                @if (apellidosControl.hasError('required')) {
+                  Los apellidos son requeridos.
+                } @else if (apellidosControl.hasError('minlength')) {
+                  Mínimo 2 caracteres.
+                }
+              </small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="numero_identificacion" class="field__label">
+              Número de identificación
+            </label>
+            <input
+              pInputText
+              id="numero_identificacion"
+              type="text"
+              formControlName="numero_identificacion"
+              fluid
+              placeholder="1234567890"
+              [invalid]="identificacionControl.invalid && identificacionControl.touched"
+              aria-describedby="identificacion-error"
+            />
+            @if (identificacionControl.invalid && identificacionControl.touched) {
+              <small id="identificacion-error" class="field__error">
+                El número de identificación es requerido.
+              </small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="email" class="field__label">Correo electrónico</label>
+            <input
+              pInputText
+              id="email"
+              type="email"
+              formControlName="email"
+              fluid
+              placeholder="usuario@ejemplo.com"
+              [invalid]="emailControl.invalid && emailControl.touched"
+              aria-describedby="email-error"
+            />
+            @if (emailControl.invalid && emailControl.touched) {
+              <small id="email-error" class="field__error">
+                @if (emailControl.hasError('required')) {
+                  El correo es requerido.
+                } @else if (emailControl.hasError('email')) {
+                  Ingresa un correo válido.
+                }
+              </small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="password" class="field__label">Contraseña</label>
+            <p-password
+              inputId="password"
+              formControlName="password"
+              fluid
+              [toggleMask]="true"
+              placeholder="••••••••"
+              [invalid]="passwordControl.invalid && passwordControl.touched"
+              aria-describedby="password-error"
+            />
+            @if (passwordControl.invalid && passwordControl.touched) {
+              <small id="password-error" class="field__error">
+                @if (passwordControl.hasError('required')) {
+                  La contraseña es requerida.
+                } @else if (passwordControl.hasError('minlength')) {
+                  Mínimo 8 caracteres.
+                }
+              </small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="confirmPassword" class="field__label">Confirmar contraseña</label>
+            <p-password
+              inputId="confirmPassword"
+              formControlName="confirmPassword"
+              fluid
+              [toggleMask]="true"
+              [feedback]="false"
+              placeholder="••••••••"
+              [invalid]="
+                (confirmPasswordControl.invalid && confirmPasswordControl.touched) ||
+                (form.hasError('passwordMismatch') && confirmPasswordControl.touched)
+              "
+              aria-describedby="confirm-error"
+            />
+            @if (
+              (confirmPasswordControl.invalid && confirmPasswordControl.touched) ||
+              (form.hasError('passwordMismatch') && confirmPasswordControl.touched)
+            ) {
+              <small id="confirm-error" class="field__error">
+                @if (confirmPasswordControl.hasError('required')) {
+                  Debes confirmar la contraseña.
+                } @else if (form.hasError('passwordMismatch')) {
+                  Las contraseñas no coinciden.
+                }
+              </small>
+            }
+          </div>
+
+          <div class="field field--terms">
+            <p-checkbox
+              [binary]="true"
+              [ngModel]="termsAccepted()"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="termsAccepted.set($event)"
+              inputId="terms"
+            />
+            <label for="terms" class="field__terms-label">
+              Acepto los
+              <a (click)="termsDialogVisible.set(true); $event.preventDefault()" href="#">
+                términos y condiciones
+              </a>
+            </label>
+          </div>
+
+          <app-turnstile
+            (verified)="captchaToken.set($event)"
+            (expired)="captchaToken.set(null)"
+            (errored)="captchaToken.set(null)"
+          />
+
+          <p-button
+            type="submit"
+            label="Crear cuenta"
+            fluid
+            styleClass="auth-btn"
+            [loading]="isLoading()"
+            [disabled]="isLoading() || !captchaToken() || !termsAccepted()"
+          />
+
+          <p class="form-footer">
+            ¿Ya tienes cuenta?
+            <a routerLink="/auth/login" class="form-footer__link">Inicia sesión</a>
+          </p>
+        </form>
+      } @else {
+        <div class="success-state">
+          <div class="success-state__icon">
+            <i class="pi pi-check-circle"></i>
+          </div>
+          <h2 class="success-state__title">¡Registro exitoso!</h2>
+          <p class="success-state__desc">
+            Tu cuenta fue creada correctamente. Recibirás un correo de confirmación para verificar
+            tu cuenta.
+          </p>
+          <a routerLink="/auth/login" class="success-state__back">Ir al login ahora</a>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<p-dialog
+  header="Términos y condiciones"
+  [(visible)]="termsDialogVisible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [style]="{ width: '680px', maxHeight: '80vh' }"
+  [breakpoints]="{ '768px': '95vw' }"
+>
+  <div class="terms-content">
+    <section>
+      <h3>1. Aceptación de términos</h3>
+      <p>
+        Al acceder y utilizar el ERP de Semantica S.A.S. (en adelante "Semantica" o "la
+        plataforma"), usted acepta cumplir con los presentes términos y condiciones de uso. Si no
+        está de acuerdo con alguna parte de estos términos, le solicitamos abstenerse de utilizar la
+        plataforma.
+      </p>
+    </section>
+
+    <section>
+      <h3>2. Descripción del servicio</h3>
+      <p>
+        Semantica es una plataforma web de gestión empresarial que permite a los administradores
+        acceder a servicios como:
+      </p>
+      <ul>
+        <li>Administración de empresas y usuarios.</li>
+        <li>Gestión de claves de API y permisos de seguridad.</li>
+        <li>Configuración de formatos y documentos.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>3. Cuentas y credenciales</h3>
+      <p>
+        Para acceder a la plataforma, usted debe registrarse con un correo electrónico válido y
+        crear una contraseña segura. Usted es responsable de:
+      </p>
+      <ul>
+        <li>Mantener la confidencialidad de sus credenciales de acceso.</li>
+        <li>Notificar de inmediato cualquier uso no autorizado de su cuenta.</li>
+        <li>Toda la actividad que ocurra bajo su cuenta, sea o no autorizada por usted.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>4. Uso aceptable</h3>
+      <p>
+        El usuario se compromete a utilizar la plataforma únicamente para los fines empresariales
+        previstos. Queda prohibido:
+      </p>
+      <ul>
+        <li>Intentar acceder a información de otras empresas o cuentas sin autorización.</li>
+        <li>Utilizar la plataforma para actividades ilegales, fraudulentas o no autorizadas.</li>
+        <li>Interferir con el funcionamiento normal de la plataforma.</li>
+        <li>Compartir claves de API con terceros no autorizados.</li>
+        <li>Utilizar herramientas automatizadas para extraer información sin autorización.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>5. Propiedad intelectual</h3>
+      <p>
+        Todo el contenido de la plataforma es propiedad de Semantica o de sus licenciantes y está
+        protegido por las leyes de propiedad intelectual de Colombia y los tratados internacionales
+        aplicables.
+      </p>
+    </section>
+
+    <section>
+      <h3>6. Disponibilidad del servicio</h3>
+      <p>
+        Semantica se esfuerza por mantener la plataforma disponible las 24 horas del día, los 7 días
+        de la semana. Sin embargo, no garantizamos que el servicio será ininterrumpido o libre de
+        errores.
+      </p>
+    </section>
+
+    <section>
+      <h3>7. Limitación de responsabilidad</h3>
+      <p>
+        Semantica no será responsable por daños directos, indirectos, incidentales, consecuentes o
+        punitivos que resulten del uso o la imposibilidad de uso de la plataforma.
+      </p>
+    </section>
+
+    <section>
+      <h3>8. Modificaciones a los términos</h3>
+      <p>
+        Semantica se reserva el derecho de modificar estos términos de uso en cualquier momento. Las
+        modificaciones entrarán en vigencia a partir de su publicación en esta página.
+      </p>
+    </section>
+
+    <section>
+      <h3>9. Ley aplicable y jurisdicción</h3>
+      <p>
+        Los presentes términos se rigen por las leyes de la República de Colombia. Cualquier
+        controversia será sometida a la jurisdicción de los tribunales de Bogotá D.C., Colombia.
+      </p>
+    </section>
+
+    <section>
+      <h3>10. Contacto</h3>
+      <p>Para consultas sobre estos términos:</p>
+      <ul>
+        <li><strong>Correo:</strong> soporte&#64;semantica.com.co</li>
+      </ul>
+    </section>
+  </div>
+</p-dialog>
