@@ -2,11 +2,9 @@ import { Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { BaseHttpService, API_ENDPOINTS, PaginatedResponse } from '../../../core';
 import {
-  UsuarioListItem,
   UsuarioTenantItem,
   UsuarioTenantFilters,
   UsuarioTenantUpdateRequest,
-  CreateUsuarioRequest,
 } from '../models/usuario.model';
 
 @Injectable({ providedIn: 'root' })
@@ -50,7 +48,8 @@ export class UsuarioService extends BaseHttpService {
     return this.patch<UsuarioTenantItem>(API_ENDPOINTS.userTenant.actualizar(id), req);
   }
 
-  createUsuario(req: CreateUsuarioRequest): Observable<UsuarioListItem> {
-    return this.post<UsuarioListItem>(API_ENDPOINTS.user.create, req);
+  /** Quita al usuario de la empresa borrando su membresía. Solo para el propietario de la empresa. */
+  deleteUsuarioTenant(id: number): Observable<unknown> {
+    return this.delete<unknown>(API_ENDPOINTS.userTenant.eliminar(id));
   }
 }

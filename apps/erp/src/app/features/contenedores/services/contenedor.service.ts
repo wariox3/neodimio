@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { BaseHttpService, PaginatedResponse } from '../../../core';
+import { API_ENDPOINTS, BaseHttpService, PaginatedResponse } from '../../../core';
 import { Contenedor } from '../models/contenedor.model';
 
 /** Tope de empresas por usuario que se traen de una vez; la búsqueda es local. */
@@ -18,9 +18,9 @@ export class ContenedorService extends BaseHttpService {
 
   /**
    * Sale de la empresa borrando la membresía propia (`id` de `/mas/user-tenant/lista`).
-   * El backend solo permite borrar la membresía del usuario autenticado.
+   * Cualquier miembro puede borrar la suya.
    */
   salir(userTenantId: number): Observable<unknown> {
-    return this.delete<unknown>(`/mas/user-tenant/eliminar/${userTenantId}`);
+    return this.delete<unknown>(API_ENDPOINTS.userTenant.eliminar(userTenantId));
   }
 }

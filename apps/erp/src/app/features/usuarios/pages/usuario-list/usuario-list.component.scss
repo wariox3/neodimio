@@ -54,10 +54,11 @@
   color: var(--p-text-muted-color);
 }
 
-// Columna de acciones: ancho fijo y centrada (mismo criterio que la lista de formatos).
+// Columna de acciones: ancho fijo y centrada; cabe editar + quitar sin partirse en dos líneas.
 .col-actions {
-  width: 100px;
+  width: 120px;
   text-align: center;
+  white-space: nowrap;
 }
 
 // ─── Celda de usuario (avatar + nombre + email) ──────────────────────────────
@@ -159,9 +160,9 @@
   }
 }
 
-// ─── Formulario de creación ──────────────────────────────────────────────────
+// ─── Formulario del diálogo de edición ───────────────────────────────────────
 
-.create-form {
+.dialog-form {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -178,10 +179,6 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--p-text-color);
-}
-
-.required {
-  color: var(--p-red-500);
 }
 
 .field-error {

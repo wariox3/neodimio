@@ -32,6 +32,11 @@ export const DASHBOARD_AREAS: Record<DashboardArea, DashboardAreaConfig> = {
     icon: 'pi pi-shield',
     items: [
       { label: 'Usuarios', icon: 'pi pi-users', route: ROUTE_PATHS.dashboard.seguridad.usuarios },
+      {
+        label: 'Invitaciones',
+        icon: 'pi pi-envelope',
+        route: ROUTE_PATHS.dashboard.seguridad.invitaciones,
+      },
       { label: 'API Keys', icon: 'pi pi-key', route: ROUTE_PATHS.dashboard.seguridad.apiKeys },
     ],
   },

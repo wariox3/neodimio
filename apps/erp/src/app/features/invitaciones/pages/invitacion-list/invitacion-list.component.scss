@@ -1,0 +1,59 @@
+// Fila de "sin resultados" cuando no hay invitaciones pendientes.
+.empty-row {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--p-text-muted-color);
+}
+
+// Columna de fecha: ancho fijo y sin partirse en dos líneas.
+.col-fecha {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--p-text-muted-color);
+}
+
+// ─── Celda de usuario (avatar + nombre + email) ──────────────────────────────
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-cell__avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-primary-contrast-color);
+  background: var(--p-primary-color);
+}
+
+.user-cell__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-cell__name {
+  font-weight: 500;
+  color: var(--p-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-cell__email {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

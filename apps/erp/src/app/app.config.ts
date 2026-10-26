@@ -126,6 +126,9 @@ export const appConfig: ApplicationConfig = {
         preset: SemanticaPreset,
         options: { darkModeSelector: '.dark-mode' },
       },
+      // Overlays (select, autocomplete, paginador…) en <body>: dentro de contenedores con
+      // `overflow: hidden` (p. ej. `.table-card`) quedan recortados y desplazan el contenido.
+      overlayAppendTo: 'body',
     }),
   ],
 };

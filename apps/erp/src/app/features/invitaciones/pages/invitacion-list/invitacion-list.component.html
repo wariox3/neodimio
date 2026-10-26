@@ -1,0 +1,74 @@
+<div class="page-container">
+  <app-page-header
+    title="Invitaciones"
+    subtitle="Invitaciones enviadas que aún no han sido respondidas"
+    icon="pi pi-envelope"
+  />
+
+  <div class="table-card">
+    <p-table
+      [value]="invitaciones()"
+      [lazy]="true"
+      [lazyLoadOnInit]="false"
+      [first]="first()"
+      [totalRecords]="totalRecords()"
+      [loading]="loading()"
+      [rowHover]="true"
+      [paginator]="true"
+      [rows]="rows()"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onLazyLoad)="onLazyLoad($event)"
+      [scrollable]="true"
+      scrollHeight="600px"
+    >
+      <ng-template #header>
+        <tr>
+          <th>Invitado</th>
+          <th>Invitado por</th>
+          <th class="col-fecha">Fecha</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-invitacion>
+        <tr>
+          <!-- Invitado: avatar + nombre + email -->
+          <td>
+            <div class="user-cell">
+              <div class="user-cell__avatar">{{ initial(invitacion) }}</div>
+              <div class="user-cell__info">
+                <span class="user-cell__name">{{ invitadoNombre(invitacion) }}</span>
+                @if (invitacion.usuario_invitado_nombre) {
+                  <span class="user-cell__email">{{ invitacion.usuario_invitado_email }}</span>
+                }
+              </div>
+            </div>
+          </td>
+
+          <!-- Quien invitó; puede haber sido eliminado -->
+          <td>
+            @if (invitacion.usuario_nombre || invitacion.usuario_email) {
+              <div class="user-cell__info">
+                <span class="user-cell__name">
+                  {{ invitacion.usuario_nombre || invitacion.usuario_email }}
+                </span>
+                @if (invitacion.usuario_nombre && invitacion.usuario_email) {
+                  <span class="user-cell__email">{{ invitacion.usuario_email }}</span>
+                }
+              </div>
+            } @else {
+              <span class="muted">Usuario eliminado</span>
+            }
+          </td>
+
+          <td class="col-fecha">{{ invitacion.fecha | date: 'dd/MM/yyyy' }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="3" class="empty-row">No hay invitaciones pendientes.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

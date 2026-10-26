@@ -35,6 +35,11 @@ export const DASHBOARD_ROUTES: Routes = [
               import('../usuarios/usuarios.routes').then((m) => m.USUARIOS_ROUTES),
           },
           {
+            path: 'invitaciones',
+            loadChildren: () =>
+              import('../invitaciones/invitaciones.routes').then((m) => m.INVITACIONES_ROUTES),
+          },
+          {
             path: '',
             loadChildren: () =>
               import('../seguridad/seguridad.routes').then((m) => m.SEGURIDAD_ROUTES),
