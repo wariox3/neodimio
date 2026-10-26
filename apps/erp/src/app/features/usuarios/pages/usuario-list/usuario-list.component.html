@@ -1,122 +1,153 @@
 <div class="page-container">
   <app-page-header
     title="Usuarios"
-    subtitle="Gestiona las personas con acceso a la plataforma"
+    subtitle="Gestiona las personas con acceso a la empresa"
     icon="pi pi-users"
   >
     <p-button label="Nuevo usuario" icon="pi pi-plus" (onClick)="openCreateDialog()" />
   </app-page-header>
 
-  @if (loading() && usuarios().length === 0 && !hasActiveFilters()) {
-    <app-loading-spinner message="Cargando usuarios..." />
-  } @else if (!loading() && usuarios().length === 0 && !hasActiveFilters()) {
-    <app-empty-state
-      title="Sin usuarios"
-      message="Aún no hay usuarios registrados. Crea el primero para darle acceso a la plataforma."
-      icon="pi pi-users"
-    >
-      <p-button
-        label="Crear primer usuario"
-        icon="pi pi-plus"
-        [outlined]="true"
-        (onClick)="openCreateDialog()"
-      />
-    </app-empty-state>
-  } @else {
-    <div class="table-card">
-      <!-- Filtros: búsqueda por correo + filtro por rol -->
-      <div class="table-toolbar">
-        <p-iconfield class="toolbar-search">
-          <p-inputicon class="pi pi-search" />
-          <input
-            pInputText
-            type="text"
-            placeholder="Buscar por correo..."
-            [value]="searchEmail()"
-            (input)="onSearchInput($any($event.target).value)"
-          />
-        </p-iconfield>
-
-        <p-select
-          class="toolbar-role"
-          [options]="roleFilterOptions"
-          [ngModel]="selectedRole()"
-          (onChange)="onRoleChange($event.value)"
-          (onClear)="onRoleChange(null)"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Todos los roles"
-          [showClear]="true"
-          appendTo="body"
+  <div class="table-card">
+    <!-- Filtros: correo, usuario semantica, acceso al ERP y control -->
+    <div class="table-toolbar">
+      <p-iconfield class="toolbar-search">
+        <p-inputicon class="pi pi-search" />
+        <input
+          pInputText
+          type="text"
+          placeholder="Buscar por correo..."
+          aria-label="Buscar por correo"
+          [value]="searchEmail()"
+          (input)="onEmailInput($any($event.target).value)"
         />
-      </div>
+      </p-iconfield>
 
-      <p-table
-        [value]="usuarios()"
-        [lazy]="true"
-        [lazyLoadOnInit]="false"
-        [first]="first()"
-        [totalRecords]="totalRecords()"
-        [loading]="loading()"
-        [rowHover]="true"
-        [paginator]="true"
-        [rows]="rows()"
-        [rowsPerPageOptions]="[10, 25, 50]"
-        (onLazyLoad)="onLazyLoad($event)"
-        [scrollable]="true"
-        scrollHeight="600px"
-      >
-        <ng-template #header>
-          <tr>
-            <th>Usuario</th>
-            <th>Rol</th>
-            <th>Verificado</th>
-          </tr>
-        </ng-template>
+      <p-iconfield class="toolbar-search">
+        <p-inputicon class="pi pi-id-card" />
+        <input
+          pInputText
+          type="text"
+          placeholder="Buscar por usuario semantica..."
+          aria-label="Buscar por usuario semantica"
+          [value]="searchCodigo()"
+          (input)="onCodigoInput($any($event.target).value)"
+        />
+      </p-iconfield>
 
-        <ng-template #body let-usuario>
-          <tr>
-            <!-- Usuario: avatar + nombre + email -->
-            <td>
-              <div class="user-cell">
-                <div class="user-cell__avatar">{{ initial(usuario) }}</div>
-                <div class="user-cell__info">
-                  <span class="user-cell__name">{{ displayName(usuario) }}</span>
-                  @if (hasName(usuario)) {
-                    <span class="user-cell__email">{{ usuario.email }}</span>
-                  }
-                </div>
-              </div>
-            </td>
+      <p-select
+        class="toolbar-select"
+        [options]="erpFilterOptions"
+        [ngModel]="erpFilter()"
+        (onChange)="onErpChange($event.value)"
+        optionLabel="label"
+        optionValue="value"
+        ariaLabel="Acceso al ERP"
+        appendTo="body"
+      />
 
-            <!-- Rol -->
-            <td>
-              <span class="role-pill" [class.role-pill--admin]="usuario.role === 'admin'">
-                {{ roleLabel(usuario.role) }}
-              </span>
-            </td>
-
-            <!-- Verificado -->
-            <td>
-              @if (usuario.is_verified) {
-                <span class="status status--ok">
-                  <i class="pi pi-check-circle"></i> Verificado
-                </span>
-              } @else {
-                <span class="status status--pending"> <i class="pi pi-clock"></i> Pendiente </span>
-              }
-            </td>
-          </tr>
-        </ng-template>
-
-        <ng-template #emptymessage>
-          <tr>
-            <td colspan="3" class="empty-row">No se encontraron usuarios con esos filtros.</td>
-          </tr>
-        </ng-template>
-      </p-table>
+      <p-select
+        class="toolbar-select"
+        [options]="controlFilterOptions"
+        [ngModel]="controlFilter()"
+        (onChange)="onControlChange($event.value)"
+        (onClear)="onControlChange(null)"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Control: todos"
+        ariaLabel="Control"
+        [showClear]="true"
+        appendTo="body"
+      />
     </div>
-  }
+
+    <p-table
+      [value]="usuarios()"
+      [lazy]="true"
+      [lazyLoadOnInit]="false"
+      [first]="first()"
+      [totalRecords]="totalRecords()"
+      [loading]="loading()"
+      [rowHover]="true"
+      [paginator]="true"
+      [rows]="rows()"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onLazyLoad)="onLazyLoad($event)"
+      [scrollable]="true"
+      scrollHeight="600px"
+    >
+      <ng-template #header>
+        <tr>
+          <th>Usuario</th>
+          <th>Usuario semantica</th>
+          <th>Control</th>
+          <th>Estado</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-usuario>
+        <tr>
+          <!-- Usuario: avatar + nombre + email -->
+          <td>
+            <div class="user-cell">
+              <div class="user-cell__avatar">{{ initial(usuario) }}</div>
+              <div class="user-cell__info">
+                <span class="user-cell__name">{{ displayName(usuario) }}</span>
+                @if (hasName(usuario)) {
+                  <span class="user-cell__email">{{ usuario.email }}</span>
+                }
+              </div>
+            </div>
+          </td>
+
+          <!-- Código del usuario en Semantica -->
+          <td>
+            @if (usuario.codigo_usuario_fk) {
+              <span class="code">{{ usuario.codigo_usuario_fk }}</span>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </td>
+
+          <!-- Control: propietario de la empresa -->
+          <td>
+            <span class="control-pill" [class.control-pill--yes]="usuario.control">
+              {{ usuario.control ? 'Sí' : 'No' }}
+            </span>
+          </td>
+
+          <!-- Estado de la membresía -->
+          <td>
+            @if (usuario.activo) {
+              <span class="status status--ok"> <i class="pi pi-check-circle"></i> Activo </span>
+            } @else {
+              <span class="status status--inactive"> <i class="pi pi-ban"></i> Inactivo </span>
+            }
+          </td>
+
+          <!-- Acciones -->
+          <td class="col-actions">
+            <p-button
+              icon="pi pi-pencil"
+              severity="secondary"
+              [text]="true"
+              [rounded]="true"
+              pTooltip="Editar usuario"
+              tooltipPosition="top"
+              [ariaLabel]="'Editar ' + displayName(usuario)"
+              (onClick)="openEditDialog(usuario)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="5" class="empty-row">No se encontraron usuarios con esos filtros.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
 </div>
 
 <!-- Diálogo: crear usuario -->
@@ -240,6 +271,65 @@
       icon="pi pi-user-plus"
       [loading]="submitting()"
       (onClick)="submitCreate()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Diálogo: editar usuario (solo el código del usuario en Semantica) -->
+<p-dialog
+  [visible]="editingUsuario() !== null"
+  (visibleChange)="!$event && closeEditDialog()"
+  header="Editar usuario"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '480px' }"
+  [breakpoints]="{ '575px': '95vw' }"
+>
+  @if (editingUsuario(); as usuario) {
+    <form [formGroup]="editForm" (ngSubmit)="submitEdit()" class="create-form" autocomplete="off">
+      <!-- Usuario que se edita (solo lectura) -->
+      <div class="user-cell">
+        <div class="user-cell__avatar">{{ initial(usuario) }}</div>
+        <div class="user-cell__info">
+          <span class="user-cell__name">{{ displayName(usuario) }}</span>
+          @if (hasName(usuario)) {
+            <span class="user-cell__email">{{ usuario.email }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Usuario semantica -->
+      <div class="form-field">
+        <label for="user-codigo" class="form-label">Usuario semantica</label>
+        <input
+          id="user-codigo"
+          pInputText
+          type="text"
+          formControlName="codigoUsuario"
+          placeholder="Código del usuario en Semantica"
+          class="w-full"
+          [attr.maxlength]="codigoMaxLength"
+          [class.ng-invalid]="
+            editForm.controls.codigoUsuario.invalid && editForm.controls.codigoUsuario.touched
+          "
+        />
+        @if (editForm.controls.codigoUsuario.invalid && editForm.controls.codigoUsuario.touched) {
+          <span class="field-error">Máximo {{ codigoMaxLength }} caracteres.</span>
+        } @else {
+          <span class="field-hint">Déjalo vacío para quitar el código.</span>
+        }
+      </div>
+    </form>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="closeEditDialog()" />
+    <p-button
+      label="Guardar"
+      icon="pi pi-check"
+      [loading]="savingEdit()"
+      (onClick)="submitEdit()"
     />
   </ng-template>
 </p-dialog>

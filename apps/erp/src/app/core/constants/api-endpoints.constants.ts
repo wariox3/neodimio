@@ -25,6 +25,10 @@ export const API_ENDPOINTS = {
   tenant: {
     buscar: '/auth/tenant/seleccionar',
   },
+  userTenant: {
+    listaTenant: '/mas/user-tenant/lista-tenant',
+    actualizar: (id: number) => `/mas/user-tenant/${id}/actualizar`,
+  },
   formato: {
     list: '/gen/formato/lista',
     byId: (id: number) => `/gen/formato/${id}`,

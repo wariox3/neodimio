@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { ShellComponent } from './shell/shell.component';
-import { authGuard, propietarioGuard, roleGuard } from '../../core';
+import { authGuard, propietarioGuard } from '../../core';
 import { DashboardArea } from './shell/dashboard-areas';
 
 /**
@@ -30,8 +30,7 @@ export const DASHBOARD_ROUTES: Routes = [
         children: [
           {
             path: 'usuarios',
-            canActivate: [authGuard, roleGuard],
-            data: { roles: ['admin'] },
+            canActivate: [authGuard],
             loadChildren: () =>
               import('../usuarios/usuarios.routes').then((m) => m.USUARIOS_ROUTES),
           },

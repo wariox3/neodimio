@@ -29,10 +29,11 @@ export class InvitacionService extends BaseHttpService {
     }).pipe(map((res) => res?.items ?? []));
   }
 
-  /** Miembros de la empresa. Solo para su propietario (`control`). */
+  /** Miembros ERP de la empresa (`erp=true`). Solo para su propietario (`control`). */
   getMiembros(tenantId: number): Observable<ContenedorMiembro[]> {
     return this.get<PaginatedResponse<ContenedorMiembro>>('/mas/user-tenant/lista-tenant', {
       tenant_id: tenantId,
+      erp: true,
       page: 1,
       size: MAX_REGISTROS,
     }).pipe(map((res) => res?.items ?? []));
