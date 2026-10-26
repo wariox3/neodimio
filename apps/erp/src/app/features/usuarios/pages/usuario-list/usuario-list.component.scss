@@ -1,9 +1,11 @@
 // ─── Barra de filtros ────────────────────────────────────────────────────────
-// Búsqueda por correo (crece) + filtro de rol (ancho fijo). Pegada a la tabla
-// mediante un borde inferior tenue; en móvil los controles se apilan.
+// Búsquedas por correo y usuario semantica + selects de acceso al ERP y control,
+// todos de ancho fijo. Si no caben en una fila pasan a la siguiente; en móvil se
+// apilan. Pegada a la tabla mediante un borde inferior tenue.
 
 .table-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
   // Padding horizontal = inset de las celdas (alinea el buscador con las columnas).
@@ -25,7 +27,7 @@
   }
 }
 
-.toolbar-role {
+.toolbar-select {
   width: 200px;
 
   ::ng-deep .p-select {
@@ -40,16 +42,22 @@
   }
 
   .toolbar-search,
-  .toolbar-role {
+  .toolbar-select {
     width: 100%;
   }
 }
 
-// Fila de "sin resultados" cuando un filtro no arroja coincidencias.
+// Fila de "sin resultados" cuando los filtros no arrojan coincidencias.
 .empty-row {
   padding: 1.5rem;
   text-align: center;
   color: var(--p-text-muted-color);
+}
+
+// Columna de acciones: ancho fijo y centrada (mismo criterio que la lista de formatos).
+.col-actions {
+  width: 100px;
+  text-align: center;
 }
 
 // ─── Celda de usuario (avatar + nombre + email) ──────────────────────────────
@@ -95,10 +103,22 @@
   white-space: nowrap;
 }
 
-// ─── Rol ─────────────────────────────────────────────────────────────────────
-// Empleado: pill neutral. Administrador: pill de marca (jerarquía visible).
+// ─── Usuario semantica ───────────────────────────────────────────────────────
 
-.role-pill {
+.code {
+  font-family: var(--p-font-family-mono, monospace);
+  font-size: 0.8125rem;
+  color: var(--p-text-color);
+}
+
+.muted {
+  color: var(--p-text-muted-color);
+}
+
+// ─── Control ─────────────────────────────────────────────────────────────────
+// No: pill neutral. Sí (propietario): pill de marca (jerarquía visible).
+
+.control-pill {
   display: inline-flex;
   align-items: center;
   font-size: 0.75rem;
@@ -110,14 +130,14 @@
   background: var(--p-surface-100);
   border: 1px solid var(--p-surface-200);
 
-  &--admin {
+  &--yes {
     color: var(--p-primary-color);
     background: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
     border-color: color-mix(in srgb, var(--p-primary-color) 25%, transparent);
   }
 }
 
-// ─── Estado de verificación ──────────────────────────────────────────────────
+// ─── Estado de la membresía ──────────────────────────────────────────────────
 
 .status {
   display: inline-flex;
@@ -134,8 +154,8 @@
     color: var(--p-green-600);
   }
 
-  &--pending {
-    color: var(--p-orange-500);
+  &--inactive {
+    color: var(--p-text-muted-color);
   }
 }
 
@@ -167,5 +187,11 @@
 .field-error {
   font-size: 0.75rem;
   color: var(--p-red-500);
+  margin-top: 0.125rem;
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
   margin-top: 0.125rem;
 }
