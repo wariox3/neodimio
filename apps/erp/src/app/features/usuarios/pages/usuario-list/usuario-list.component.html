@@ -3,9 +3,7 @@
     title="Usuarios"
     subtitle="Gestiona las personas con acceso a la empresa"
     icon="pi pi-users"
-  >
-    <p-button label="Nuevo usuario" icon="pi pi-plus" (onClick)="openCreateDialog()" />
-  </app-page-header>
+  />
 
   <div class="table-card">
     <!-- Filtros: correo, usuario semantica, acceso al ERP y control -->
@@ -137,6 +135,19 @@
               [ariaLabel]="'Editar ' + displayName(usuario)"
               (onClick)="openEditDialog(usuario)"
             />
+            @if (canDelete(usuario)) {
+              <p-button
+                icon="pi pi-trash"
+                severity="danger"
+                [text]="true"
+                [rounded]="true"
+                pTooltip="Retirar de la empresa"
+                tooltipPosition="top"
+                [ariaLabel]="'Retirar ' + displayName(usuario) + ' de la empresa'"
+                [loading]="deletingId() === usuario.id"
+                (onClick)="confirmDelete(usuario)"
+              />
+            }
           </td>
         </tr>
       </ng-template>
@@ -150,131 +161,6 @@
   </div>
 </div>
 
-<!-- Diálogo: crear usuario -->
-<p-dialog
-  [visible]="createDialogVisible()"
-  (visibleChange)="createDialogVisible.set($event)"
-  header="Nuevo usuario"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  styleClass="create-dialog"
-  [style]="{ width: '480px' }"
-  [breakpoints]="{ '575px': '95vw' }"
->
-  <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="create-form" autocomplete="off">
-    <!-- Correo -->
-    <div class="form-field">
-      <label for="user-email" class="form-label"
-        >Correo electrónico <span class="required">*</span></label
-      >
-      <input
-        id="user-email"
-        pInputText
-        type="email"
-        formControlName="email"
-        placeholder="usuario@empresa.com"
-        class="w-full"
-        [class.ng-invalid]="createForm.controls.email.invalid && createForm.controls.email.touched"
-      />
-      @if (createForm.controls.email.invalid && createForm.controls.email.touched) {
-        <span class="field-error">
-          @if (createForm.controls.email.errors?.['required']) {
-            El correo es obligatorio.
-          } @else if (createForm.controls.email.errors?.['email']) {
-            Ingresa un correo válido.
-          }
-        </span>
-      }
-    </div>
-
-    <!-- Contraseña -->
-    <div class="form-field">
-      <label for="user-password" class="form-label"
-        >Contraseña <span class="required">*</span></label
-      >
-      <p-password
-        inputId="user-password"
-        formControlName="password"
-        fluid
-        [toggleMask]="true"
-        placeholder="Mínimo 8 caracteres"
-        [invalid]="createForm.controls.password.invalid && createForm.controls.password.touched"
-        promptLabel="Ingresa una contraseña"
-        weakLabel="Débil"
-        mediumLabel="Media"
-        strongLabel="Fuerte"
-      />
-      @if (createForm.controls.password.invalid && createForm.controls.password.touched) {
-        <span class="field-error">
-          @if (createForm.controls.password.errors?.['required']) {
-            La contraseña es obligatoria.
-          } @else if (createForm.controls.password.errors?.['minlength']) {
-            Mínimo 8 caracteres.
-          }
-        </span>
-      }
-    </div>
-
-    <!-- Rol -->
-    <div class="form-field">
-      <label for="user-role" class="form-label">Rol <span class="required">*</span></label>
-      <p-select
-        inputId="user-role"
-        formControlName="role"
-        [options]="roleOptions"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Selecciona un rol"
-        appendTo="body"
-        [style]="{ width: '100%' }"
-        [invalid]="createForm.controls.role.invalid && createForm.controls.role.touched"
-      />
-      @if (createForm.controls.role.invalid && createForm.controls.role.touched) {
-        <span class="field-error">El rol es obligatorio.</span>
-      }
-    </div>
-
-    <!-- Empresa / Tenant -->
-    <div class="form-field">
-      <label for="user-tenant" class="form-label">Empresa <span class="required">*</span></label>
-      <p-autocomplete
-        inputId="user-tenant"
-        formControlName="tenant"
-        [suggestions]="tenantSuggestions()"
-        (completeMethod)="onSearchTenants($event)"
-        optionLabel="nombre"
-        [forceSelection]="true"
-        [delay]="300"
-        placeholder="Escribe para buscar una empresa..."
-        emptyMessage="No se encontraron empresas"
-        appendTo="body"
-        [style]="{ width: '100%' }"
-        [inputStyle]="{ width: '100%' }"
-        [invalid]="createForm.controls.tenant.invalid && createForm.controls.tenant.touched"
-      />
-      @if (createForm.controls.tenant.invalid && createForm.controls.tenant.touched) {
-        <span class="field-error">La empresa es obligatoria.</span>
-      }
-    </div>
-  </form>
-
-  <ng-template pTemplate="footer">
-    <p-button
-      label="Cancelar"
-      [text]="true"
-      severity="secondary"
-      (onClick)="createDialogVisible.set(false)"
-    />
-    <p-button
-      label="Crear usuario"
-      icon="pi pi-user-plus"
-      [loading]="submitting()"
-      (onClick)="submitCreate()"
-    />
-  </ng-template>
-</p-dialog>
-
 <!-- Diálogo: editar usuario (solo el código del usuario en Semantica) -->
 <p-dialog
   [visible]="editingUsuario() !== null"
@@ -287,7 +173,7 @@
   [breakpoints]="{ '575px': '95vw' }"
 >
   @if (editingUsuario(); as usuario) {
-    <form [formGroup]="editForm" (ngSubmit)="submitEdit()" class="create-form" autocomplete="off">
+    <form [formGroup]="editForm" (ngSubmit)="submitEdit()" class="dialog-form" autocomplete="off">
       <!-- Usuario que se edita (solo lectura) -->
       <div class="user-cell">
         <div class="user-cell__avatar">{{ initial(usuario) }}</div>
@@ -333,3 +219,5 @@
     />
   </ng-template>
 </p-dialog>
+
+<p-confirmdialog [style]="{ width: '420px' }" [breakpoints]="{ '575px': '95vw' }" />

@@ -17,6 +17,7 @@ export const ROUTE_PATHS = {
     seguridad: {
       root: '/dashboard/seguridad',
       usuarios: '/dashboard/seguridad/usuarios/lista',
+      invitaciones: '/dashboard/seguridad/invitaciones/lista',
       apiKeys: '/dashboard/seguridad/api-keys',
     },
     configuracion: {

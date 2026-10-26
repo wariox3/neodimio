@@ -20,14 +20,14 @@ export const API_ENDPOINTS = {
   },
   user: {
     list: `${USER}/lista`,
-    create: `${USER}/nuevo`,
   },
-  tenant: {
-    buscar: '/auth/tenant/seleccionar',
+  invitacion: {
+    lista: '/mas/invitacion/lista',
   },
   userTenant: {
     listaTenant: '/mas/user-tenant/lista-tenant',
     actualizar: (id: number) => `/mas/user-tenant/${id}/actualizar`,
+    eliminar: (id: number) => `/mas/user-tenant/eliminar/${id}`,
   },
   formato: {
     list: '/gen/formato/lista',
