@@ -1,0 +1,117 @@
+<div class="form-grid" [formGroup]="form()">
+  <div class="field">
+    <label for="codigo_identificacion_fk" class="field__label">
+      Tipo de identificación <span class="form-required">*</span>
+    </label>
+    <p-select
+      inputId="codigo_identificacion_fk"
+      formControlName="codigo_identificacion_fk"
+      [options]="tiposIdentificacion()"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Seleccione un tipo"
+      [fluid]="true"
+      appendTo="body"
+      [invalid]="!!errorDe('codigo_identificacion_fk')"
+    />
+    @if (errorDe('codigo_identificacion_fk'); as error) {
+      <small class="form-error">{{ error }}</small>
+    }
+  </div>
+
+  <div class="field">
+    <label for="numero_identificacion" class="field__label">
+      Número de identificación <span class="form-required">*</span>
+    </label>
+    <input
+      pInputText
+      id="numero_identificacion"
+      formControlName="numero_identificacion"
+      fluid
+      [invalid]="!!errorDe('numero_identificacion')"
+    />
+    @if (errorDe('numero_identificacion'); as error) {
+      <small class="form-error">{{ error }}</small>
+    }
+  </div>
+
+  <div class="field field--full">
+    <label for="nombre_corto" class="field__label">
+      Nombre <span class="form-required">*</span>
+    </label>
+    <input
+      pInputText
+      id="nombre_corto"
+      formControlName="nombre_corto"
+      fluid
+      [invalid]="!!errorDe('nombre_corto')"
+    />
+    @if (errorDe('nombre_corto'); as error) {
+      <small class="form-error">{{ error }}</small>
+    }
+  </div>
+
+  <div class="field field--full">
+    <label for="direccion" class="field__label">
+      Dirección <span class="form-required">*</span>
+    </label>
+    <input
+      pInputText
+      id="direccion"
+      formControlName="direccion"
+      fluid
+      [invalid]="!!errorDe('direccion')"
+    />
+    @if (errorDe('direccion'); as error) {
+      <small class="form-error">{{ error }}</small>
+    }
+  </div>
+
+  <div class="field">
+    <label for="telefono" class="field__label">
+      Teléfono <span class="form-required">*</span>
+    </label>
+    <input
+      pInputText
+      id="telefono"
+      type="tel"
+      formControlName="telefono"
+      fluid
+      [invalid]="!!errorDe('telefono')"
+    />
+    @if (errorDe('telefono'); as error) {
+      <small class="form-error">{{ error }}</small>
+    }
+  </div>
+
+  <div class="field">
+    <label for="codigo_ciudad_fk" class="field__label">
+      Ciudad <span class="form-required">*</span>
+    </label>
+    <p-select
+      inputId="codigo_ciudad_fk"
+      formControlName="codigo_ciudad_fk"
+      [options]="ciudades()"
+      optionLabel="nombre"
+      optionValue="codigo_ciudad_pk"
+      placeholder="Seleccione una ciudad"
+      [filter]="true"
+      filterBy="nombre,departamento_nombre"
+      [virtualScroll]="true"
+      [virtualScrollItemSize]="52"
+      [fluid]="true"
+      appendTo="body"
+      [invalid]="!!errorDe('codigo_ciudad_fk')"
+    >
+      <ng-template #item let-ciudad>
+        <div class="ciudad-option">
+          <span>{{ ciudad.nombre }}</span>
+          <small>{{ ciudad.departamento_nombre }}</small>
+        </div>
+      </ng-template>
+    </p-select>
+    @if (errorDe('codigo_ciudad_fk'); as error) {
+      <small class="form-error">{{ error }}</small>
+    }
+  </div>
+</div>

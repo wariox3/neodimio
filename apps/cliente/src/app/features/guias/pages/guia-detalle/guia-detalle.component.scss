@@ -1,0 +1,292 @@
+// ─── Novedades ────────────────────────────────────────────────────────────────
+.novedades {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--p-red-500) 30%, transparent);
+  background: color-mix(in srgb, var(--p-red-500) 6%, var(--p-surface-0));
+  color: var(--p-red-700);
+  font-size: 0.875rem;
+
+  > i {
+    margin-top: 0.15rem;
+    color: var(--p-red-500);
+  }
+
+  &__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__solucion {
+    color: var(--p-green-700);
+  }
+}
+
+// ─── Layout ───────────────────────────────────────────────────────────────────
+.detalle-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.detalle-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detalle-card {
+  margin-bottom: 0;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+  margin: 0;
+
+  i {
+    color: var(--p-primary-color);
+  }
+}
+
+// ─── Datos ────────────────────────────────────────────────────────────────────
+.datos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+  margin: 0;
+
+  &--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+
+  dt {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--p-text-color);
+    word-break: break-word;
+  }
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+
+  &--destacado dd {
+    font-weight: 700;
+    color: var(--p-primary-color);
+  }
+}
+
+// ─── Estados ──────────────────────────────────────────────────────────────────
+.indicadores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.indicador {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--p-surface-200);
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+
+  &--activo {
+    border-color: color-mix(in srgb, var(--p-green-500) 35%, transparent);
+    color: var(--p-green-700);
+
+    i {
+      color: var(--p-green-500);
+    }
+  }
+
+  &--alerta {
+    border-color: color-mix(in srgb, var(--p-red-500) 35%, transparent);
+    color: var(--p-red-600);
+
+    i {
+      color: var(--p-red-500);
+    }
+  }
+}
+
+// ─── Línea de tiempo ──────────────────────────────────────────────────────────
+.seguimiento {
+  position: sticky;
+  top: 0;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  &__etapa {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--p-text-muted-color);
+    margin: 0.75rem 0 0.5rem;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  &__paso {
+    position: relative;
+    display: flex;
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+
+    // Línea vertical que une los pasos.
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0.9375rem;
+      top: 2rem;
+      bottom: 0;
+      width: 2px;
+      background: var(--p-surface-200);
+    }
+
+    &:last-child::before {
+      display: none;
+    }
+  }
+
+  &__icono {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--p-surface-100);
+    color: var(--p-text-muted-color);
+    font-size: 0.875rem;
+  }
+
+  &__paso--completado &__icono {
+    background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+    color: var(--p-primary-color);
+  }
+
+  &__contenido {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    padding-top: 0.3rem;
+    min-width: 0;
+  }
+
+  &__titulo {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+  }
+
+  &__paso:not(&__paso--completado) &__titulo {
+    color: var(--p-text-muted-color);
+    font-weight: 500;
+  }
+
+  &__fecha,
+  &__detalle {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 1100px) {
+  .detalle-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .seguimiento {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .datos-grid,
+  .datos-grid--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .detalle-card {
+    padding: 1.25rem;
+  }
+
+  .datos-grid,
+  .datos-grid--4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ─── Tabla de despachos ───────────────────────────────────────────────────────
+.tabla-simple {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  th,
+  td {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--p-surface-200);
+  }
+
+  th {
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+  }
+}

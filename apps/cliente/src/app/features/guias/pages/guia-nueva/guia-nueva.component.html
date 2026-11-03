@@ -1,0 +1,497 @@
+<div class="page-container">
+  <app-page-header
+    title="Nueva guía"
+    subtitle="Registra una guía de transporte para tus envíos"
+    icon="pi pi-box"
+  >
+    <p-button
+      label="Volver"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      [routerLink]="listaRoute"
+    />
+  </app-page-header>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="guia-form">
+    @if (errorMessage()) {
+      <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+    }
+
+    <div class="guia-panels">
+      <!-- Columna lateral: adquiriente y resumen de valores -->
+      <aside class="guia-aside">
+        <section class="guia-aside__card">
+          <h3 class="section-title">
+            <i class="pi pi-building" aria-hidden="true"></i>
+            Adquiriente
+          </h3>
+          @if (adquiriente(); as adq) {
+            <div class="readonly">
+              <div class="readonly__item">
+                <span class="readonly__label">Nombre</span>
+                <span class="readonly__value">{{ adq.nombre_corto }}</span>
+              </div>
+              <div class="readonly__item">
+                <span class="readonly__label">Identificación</span>
+                <span class="readonly__value">
+                  {{ adq.codigo_identificacion_fk }} {{ adq.numero_identificacion }}
+                </span>
+              </div>
+              <div class="readonly__item">
+                <span class="readonly__label">Código</span>
+                <span class="readonly__value">{{ adq.codigo_tercero_pk }}</span>
+              </div>
+            </div>
+          } @else {
+            <p class="resumen__nota">Los datos del cliente no están disponibles.</p>
+          }
+        </section>
+
+        <section class="guia-aside__card resumen">
+          <h3 class="section-title">
+            <i class="pi pi-calculator" aria-hidden="true"></i>
+            Liquidación
+          </h3>
+          <dl class="resumen__lista">
+            <div class="resumen__fila">
+              <dt>Origen</dt>
+              <dd>{{ origenTexto() }}</dd>
+            </div>
+            <div class="resumen__fila">
+              <dt>Peso facturado</dt>
+              <dd>{{ pesoFacturado() | number: '1.0-2' }} kg</dd>
+            </div>
+            <div class="resumen__fila">
+              <dt>Flete</dt>
+              <dd>$ {{ flete() | number: '1.0-0' }}</dd>
+            </div>
+            <div class="resumen__fila">
+              <dt>Manejo</dt>
+              <dd>$ {{ manejo() | number: '1.0-0' }}</dd>
+            </div>
+            <div class="resumen__fila resumen__fila--total">
+              <dt>Total</dt>
+              <dd>$ {{ total() | number: '1.0-0' }}</dd>
+            </div>
+          </dl>
+          @if (avisoLiquidacion(); as aviso) {
+            <small class="form-error">{{ aviso }}</small>
+          } @else if (liquidando()) {
+            <p class="resumen__nota">Calculando valores...</p>
+          } @else {
+            <p class="resumen__nota">El flete y el manejo salen de la tarifa del cliente.</p>
+          }
+        </section>
+      </aside>
+
+      <!-- Columna principal: formulario por secciones -->
+      <div class="guia-main">
+        <!-- Información general -->
+        <section class="form-section">
+          <h3 class="section-title">
+            <i class="pi pi-info-circle" aria-hidden="true"></i>
+            Información general
+          </h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="codigo_guia_tipo_fk" class="field__label">
+                Tipo <span class="form-required">*</span>
+              </label>
+              <p-select
+                inputId="codigo_guia_tipo_fk"
+                formControlName="codigo_guia_tipo_fk"
+                [options]="tipos()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione un tipo"
+                emptyMessage="No hay tipos de guía habilitados"
+                [fluid]="true"
+                appendTo="body"
+                [invalid]="!!errorDe('codigo_guia_tipo_fk')"
+              />
+              @if (errorDe('codigo_guia_tipo_fk'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="tipo_liquidacion" class="field__label">
+                Liquidación <span class="form-required">*</span>
+              </label>
+              <p-select
+                inputId="tipo_liquidacion"
+                formControlName="tipo_liquidacion"
+                [options]="liquidaciones()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione una liquidación"
+                emptyMessage="No hay liquidaciones habilitadas"
+                [fluid]="true"
+                appendTo="body"
+                [invalid]="!!errorDe('tipo_liquidacion')"
+              />
+              @if (errorDe('tipo_liquidacion'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="codigo_tercero_operacion_fk" class="field__label">Operación</label>
+              <p-select
+                inputId="codigo_tercero_operacion_fk"
+                formControlName="codigo_tercero_operacion_fk"
+                [options]="operaciones()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione una operación"
+                [showClear]="true"
+                [fluid]="true"
+                appendTo="body"
+              />
+            </div>
+
+            <div class="field">
+              <label for="documento_cliente" class="field__label">Documento cliente</label>
+              <input
+                pInputText
+                id="documento_cliente"
+                formControlName="documento_cliente"
+                fluid
+                placeholder="Ej. factura o pedido"
+              />
+            </div>
+
+            <div class="field field--full">
+              <label for="remitente" class="field__label">Remitente</label>
+              <input pInputText id="remitente" formControlName="remitente" fluid />
+            </div>
+          </div>
+        </section>
+
+        <!-- Destinatario -->
+        <section class="form-section">
+          <div class="section-header">
+            <h3 class="section-title">
+              <i class="pi pi-user" aria-hidden="true"></i>
+              Destinatario
+            </h3>
+            <div class="section-header__acciones">
+              <p-button
+                type="button"
+                label="Nuevo"
+                icon="pi pi-plus"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                (onClick)="abrirNuevoDestinatario()"
+              />
+              <p-button
+                type="button"
+                label="Buscar"
+                icon="pi pi-search"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                (onClick)="buscarVisible.set(true)"
+              />
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field field--full">
+              <label for="numero_identificacion_destinatario" class="field__label">
+                Identificación <span class="form-required">*</span>
+              </label>
+              <div class="identificacion-group">
+                <p-select
+                  class="identificacion-group__tipo"
+                  formControlName="codigo_identificacion_destinatario_fk"
+                  [options]="tiposIdentificacion"
+                  optionLabel="label"
+                  optionValue="value"
+                  ariaLabel="Tipo de identificación"
+                  placeholder="Tipo"
+                  appendTo="body"
+                  [invalid]="!!errorDe('codigo_identificacion_destinatario_fk')"
+                />
+                <input
+                  pInputText
+                  id="numero_identificacion_destinatario"
+                  formControlName="numero_identificacion_destinatario"
+                  class="identificacion-group__numero"
+                  [invalid]="!!errorDe('numero_identificacion_destinatario')"
+                />
+              </div>
+              @if (errorDe('codigo_identificacion_destinatario_fk')) {
+                <small class="form-error">Seleccione el tipo de identificación (CC o NI).</small>
+              } @else if (errorDe('numero_identificacion_destinatario'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field field--full">
+              <label for="nombre_destinatario" class="field__label">
+                Nombre <span class="form-required">*</span>
+              </label>
+              <input
+                pInputText
+                id="nombre_destinatario"
+                formControlName="nombre_destinatario"
+                fluid
+                [invalid]="!!errorDe('nombre_destinatario')"
+              />
+              @if (errorDe('nombre_destinatario'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field field--full">
+              <label for="direccion_destinatario" class="field__label">
+                Dirección <span class="form-required">*</span>
+              </label>
+              <input
+                pInputText
+                id="direccion_destinatario"
+                formControlName="direccion_destinatario"
+                fluid
+                [invalid]="!!errorDe('direccion_destinatario')"
+              />
+              @if (errorDe('direccion_destinatario'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field field--full">
+              <label for="telefono_destinatario" class="field__label">
+                Teléfono <span class="form-required">*</span>
+              </label>
+              <input
+                pInputText
+                id="telefono_destinatario"
+                type="tel"
+                formControlName="telefono_destinatario"
+                fluid
+                [invalid]="!!errorDe('telefono_destinatario')"
+              />
+              @if (errorDe('telefono_destinatario'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+          </div>
+        </section>
+
+        <!-- Mercancía -->
+        <section class="form-section">
+          <h3 class="section-title">
+            <i class="pi pi-box" aria-hidden="true"></i>
+            Mercancía
+          </h3>
+          <div class="form-grid form-grid--3">
+            <div class="field field--full">
+              <label for="codigo_producto_fk" class="field__label">
+                Producto <span class="form-required">*</span>
+              </label>
+              <p-select
+                inputId="codigo_producto_fk"
+                formControlName="codigo_producto_fk"
+                [options]="productos()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione un producto"
+                [filter]="true"
+                filterBy="label"
+                [fluid]="true"
+                appendTo="body"
+                [invalid]="!!errorDe('codigo_producto_fk')"
+              />
+              @if (errorDe('codigo_producto_fk'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field field--full">
+              <label for="codigo_ciudad_destino_fk" class="field__label">
+                Destino <span class="form-required">*</span>
+              </label>
+              <p-select
+                inputId="codigo_ciudad_destino_fk"
+                formControlName="codigo_ciudad_destino_fk"
+                [options]="ciudades()"
+                optionLabel="nombre"
+                optionValue="codigo_ciudad_pk"
+                placeholder="Seleccione una ciudad"
+                [filter]="true"
+                filterBy="nombre,departamento_nombre,codigo_ciudad_pk"
+                [virtualScroll]="true"
+                [virtualScrollItemSize]="52"
+                [fluid]="true"
+                appendTo="body"
+                [invalid]="!!errorDe('codigo_ciudad_destino_fk')"
+              >
+                <ng-template #selectedItem let-ciudad>
+                  {{ ciudad.nombre }} - {{ ciudad.departamento_nombre }} [{{
+                    ciudad.codigo_ciudad_pk
+                  }}]
+                </ng-template>
+                <ng-template #item let-ciudad>
+                  <div class="ciudad-option">
+                    <span>{{ ciudad.nombre }} [{{ ciudad.codigo_ciudad_pk }}]</span>
+                    <small>{{ ciudad.departamento_nombre }}</small>
+                  </div>
+                </ng-template>
+              </p-select>
+              @if (errorDe('codigo_ciudad_destino_fk'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="unidades" class="field__label">
+                Unidades <span class="form-required">*</span>
+              </label>
+              <p-inputnumber
+                inputId="unidades"
+                formControlName="unidades"
+                [min]="1"
+                [showButtons]="true"
+                [fluid]="true"
+                [invalid]="!!errorDe('unidades')"
+              />
+              @if (errorDe('unidades'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="peso_real" class="field__label">
+                Peso real (kg) <span class="form-required">*</span>
+              </label>
+              <p-inputnumber
+                inputId="peso_real"
+                formControlName="peso_real"
+                [min]="0"
+                [maxFractionDigits]="2"
+                [fluid]="true"
+                [invalid]="!!errorDe('peso_real')"
+              />
+              @if (errorDe('peso_real'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="peso_volumen" class="field__label">
+                Peso volumen (kg) <span class="form-required">*</span>
+              </label>
+              <p-inputnumber
+                inputId="peso_volumen"
+                formControlName="peso_volumen"
+                [min]="0"
+                [maxFractionDigits]="2"
+                [fluid]="true"
+                [invalid]="!!errorDe('peso_volumen')"
+              />
+              @if (errorDe('peso_volumen'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+          </div>
+        </section>
+
+        <!-- Valores -->
+        <section class="form-section">
+          <h3 class="section-title">
+            <i class="pi pi-dollar" aria-hidden="true"></i>
+            Valores
+          </h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="vr_declara" class="field__label">
+                Valor declarado <span class="form-required">*</span>
+              </label>
+              <p-inputnumber
+                inputId="vr_declara"
+                formControlName="vr_declara"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                [fluid]="true"
+                [invalid]="!!errorDe('vr_declara')"
+              />
+              @if (errorDe('vr_declara'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="vr_recaudo" class="field__label">
+                Recaudo <span class="form-required">*</span>
+              </label>
+              <p-inputnumber
+                inputId="vr_recaudo"
+                formControlName="vr_recaudo"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                [fluid]="true"
+                [invalid]="!!errorDe('vr_recaudo')"
+              />
+              @if (errorDe('vr_recaudo'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field field--full field--check">
+              <p-checkbox
+                inputId="devolver_documento_cliente"
+                formControlName="devolver_documento_cliente"
+                [binary]="true"
+              />
+              <label for="devolver_documento_cliente">Devolver documento del cliente</label>
+            </div>
+
+            <div class="field field--full">
+              <label for="comentario" class="field__label">Comentario</label>
+              <textarea
+                pTextarea
+                id="comentario"
+                formControlName="comentario"
+                rows="3"
+                [autoResize]="true"
+                fluid
+                placeholder="Indicaciones para la entrega"
+                [invalid]="!!errorDe('comentario')"
+              ></textarea>
+              @if (errorDe('comentario'); as error) {
+                <small class="form-error">{{ error }}</small>
+              }
+            </div>
+          </div>
+        </section>
+
+        <!-- Acciones -->
+        <div class="form-actions">
+          <p-button
+            type="button"
+            label="Cancelar"
+            severity="secondary"
+            [text]="true"
+            [routerLink]="listaRoute"
+          />
+          <p-button type="submit" label="Guardar guía" icon="pi pi-check" />
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<app-destinatario-buscar [(visible)]="buscarVisible" (seleccionado)="usarDestinatario($event)" />
+<app-destinatario-nuevo
+  [(visible)]="nuevoDestinatarioVisible"
+  [inicial]="destinatarioInicial()"
+  (creado)="usarDestinatario($event)"
+/>

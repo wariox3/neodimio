@@ -1,0 +1,30 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  header="Nuevo destinatario"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(720px, 95vw)' }"
+>
+  @if (visible()) {
+    <form [formGroup]="form" (ngSubmit)="guardar()" novalidate class="destinatario-nuevo">
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+      }
+
+      <app-destinatario-campos [form]="form" [tiposIdentificacion]="tiposIdentificacion" />
+
+      <div class="form-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [text]="true"
+          (onClick)="visible.set(false)"
+        />
+        <p-button type="submit" label="Guardar" icon="pi pi-check" [loading]="guardando()" />
+      </div>
+    </form>
+  }
+</p-dialog>

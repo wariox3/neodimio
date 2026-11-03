@@ -1,0 +1,9 @@
+{
+  "/api": {
+    "target": "https://api.semanticaapi.uk",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": { "^/api": "" },
+    "logLevel": "info"
+  }
+}

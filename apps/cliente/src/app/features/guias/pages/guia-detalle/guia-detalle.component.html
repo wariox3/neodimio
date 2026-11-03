@@ -1,0 +1,301 @@
+<div class="page-container">
+  <app-page-header
+    [title]="guia() ? 'Guía ' + guia()!.codigo_guia_pk : 'Guía'"
+    [subtitle]="
+      guia()
+        ? (guia()!.ciudad_origen_nombre ?? guia()!.codigo_ciudad_origen_fk ?? '') +
+          ' → ' +
+          (guia()!.ciudad_destino_nombre ?? guia()!.codigo_ciudad_destino_fk ?? '')
+        : ''
+    "
+    icon="pi pi-box"
+  >
+    @if (guia(); as guia) {
+      <app-guia-imprimir [guiaId]="guia.codigo_guia_pk" etiqueta="Imprimir" />
+    }
+    <p-button
+      label="Volver"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      [routerLink]="listaRoute"
+    />
+  </app-page-header>
+
+  @if (loading()) {
+    <app-loading-spinner message="Cargando guía..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="cargar()" />
+  } @else if (guia(); as guia) {
+    <!-- Novedades -->
+    @if (novedades().length > 0) {
+      <div class="novedades" role="alert">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <div class="novedades__lista">
+          <strong>Novedades</strong>
+          @for (novedad of novedades(); track novedad.codigo_novedad_pk) {
+            <span>
+              {{ novedad.fecha ? (novedad.fecha | date: 'dd/MM/yyyy') : '—' }} ·
+              {{ novedad.descripcion ?? novedad.codigo_novedad_tipo_fk ?? 'Novedad' }}
+              @if (novedad.estado_solucion) {
+                <strong class="novedades__solucion">· Solucionada</strong>
+              }
+            </span>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="detalle-layout">
+      <!-- Resumen -->
+      <div class="detalle-main">
+        <section class="card detalle-card">
+          <div class="detalle-card__header">
+            <h3 class="section-title">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              Información de la guía
+            </h3>
+            @if (estado(); as estado) {
+              <p-tag [value]="estado.label" [severity]="estado.severity" />
+            }
+          </div>
+
+          <dl class="datos-grid">
+            <div class="dato">
+              <dt>Tipo</dt>
+              <dd>{{ guia.guia_tipo_nombre ?? guia.codigo_guia_tipo_fk ?? '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Servicio</dt>
+              <dd>{{ guia.servicio_nombre ?? guia.codigo_servicio_fk ?? '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Fecha ingreso</dt>
+              <dd>
+                {{ guia.fecha_ingreso ? (guia.fecha_ingreso | date: 'dd/MM/yyyy HH:mm') : '—' }}
+              </dd>
+            </div>
+            <div class="dato">
+              <dt>Documento cliente</dt>
+              <dd>{{ guia.documento_cliente ?? '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Remitente</dt>
+              <dd>{{ guia.remitente ?? '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Producto</dt>
+              <dd>{{ guia.producto_nombre ?? guia.codigo_producto_fk ?? '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Despacho</dt>
+              <dd>{{ guia.codigo_despacho_fk ?? '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Factura</dt>
+              <dd>{{ guia.numero_factura ?? '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Adquiriente</dt>
+              <dd>{{ guia.adquiriente_nombre ?? '—' }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="card detalle-card">
+          <h3 class="section-title">
+            <i class="pi pi-user" aria-hidden="true"></i>
+            Destinatario
+          </h3>
+          <dl class="datos-grid">
+            <div class="dato">
+              <dt>Nombre</dt>
+              <dd>{{ guia.nombre_destinatario ?? '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Identificación</dt>
+              <dd>
+                @if (guia.numero_identificacion_destinatario) {
+                  {{ guia.codigo_identificacion_destinatario_fk }}
+                  {{ guia.numero_identificacion_destinatario }}
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div class="dato">
+              <dt>Teléfono</dt>
+              <dd>{{ guia.telefono_destinatario ?? '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Ciudad</dt>
+              <dd>{{ guia.ciudad_destino_nombre ?? guia.codigo_ciudad_destino_fk ?? '—' }}</dd>
+            </div>
+            <div class="dato dato--full">
+              <dt>Dirección</dt>
+              <dd>{{ guia.direccion_destinatario ?? '—' }}</dd>
+            </div>
+            @if (guia.comentario) {
+              <div class="dato dato--full">
+                <dt>Comentario</dt>
+                <dd>{{ guia.comentario }}</dd>
+              </div>
+            }
+          </dl>
+        </section>
+
+        <section class="card detalle-card">
+          <h3 class="section-title">
+            <i class="pi pi-box" aria-hidden="true"></i>
+            Mercancía y valores
+          </h3>
+          <dl class="datos-grid datos-grid--4">
+            <div class="dato">
+              <dt>Unidades</dt>
+              <dd>{{ guia.unidades ?? 0 | number: '1.0-2' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Peso real</dt>
+              <dd>{{ guia.peso_real ?? 0 | number: '1.0-2' }} kg</dd>
+            </div>
+            <div class="dato">
+              <dt>Peso volumen</dt>
+              <dd>{{ guia.peso_volumen ?? 0 | number: '1.0-2' }} kg</dd>
+            </div>
+            <div class="dato">
+              <dt>Peso facturado</dt>
+              <dd>{{ guia.peso_facturado ?? 0 | number: '1.0-2' }} kg</dd>
+            </div>
+            <div class="dato">
+              <dt>Declarado</dt>
+              <dd>$ {{ guia.vr_declara ?? 0 | number: '1.0-0' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Recaudo</dt>
+              <dd>$ {{ guia.vr_recaudo | number: '1.0-0' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Flete</dt>
+              <dd>$ {{ guia.vr_flete ?? 0 | number: '1.0-0' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Manejo</dt>
+              <dd>$ {{ guia.vr_manejo ?? 0 | number: '1.0-0' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Otros</dt>
+              <dd>$ {{ guia.vr_otros | number: '1.0-0' }}</dd>
+            </div>
+            <div class="dato dato--destacado">
+              <dt>Total</dt>
+              <dd>$ {{ total() | number: '1.0-0' }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="card detalle-card">
+          <h3 class="section-title">
+            <i class="pi pi-check-square" aria-hidden="true"></i>
+            Estados
+          </h3>
+          <div class="indicadores">
+            @for (indicador of indicadores(); track indicador.label) {
+              <span
+                class="indicador"
+                [class.indicador--activo]="indicador.activo"
+                [class.indicador--alerta]="indicador.alerta"
+              >
+                <i
+                  [class]="indicador.activo ? 'pi pi-check-circle' : 'pi pi-circle'"
+                  aria-hidden="true"
+                ></i>
+                {{ indicador.label }}
+              </span>
+            }
+          </div>
+        </section>
+
+        @if (despachos().length > 0) {
+          <section class="card detalle-card">
+            <h3 class="section-title">
+              <i class="pi pi-truck" aria-hidden="true"></i>
+              Despachos
+            </h3>
+            <div class="tabla-simple">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Número</th>
+                    <th>Salida</th>
+                    <th>Origen</th>
+                    <th>Destino</th>
+                    <th>Conductor</th>
+                    <th>Entregado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (despacho of despachos(); track despacho.codigo_despacho_detalle_pk) {
+                    <tr>
+                      <td>{{ despacho.numero ?? '—' }}</td>
+                      <td>
+                        {{
+                          despacho.fecha_salida
+                            ? (despacho.fecha_salida | date: 'dd/MM/yyyy HH:mm')
+                            : '—'
+                        }}
+                      </td>
+                      <td>{{ despacho.ciudad_origen ?? '—' }}</td>
+                      <td>{{ despacho.ciudad_destino ?? '—' }}</td>
+                      <td>{{ despacho.conductor_nombre_corto ?? '—' }}</td>
+                      <td>{{ despacho.estado_entregado ? 'Sí' : 'No' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+
+        <section class="card detalle-card">
+          <h3 class="section-title">
+            <i class="pi pi-paperclip" aria-hidden="true"></i>
+            Archivos
+          </h3>
+          <app-guia-archivos [guiaId]="guia.codigo_guia_pk" />
+        </section>
+      </div>
+
+      <!-- Seguimiento -->
+      <aside class="card detalle-card seguimiento">
+        <h3 class="section-title">
+          <i class="pi pi-map" aria-hidden="true"></i>
+          Seguimiento
+        </h3>
+
+        <ol class="timeline">
+          @for (paso of seguimiento(); track $index; let first = $first) {
+            @if (first || paso.etapa !== seguimiento()[$index - 1].etapa) {
+              <li class="timeline__etapa">{{ paso.etapa }}</li>
+            }
+            <li class="timeline__paso" [class.timeline__paso--completado]="paso.completado">
+              <span class="timeline__icono" aria-hidden="true">
+                <i [class]="paso.icono"></i>
+              </span>
+              <div class="timeline__contenido">
+                <span class="timeline__titulo">{{ paso.titulo }}</span>
+                @if (paso.fecha) {
+                  <time class="timeline__fecha" [attr.datetime]="paso.fecha">
+                    {{ paso.fecha | date: 'dd/MM/yyyy HH:mm' }}
+                  </time>
+                }
+                @if (paso.detalle) {
+                  <span class="timeline__detalle">{{ paso.detalle }}</span>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      </aside>
+    </div>
+  }
+</div>

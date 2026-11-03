@@ -1,0 +1,21 @@
+.destinatario-nuevo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@media (max-width: 576px) {
+  .form-actions {
+    flex-direction: column-reverse;
+
+    ::ng-deep .p-button {
+      width: 100%;
+    }
+  }
+}

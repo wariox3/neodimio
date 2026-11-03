@@ -192,3 +192,33 @@
   color: var(--p-text-muted-color);
   margin-top: 0.125rem;
 }
+
+// Diálogo de configuración: usuario y estados de carga o error.
+.dialog-usuario {
+  margin-bottom: 1.25rem;
+}
+
+.dialog-estado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--p-text-muted-color);
+
+  p {
+    margin: 0;
+  }
+}
+
+// Fila del diálogo con etiqueta e interruptor.
+.switch-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  .form-label {
+    margin: 0;
+  }
+}

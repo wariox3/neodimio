@@ -1,0 +1,168 @@
+<div class="page-container">
+  <app-page-header
+    title="Despachos"
+    subtitle="Consulta los despachos de transporte"
+    icon="pi pi-truck"
+  >
+    <p-button label="Nuevo" icon="pi pi-plus" (onClick)="nuevo()" />
+  </app-page-header>
+
+  <div class="card filtros-card">
+    <button
+      type="button"
+      class="filtros-card__header"
+      [attr.aria-expanded]="filtrosVisibles()"
+      aria-controls="despacho-filtros"
+      (click)="toggleFiltros()"
+    >
+      <span class="filtros-card__title">
+        <i class="pi pi-filter" aria-hidden="true"></i>
+        Filtros
+      </span>
+      <i
+        class="pi pi-chevron-down filtros-card__chevron"
+        [class.filtros-card__chevron--open]="filtrosVisibles()"
+        aria-hidden="true"
+      ></i>
+    </button>
+
+    @if (filtrosVisibles()) {
+      <form id="despacho-filtros" [formGroup]="form" (ngSubmit)="buscar()" novalidate>
+        <div class="filtros-grid">
+          <div class="field">
+            <label for="codigo_vehiculo_fk" class="field__label">Placa</label>
+            <input pInputText id="codigo_vehiculo_fk" formControlName="codigo_vehiculo_fk" fluid />
+          </div>
+
+          <div class="field">
+            <label for="numero" class="field__label">Número</label>
+            <p-inputnumber
+              inputId="numero"
+              formControlName="numero"
+              [useGrouping]="false"
+              [fluid]="true"
+            />
+          </div>
+
+          <div class="field">
+            <label for="fecha_desde" class="field__label">Fecha desde</label>
+            <p-datepicker
+              inputId="fecha_desde"
+              formControlName="fecha_desde"
+              [showIcon]="true"
+              [fluid]="true"
+              dateFormat="dd/mm/yy"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="fecha_hasta" class="field__label">Fecha hasta</label>
+            <p-datepicker
+              inputId="fecha_hasta"
+              formControlName="fecha_hasta"
+              [showIcon]="true"
+              [fluid]="true"
+              dateFormat="dd/mm/yy"
+              appendTo="body"
+            />
+          </div>
+        </div>
+
+        <div class="filtros-actions">
+          <p-button
+            type="button"
+            label="Limpiar"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            [text]="true"
+            (onClick)="limpiar()"
+          />
+          <p-button type="submit" label="Filtrar" icon="pi pi-search" [loading]="loading()" />
+        </div>
+      </form>
+    }
+  </div>
+
+  @if (loading() && despachos().length === 0) {
+    <app-loading-spinner message="Cargando despachos..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="buscar()" />
+  } @else if (!loading() && despachos().length === 0) {
+    <app-empty-state
+      title="Sin despachos"
+      message="No se encontraron despachos con los filtros seleccionados."
+      icon="pi pi-truck"
+    />
+  } @else {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-toolbar__count">
+          {{ totalRecords() }} {{ totalRecords() === 1 ? 'despacho' : 'despachos' }}
+        </span>
+      </div>
+
+      <p-table
+        [value]="despachos()"
+        [lazy]="true"
+        [lazyLoadOnInit]="false"
+        [totalRecords]="totalRecords()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [first]="first()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onLazyLoad)="onLazyLoad($event)"
+        [rowHover]="true"
+        [scrollable]="true"
+        scrollHeight="600px"
+        dataKey="codigo_despacho_pk"
+      >
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Número</th>
+            <th>Fecha</th>
+            <th>Placa</th>
+            <th>Origen</th>
+            <th>Destino</th>
+            <th>Autorizado</th>
+            <th>Aprobado</th>
+            <th>Entregado</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-despacho>
+          <tr>
+            <td>{{ despacho.codigo_despacho_pk }}</td>
+            <td>{{ despacho.numero ?? '—' }}</td>
+            <td class="nowrap">
+              {{ despacho.fecha ? (despacho.fecha | date: 'dd/MM/yyyy') : '—' }}
+            </td>
+            <td class="nowrap">{{ despacho.codigo_vehiculo_fk ?? '—' }}</td>
+            <td class="nowrap">{{ nombreCiudad(despacho.codigo_ciudad_origen_fk) }}</td>
+            <td class="nowrap">{{ nombreCiudad(despacho.codigo_ciudad_destino_fk) }}</td>
+            <td>
+              <p-tag
+                [value]="despacho.estado_autorizado ? 'Sí' : 'No'"
+                [severity]="despacho.estado_autorizado ? 'success' : 'secondary'"
+              />
+            </td>
+            <td>
+              <p-tag
+                [value]="despacho.estado_aprobado ? 'Sí' : 'No'"
+                [severity]="despacho.estado_aprobado ? 'success' : 'secondary'"
+              />
+            </td>
+            <td>
+              <p-tag
+                [value]="despacho.estado_entregado ? 'Sí' : 'No'"
+                [severity]="despacho.estado_entregado ? 'success' : 'secondary'"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

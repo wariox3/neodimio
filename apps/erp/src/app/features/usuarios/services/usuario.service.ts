@@ -3,6 +3,8 @@ import { Observable, tap } from 'rxjs';
 import { BaseHttpService, API_ENDPOINTS, PaginatedResponse } from '../../../core';
 import {
   UsuarioTenantItem,
+  UsuarioTenantConfiguracion,
+  UsuarioTenantConfiguracionUpdateRequest,
   UsuarioTenantFilters,
   UsuarioTenantUpdateRequest,
 } from '../models/usuario.model';
@@ -43,9 +45,25 @@ export class UsuarioService extends BaseHttpService {
     );
   }
 
-  /** Actualiza el código del usuario en Semantica. Solo para el propietario de la empresa. */
+  /** Actualiza los datos de la membresía del usuario. Solo para el propietario de la empresa. */
   updateUsuarioTenant(id: number, req: UsuarioTenantUpdateRequest): Observable<UsuarioTenantItem> {
     return this.patch<UsuarioTenantItem>(API_ENDPOINTS.userTenant.actualizar(id), req);
+  }
+
+  /** Configuración del usuario en la empresa; sus campos llegan en `null` si aún no tiene. */
+  getConfiguracion(id: number): Observable<UsuarioTenantConfiguracion> {
+    return this.get<UsuarioTenantConfiguracion>(API_ENDPOINTS.userTenantConfiguracion.detalle(id));
+  }
+
+  /** Actualiza la configuración del usuario. Solo para el propietario de la empresa. */
+  updateConfiguracion(
+    id: number,
+    req: UsuarioTenantConfiguracionUpdateRequest,
+  ): Observable<UsuarioTenantConfiguracion> {
+    return this.patch<UsuarioTenantConfiguracion>(
+      API_ENDPOINTS.userTenantConfiguracion.actualizar(id),
+      req,
+    );
   }
 
   /** Quita al usuario de la empresa borrando su membresía. Solo para el propietario de la empresa. */

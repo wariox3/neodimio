@@ -7,15 +7,22 @@ import { ButtonModule } from 'primeng/button';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SelectModule } from 'primeng/select';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { PageHeaderComponent } from '../../../../shared';
 import { UsuarioService } from '../../services/usuario.service';
-import { CODIGO_USUARIO_MAX_LENGTH, UsuarioTenantItem } from '../../models/usuario.model';
+import {
+  CODIGO_CIUDAD_ORIGEN_MAX_LENGTH,
+  CODIGO_OPERACION_MAX_LENGTH,
+  CODIGO_USUARIO_MAX_LENGTH,
+  UsuarioTenantItem,
+} from '../../models/usuario.model';
 import { ActiveTenantService, extractErrorMessage } from '../../../../core';
 
 @Component({
@@ -29,7 +36,9 @@ import { ActiveTenantService, extractErrorMessage } from '../../../../core';
     TableModule,
     TooltipModule,
     DialogModule,
+    InputNumberModule,
     InputTextModule,
+    ToggleSwitchModule,
     IconFieldModule,
     InputIconModule,
     SelectModule,
@@ -82,6 +91,8 @@ export class UsuarioListComponent implements OnInit {
 
   // ── Diálogo de edición ──
   readonly codigoMaxLength = CODIGO_USUARIO_MAX_LENGTH;
+  readonly operacionMaxLength = CODIGO_OPERACION_MAX_LENGTH;
+  readonly ciudadOrigenMaxLength = CODIGO_CIUDAD_ORIGEN_MAX_LENGTH;
   /** Usuario que se está editando; `null` cierra el diálogo. */
   readonly editingUsuario = signal<UsuarioTenantItem | null>(null);
   readonly savingEdit = signal(false);
@@ -92,6 +103,21 @@ export class UsuarioListComponent implements OnInit {
 
   readonly editForm = this.fb.nonNullable.group({
     codigoUsuario: ['', Validators.maxLength(CODIGO_USUARIO_MAX_LENGTH)],
+    cliente: [false],
+    clienteId: [null as number | null],
+  });
+
+  // ── Diálogo de configuración ──
+  /** Usuario cuya configuración se está editando; `null` cierra el diálogo. */
+  readonly configurandoUsuario = signal<UsuarioTenantItem | null>(null);
+  readonly cargandoConfiguracion = signal(false);
+  readonly errorConfiguracion = signal(false);
+  readonly guardandoConfiguracion = signal(false);
+
+  readonly configuracionForm = this.fb.nonNullable.group({
+    codigoOperacion: ['', Validators.maxLength(CODIGO_OPERACION_MAX_LENGTH)],
+    codigoTerceroOperacion: [null as number | null],
+    codigoCiudadOrigen: ['', Validators.maxLength(CODIGO_CIUDAD_ORIGEN_MAX_LENGTH)],
   });
 
   constructor() {
@@ -174,7 +200,11 @@ export class UsuarioListComponent implements OnInit {
   }
 
   openEditDialog(usuario: UsuarioTenantItem): void {
-    this.editForm.reset({ codigoUsuario: usuario.codigo_usuario_fk ?? '' });
+    this.editForm.reset({
+      codigoUsuario: usuario.codigo_usuario_fk ?? '',
+      cliente: usuario.cliente,
+      clienteId: usuario.cliente_id,
+    });
     this.editingUsuario.set(usuario);
   }
 
@@ -190,31 +220,115 @@ export class UsuarioListComponent implements OnInit {
       return;
     }
 
-    // Vacío se envía como null: el backend lo interpreta como quitar el código.
-    const codigo = this.editForm.getRawValue().codigoUsuario.trim() || null;
+    const { codigoUsuario, cliente, clienteId } = this.editForm.getRawValue();
 
     this.savingEdit.set(true);
-    this.usuarioService.updateUsuarioTenant(usuario.id, { codigo_usuario_fk: codigo }).subscribe({
-      next: () => {
-        this.savingEdit.set(false);
-        this.closeEditDialog();
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Usuario actualizado',
-          detail: `Se actualizó el usuario semantica de ${this.displayName(usuario)}.`,
+    this.usuarioService
+      .updateUsuarioTenant(usuario.id, {
+        // Vacío se envía como null: el backend lo interpreta como quitar el código.
+        codigo_usuario_fk: codigoUsuario.trim() || null,
+        cliente,
+        cliente_id: clienteId,
+      })
+      .subscribe({
+        next: () => {
+          this.savingEdit.set(false);
+          this.closeEditDialog();
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Usuario actualizado',
+            detail: `Se actualizaron los datos de ${this.displayName(usuario)}.`,
+          });
+          // Recarga la página actual: con filtros activos la fila puede dejar de coincidir.
+          this.loadUsuarios(Math.floor(this.first() / this.rows()) + 1, this.rows());
+        },
+        error: (err: unknown) => {
+          this.savingEdit.set(false);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: extractErrorMessage(err, 'No se pudo actualizar el usuario.'),
+          });
+        },
+      });
+  }
+
+  openConfiguracionDialog(usuario: UsuarioTenantItem): void {
+    this.configurandoUsuario.set(usuario);
+    this.cargarConfiguracion();
+  }
+
+  closeConfiguracionDialog(): void {
+    this.configurandoUsuario.set(null);
+  }
+
+  cargarConfiguracion(): void {
+    const usuario = this.configurandoUsuario();
+    if (!usuario) return;
+
+    this.configuracionForm.reset();
+    this.errorConfiguracion.set(false);
+    this.cargandoConfiguracion.set(true);
+    this.usuarioService.getConfiguracion(usuario.id).subscribe({
+      next: (configuracion) => {
+        // Si ya se cerró o se abrió otro usuario, esta respuesta no aplica.
+        if (this.configurandoUsuario()?.id !== usuario.id) return;
+        this.configuracionForm.reset({
+          codigoOperacion: configuracion.codigo_operacion_fk ?? '',
+          codigoTerceroOperacion: configuracion.codigo_tercero_operacion_fk,
+          codigoCiudadOrigen: configuracion.codigo_ciudad_origen_fk ?? '',
         });
-        // Recarga la página actual: con filtros activos la fila puede dejar de coincidir.
-        this.loadUsuarios(Math.floor(this.first() / this.rows()) + 1, this.rows());
+        this.cargandoConfiguracion.set(false);
       },
-      error: (err: unknown) => {
-        this.savingEdit.set(false);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: extractErrorMessage(err, 'No se pudo actualizar el usuario.'),
-        });
+      error: () => {
+        if (this.configurandoUsuario()?.id !== usuario.id) return;
+        this.errorConfiguracion.set(true);
+        this.cargandoConfiguracion.set(false);
       },
     });
+  }
+
+  submitConfiguracion(): void {
+    const usuario = this.configurandoUsuario();
+    if (!usuario || this.cargandoConfiguracion() || this.errorConfiguracion()) return;
+    if (this.configuracionForm.invalid) {
+      this.configuracionForm.markAllAsTouched();
+      return;
+    }
+
+    const { codigoOperacion, codigoTerceroOperacion, codigoCiudadOrigen } =
+      this.configuracionForm.getRawValue();
+
+    this.guardandoConfiguracion.set(true);
+    this.usuarioService
+      .updateConfiguracion(usuario.id, {
+        // Vacío se envía como null: el backend lo interpreta como quitar el valor.
+        codigo_operacion_fk: codigoOperacion.trim() || null,
+        codigo_tercero_operacion_fk: codigoTerceroOperacion,
+        codigo_ciudad_origen_fk: codigoCiudadOrigen.trim() || null,
+      })
+      .subscribe({
+        next: () => {
+          this.guardandoConfiguracion.set(false);
+          this.closeConfiguracionDialog();
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Configuración actualizada',
+            detail: `Se actualizó la configuración de ${this.displayName(usuario)}.`,
+          });
+        },
+        error: (err: unknown) => {
+          this.guardandoConfiguracion.set(false);
+          // 0, 403, 429 y 500+ ya los avisa el interceptor.
+          if (err instanceof HttpErrorResponse && [400, 404, 422].includes(err.status)) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'No se pudo guardar',
+              detail: extractErrorMessage(err, 'Intenta de nuevo en un momento.'),
+            });
+          }
+        },
+      });
   }
 
   /** Los propietarios (`control`) no se pueden retirar desde aquí. */

@@ -1,0 +1,145 @@
+// Estilos compartidos por las pantallas de listado: filtros, barra de la tabla y celdas.
+// ─── Filtros ──────────────────────────────────────────────────────────────────
+.filtros-card {
+  padding: 0;
+  overflow: hidden;
+
+  form {
+    padding: 0 1.5rem 1.5rem;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--p-text-color);
+
+    i {
+      color: var(--p-primary-color);
+    }
+  }
+
+  &__chevron {
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+    transition: transform 0.2s ease;
+
+    &--open {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.filtros-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.field__label {
+  font-size: 0.855rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.filtros-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 1.25rem;
+}
+
+// ─── Barra de la tabla ────────────────────────────────────────────────────────
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--p-surface-200);
+
+  &__count {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+// ─── Celdas comunes ───────────────────────────────────────────────────────────
+.text-right {
+  text-align: right !important;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 1100px) {
+  .filtros-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 576px) {
+  .filtros-card {
+    form {
+      padding: 0 1rem 1rem;
+    }
+
+    &__header {
+      padding: 1rem;
+    }
+  }
+
+  .filtros-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filtros-actions {
+    flex-direction: column-reverse;
+
+    ::ng-deep .p-button {
+      width: 100%;
+    }
+  }
+
+  .table-toolbar__actions {
+    width: 100%;
+
+    p-button {
+      flex: 1;
+    }
+
+    ::ng-deep .p-button {
+      width: 100%;
+    }
+  }
+}

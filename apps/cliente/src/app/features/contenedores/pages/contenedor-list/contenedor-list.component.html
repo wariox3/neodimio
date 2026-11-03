@@ -1,0 +1,118 @@
+<div class="contenedores-layout">
+  <header class="contenedores-navbar">
+    <img src="fondo_transparente.png" alt="Semantica Clientes" class="contenedores-navbar__logo" />
+
+    <app-user-menu />
+  </header>
+
+  <main class="contenedores">
+    <section class="contenedores__panel">
+      <div class="contenedores__header">
+        <h1 class="contenedores__title">Tus empresas</h1>
+        <p class="contenedores__subtitle">
+          @if (!loading() && !errorMessage() && contenedores().length > 0) {
+            {{ summary() }}
+          } @else {
+            Selecciona una empresa para continuar
+          }
+        </p>
+      </div>
+
+      @if (!loading() && !errorMessage() && contenedores().length > 0) {
+        <p-iconfield class="contenedores__search">
+          <p-inputicon class="pi pi-search" />
+          <input
+            pInputText
+            type="text"
+            placeholder="Buscar empresa..."
+            aria-label="Buscar empresa"
+            [value]="searchQuery()"
+            (input)="searchQuery.set($any($event.target).value)"
+          />
+        </p-iconfield>
+      }
+
+      <div class="contenedores__body">
+        @if (loading()) {
+          <ul class="contenedores__list">
+            @for (item of skeletonItems; track $index) {
+              <li class="contenedor-row contenedor-row--skeleton">
+                <p-skeleton shape="square" size="2.75rem" borderRadius="10px" />
+                <div class="contenedor-row__main">
+                  <p-skeleton width="60%" height="1rem" />
+                  <p-skeleton width="35%" height="0.75rem" />
+                </div>
+              </li>
+            }
+          </ul>
+        } @else if (errorMessage()) {
+          <app-error-alert
+            [message]="errorMessage()!"
+            [retryable]="true"
+            (retry)="loadContenedores()"
+          />
+        } @else if (contenedores().length === 0) {
+          <app-empty-state
+            icon="pi pi-building"
+            title="Sin empresas"
+            message="Tu usuario no está asociado como cliente a ninguna empresa. Comunícate con tu proveedor para que te dé acceso al portal."
+          />
+        } @else if (filteredContenedores().length === 0) {
+          <app-empty-state
+            icon="pi pi-search"
+            title="Sin resultados"
+            message="No encontramos empresas que coincidan con tu búsqueda."
+          />
+        } @else {
+          <ul class="contenedores__list">
+            @for (contenedor of filteredContenedores(); track contenedor.id) {
+              <li>
+                <button
+                  type="button"
+                  class="contenedor-row"
+                  [class.contenedor-row--inactivo]="!puedeIngresar(contenedor)"
+                  [disabled]="!puedeIngresar(contenedor)"
+                  (click)="ingresar(contenedor)"
+                >
+                  <span class="contenedor-row__avatar" aria-hidden="true">
+                    {{ inicial(contenedor) }}
+                  </span>
+
+                  <span class="contenedor-row__main">
+                    <span class="contenedor-row__nombre">{{ nombre(contenedor) }}</span>
+                    <span class="contenedor-row__tags">
+                      @if (contenedor.control) {
+                        <span class="contenedor-tag contenedor-tag--admin">
+                          <i class="pi pi-crown" aria-hidden="true"></i>
+                          Propietario
+                        </span>
+                      } @else {
+                        <span class="contenedor-tag">Miembro</span>
+                      }
+                      @if (!contenedor.activo) {
+                        <span class="contenedor-tag contenedor-tag--inactivo">Inactivo</span>
+                      } @else if (contenedor.cliente_id === null) {
+                        <span class="contenedor-tag contenedor-tag--inactivo">
+                          Sin cliente asignado
+                        </span>
+                      }
+                    </span>
+                  </span>
+
+                  @if (puedeIngresar(contenedor)) {
+                    <span class="contenedor-row__cta">
+                      <span class="contenedor-row__cta-label">Ingresar</span>
+                      <i class="pi pi-arrow-right" aria-hidden="true"></i>
+                    </span>
+                  } @else {
+                    <i class="pi pi-lock contenedor-row__lock" aria-hidden="true"></i>
+                  }
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </section>
+  </main>
+</div>
