@@ -53,6 +53,14 @@ const PERMISO_POR_PAGO: Record<string, keyof Tercero> = {
  * Tipos de guía que puede usar el tercero. Replica el filtro de terbio: un tipo se
  * oculta si su forma de pago no está habilitada, y uno sin forma de pago queda para todos.
  */
+/**
+ * Como en terbio (`validarFlete`): la guía no se guarda con flete en 0 si el tipo lo valida,
+ * salvo cortesía. El catálogo no trae la bandera `cortesia`; su pago es `CTS`.
+ */
+export function exigeFlete(tipo: GuiaTipo | undefined): boolean {
+  return !!tipo?.validar_flete && tipo.codigo_pago_fk !== 'CTS';
+}
+
 export function tiposDisponibles(tipos: GuiaTipo[], tercero: Tercero): GuiaTipo[] {
   return tipos.filter((tipo) => {
     const permiso = PERMISO_POR_PAGO[tipo.codigo_pago_fk ?? ''];

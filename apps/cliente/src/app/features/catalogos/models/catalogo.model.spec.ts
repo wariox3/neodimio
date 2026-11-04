@@ -1,4 +1,10 @@
-import { GuiaTipo, opcionesProducto, Tercero, tiposDisponibles } from './catalogo.model';
+import {
+  exigeFlete,
+  GuiaTipo,
+  opcionesProducto,
+  Tercero,
+  tiposDisponibles,
+} from './catalogo.model';
 
 describe('opcionesProducto', () => {
   it('ofrece VARIOS aunque el tercero no tenga productos', () => {
@@ -76,5 +82,24 @@ describe('tiposDisponibles', () => {
   it('trata un permiso nulo como no habilitado', () => {
     const resultado = tiposDisponibles(TIPOS, tercero({ guia_pago_credito: null }));
     expect(codigos(resultado)).toEqual(['SIN_PAGO']);
+  });
+});
+
+describe('exigeFlete', () => {
+  const tipo = {
+    codigo_guia_tipo_pk: 'COR',
+    nombre: null,
+    codigo_pago_fk: 'COR',
+    validar_flete: true,
+  };
+
+  it('exige flete si el tipo lo valida', () => {
+    expect(exigeFlete(tipo)).toBeTrue();
+    expect(exigeFlete({ ...tipo, validar_flete: false })).toBeFalse();
+    expect(exigeFlete(undefined)).toBeFalse();
+  });
+
+  it('no lo exige en cortesía aunque el tipo lo valide', () => {
+    expect(exigeFlete({ ...tipo, codigo_pago_fk: 'CTS' })).toBeFalse();
   });
 });

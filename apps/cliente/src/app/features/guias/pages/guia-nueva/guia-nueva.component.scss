@@ -194,6 +194,13 @@
   color: var(--p-text-color);
 }
 
+/** Dato de la tarifa bajo el campo, como el valor de solo lectura de terbio. */
+.field__hint {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  font-variant-numeric: tabular-nums;
+}
+
 // Tipo + número de identificación en una sola fila.
 .identificacion-group {
   display: flex;
@@ -232,6 +239,49 @@
 }
 
 // ─── Responsive ───────────────────────────────────────────────────────────────
+// ─── Condiciones del cliente para el destino ──────────────────────────────────
+.condiciones {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--p-surface-0);
+  border: 1px solid var(--p-surface-200);
+  border-left: 3px solid var(--p-primary-color);
+  border-radius: 12px;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  &__valor {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--p-text-color);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__nota {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--p-primary-color);
+  }
+}
+
 @media (max-width: 1024px) {
   .guia-panels {
     flex-direction: column;
@@ -247,6 +297,10 @@
 }
 
 @media (max-width: 768px) {
+  .condiciones {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .form-grid--3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

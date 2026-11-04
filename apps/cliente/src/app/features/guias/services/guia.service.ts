@@ -11,10 +11,14 @@ import {
 import { TipoImpresion } from '../../catalogos/models/catalogo.model';
 import { MembresiaClienteService } from '../../contenedores/services/membresia-cliente.service';
 import {
+  CondicionEspecialRequest,
+  CondicionEspecialResponse,
   Guia,
   GuiaDetalle,
   GuiaListaParams,
   GuiaNovedad,
+  GuiaNuevaRequest,
+  GuiaNuevaResponse,
   LiquidarRequest,
   LiquidarResponse,
 } from '../models/guia.model';
@@ -46,9 +50,18 @@ export class GuiaService extends BaseHttpService {
     });
   }
 
+  crear(guia: GuiaNuevaRequest): Observable<GuiaNuevaResponse> {
+    return this.post<GuiaNuevaResponse>(API_ENDPOINTS.guia.nuevo, guia);
+  }
+
   /** Calcula flete, manejo y peso facturado sin crear la guía. */
   liquidar(parametros: LiquidarRequest): Observable<LiquidarResponse> {
     return this.post<LiquidarResponse>(API_ENDPOINTS.guia.liquidar, parametros);
+  }
+
+  /** Precio y condiciones especiales de flete y manejo del cliente para un origen/destino. */
+  condicionEspecial(parametros: CondicionEspecialRequest): Observable<CondicionEspecialResponse> {
+    return this.post<CondicionEspecialResponse>(API_ENDPOINTS.guia.condicionEspecial, parametros);
   }
 
   obtener(id: number): Observable<GuiaDetalle> {

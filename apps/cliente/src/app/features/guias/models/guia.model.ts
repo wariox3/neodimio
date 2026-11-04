@@ -1,4 +1,5 @@
 import { Ciudad, OpcionCatalogo, Tercero } from '../../catalogos/models/catalogo.model';
+import { Destinatario } from '../../destinatarios/models/destinatario.model';
 
 /**
  * Guía tal como llega en `GET /tte/guia/lista` (`GuiaResponse` de fluor).
@@ -139,6 +140,8 @@ export interface LiquidarRequest {
   unidades: number;
   peso: number;
   volumen: number;
+  /** Lo que se ve en el formulario; fluor aún no lo recibe (ver `parametrosLiquidacion`). */
+  peso_facturado: number;
   declarado: number;
 }
 
@@ -157,6 +160,7 @@ export interface ValoresLiquidacion {
   unidades?: number | null;
   peso_real?: number | null;
   peso_volumen?: number | null;
+  peso_facturado?: number | null;
   vr_declara?: number | null;
 }
 
@@ -187,8 +191,269 @@ export function parametrosLiquidacion(
     unidades,
     peso: valores.peso_real ?? 0,
     volumen: valores.peso_volumen ?? 0,
+    peso_facturado: valores.peso_facturado ?? 0,
     declarado: valores.vr_declara ?? 0,
   };
+}
+
+/** Cuerpo de `POST /tte/guia/condicion-especial`. */
+export interface CondicionEspecialRequest {
+  codigo_tercero: number;
+  origen: string;
+  destino: string;
+  precio: number;
+  guia_tipo: string | null;
+  producto: string | null;
+}
+
+/**
+ * Precio y condiciones (flete y manejo) que aplican al tercero para un origen/destino.
+ * Si no hay condición especial, los mínimos de manejo son los de la condición del tercero.
+ */
+export interface CondicionEspecialResponse {
+  error: boolean;
+  error_mensaje: string | null;
+  condicion_especial_flete: boolean;
+  condicion_especial_manejo: boolean;
+  cobertura: string | null;
+  vr_peso: number;
+  vr_unidad: number;
+  descuento_peso: number;
+  descuento_unidad: number;
+  peso_minimo: number;
+  peso_minimo_guia: number;
+  flete_minimo: number;
+  flete_minimo_guia: number;
+  porcentaje_manejo: number;
+  manejo_minimo_unidad: number;
+  manejo_minimo_guia: number;
+  reexpedicion: boolean;
+}
+
+/** Campos del formulario de la guía nueva que determinan las condiciones. */
+export interface ValoresCondicion {
+  codigo_guia_tipo_fk?: string | null;
+  codigo_ciudad_destino_fk?: string | null;
+  codigo_producto_fk?: string | null;
+}
+
+/**
+ * Datos para consultar las condiciones, o `null` si falta alguno. Como en terbio,
+ * se consultan en cuanto hay destino, sin esperar el resto de la mercancía.
+ */
+export function parametrosCondicion(
+  valores: ValoresCondicion,
+  tercero: Tercero | null,
+  origen: string | null,
+): CondicionEspecialRequest | null {
+  const destino = valores.codigo_ciudad_destino_fk;
+  const precio = tercero?.condicion_codigo_precio_fk ?? null;
+  if (!tercero || precio === null || !origen || !destino) return null;
+
+  return {
+    codigo_tercero: tercero.codigo_tercero_pk,
+    origen,
+    destino,
+    precio,
+    guia_tipo: valores.codigo_guia_tipo_fk || null,
+    producto: valores.codigo_producto_fk || null,
+  };
+}
+
+/** Empaque y servicio que asigna holmio a las guías del portal (`apiOxigenoNuevo`). */
+export const EMPAQUE_PORTAL = 'VARIOS';
+export const SERVICIO_PORTAL = 'PAQ';
+
+/** Cuerpo de `POST /tte/guia/nuevo` (`GuiaCreateRequest` de fluor). */
+export interface GuiaNuevaRequest {
+  codigo_guia_tipo_fk: string;
+  codigo_operacion_ingreso_fk: string;
+  codigo_tercero_fk: number;
+  codigo_adquiriente_fk: number;
+  codigo_empaque_fk: string;
+  codigo_producto_fk: string;
+  codigo_servicio_fk: string;
+  codigo_ciudad_origen_fk: string;
+  codigo_ciudad_destino_fk: string;
+  documento_cliente: string | null;
+  codigo_tercero_operacion_fk: number | null;
+  remitente: string;
+  codigo_destinatario_fk: number | null;
+  codigo_identificacion_destinatario_fk: string;
+  numero_identificacion_destinatario: string;
+  nombre_destinatario: string;
+  direccion_destinatario: string;
+  telefono_destinatario: string;
+  unidades: number;
+  peso_real: number;
+  peso_volumen: number;
+  peso_facturado: number;
+  vr_flete: number;
+  vr_manejo: number;
+  vr_declara: number;
+  vr_recaudo: number;
+  estado_recogido: boolean;
+  estado_ingreso: boolean;
+  devolver_documento_cliente: boolean;
+  liquidar: boolean;
+  condicion: number | null;
+  precio: number | null;
+  zona: string | null;
+  tipo_liquidacion: TipoLiquidacion;
+  comentario: string;
+}
+
+/** Lo que interesa de la respuesta de `POST /tte/guia/nuevo`. */
+export interface GuiaNuevaResponse {
+  codigo_guia_pk: number;
+}
+
+/** Valores del formulario de la guía nueva que van al guardar. */
+export interface ValoresGuiaNueva {
+  codigo_guia_tipo_fk: string;
+  tipo_liquidacion: TipoLiquidacion | null;
+  codigo_tercero_operacion_fk: number | null;
+  documento_cliente: string;
+  remitente: string;
+  codigo_identificacion_destinatario_fk: TipoIdentificacion | null;
+  numero_identificacion_destinatario: string;
+  nombre_destinatario: string;
+  direccion_destinatario: string;
+  telefono_destinatario: string;
+  codigo_ciudad_destino_fk: string | null;
+  codigo_producto_fk: string;
+  unidades: number;
+  peso_real: number;
+  peso_volumen: number;
+  peso_facturado: number;
+  vr_declara: number;
+  vr_recaudo: number;
+  devolver_documento_cliente: boolean;
+  comentario: string;
+}
+
+/** Datos de la guía que no salen del formulario. */
+export interface ContextoGuiaNueva {
+  tercero: Tercero;
+  /** Operación de ingreso de la configuración del usuario. */
+  operacionIngreso: string;
+  origen: string;
+  ciudades: Ciudad[];
+  flete: number;
+  manejo: number;
+  /** Destinatario elegido en el buscador, si sigue siendo el de la guía. */
+  destinatario: Destinatario | null;
+}
+
+/**
+ * Cuerpo para guardar la guía, como la arma terbio: los valores son los que ve el usuario
+ * (`liquidar: false`) y nace recogida e ingresada, los valores por defecto de holmio.
+ */
+export function cuerpoGuiaNueva(v: ValoresGuiaNueva, ctx: ContextoGuiaNueva): GuiaNuevaRequest {
+  const destino = v.codigo_ciudad_destino_fk ?? '';
+  const destinatario =
+    ctx.destinatario?.numero_identificacion === v.numero_identificacion_destinatario
+      ? ctx.destinatario.codigo_destinatario_pk
+      : null;
+  return {
+    codigo_guia_tipo_fk: v.codigo_guia_tipo_fk,
+    codigo_operacion_ingreso_fk: ctx.operacionIngreso,
+    codigo_tercero_fk: ctx.tercero.codigo_tercero_pk,
+    codigo_adquiriente_fk: ctx.tercero.codigo_tercero_pk,
+    codigo_empaque_fk: EMPAQUE_PORTAL,
+    codigo_producto_fk: v.codigo_producto_fk,
+    codigo_servicio_fk: SERVICIO_PORTAL,
+    codigo_ciudad_origen_fk: ctx.origen,
+    codigo_ciudad_destino_fk: destino,
+    documento_cliente: v.documento_cliente || null,
+    codigo_tercero_operacion_fk: v.codigo_tercero_operacion_fk,
+    // Como holmio: sin remitente queda el nombre del cliente.
+    remitente: v.remitente || (ctx.tercero.nombre_corto ?? ''),
+    codigo_destinatario_fk: destinatario,
+    codigo_identificacion_destinatario_fk: v.codigo_identificacion_destinatario_fk ?? '',
+    numero_identificacion_destinatario: v.numero_identificacion_destinatario,
+    nombre_destinatario: v.nombre_destinatario,
+    // Como holmio (`limpiarEspaciosTexto`): sin espacios repetidos.
+    direccion_destinatario: v.direccion_destinatario.replace(/\s+/g, ' ').trim(),
+    telefono_destinatario: v.telefono_destinatario,
+    unidades: v.unidades,
+    peso_real: v.peso_real,
+    peso_volumen: v.peso_volumen,
+    peso_facturado: v.peso_facturado,
+    vr_flete: ctx.flete,
+    vr_manejo: ctx.manejo,
+    vr_declara: v.vr_declara,
+    vr_recaudo: v.vr_recaudo,
+    estado_recogido: true,
+    estado_ingreso: true,
+    devolver_documento_cliente: v.devolver_documento_cliente,
+    liquidar: false,
+    condicion: ctx.tercero.codigo_condicion_fk,
+    precio: ctx.tercero.condicion_codigo_precio_fk,
+    zona: ctx.ciudades.find((c) => c.codigo_ciudad_pk === destino)?.codigo_zona_fk ?? null,
+    tipo_liquidacion: v.tipo_liquidacion ?? 'K',
+    comentario: v.comentario,
+  };
+}
+
+/**
+ * Mínimos de peso de las condiciones del destino. `peso_minimo_guia` solo viene con
+ * condición especial de flete; si no la hay, fluor lo devuelve en 0, igual que terbio.
+ */
+export type MinimosPeso = Pick<CondicionEspecialResponse, 'peso_minimo' | 'peso_minimo_guia'>;
+
+/*
+ * Reglas de los pesos al salir de cada campo, tal cual `guia/nuevo.html.twig` de terbio.
+ * Cada una solo actualiza los campos que terbio actualiza en ese mismo evento.
+ */
+
+/** Al salir de unidades: el peso real pasa a ser unidades × peso mínimo, sin bajar del de la guía. */
+export function pesoRealPorUnidades(unidades: number, minimos: MinimosPeso): number {
+  const peso = unidades * minimos.peso_minimo;
+  return peso < minimos.peso_minimo_guia ? minimos.peso_minimo_guia : peso;
+}
+
+/** Al salir del peso real: el volumen en 0 toma el peso real y se recalcula el facturado. */
+export function pesosAlSalirDelReal(
+  real: number,
+  volumen: number,
+  minimos: MinimosPeso,
+): { peso_volumen: number; peso_facturado: number } {
+  let facturado = volumen > real ? volumen : real;
+  if (minimos.peso_minimo_guia > real && minimos.peso_minimo_guia > volumen) {
+    facturado = minimos.peso_minimo_guia;
+  }
+  return { peso_volumen: volumen <= 0 ? real : volumen, peso_facturado: facturado };
+}
+
+/** Al salir del volumen: el facturado solo cambia si el volumen o el mínimo de la guía lo superan. */
+export function facturadoAlSalirDelVolumen(
+  volumen: number,
+  real: number,
+  facturado: number,
+  minimos: MinimosPeso,
+): number {
+  if (volumen > real) facturado = volumen;
+  if (minimos.peso_minimo_guia > real && minimos.peso_minimo_guia > volumen) {
+    facturado = minimos.peso_minimo_guia;
+  }
+  return facturado;
+}
+
+/** Al salir del facturado: el digitado se respeta, pero no queda por debajo de los mínimos. */
+export function facturadoAlSalirDelFacturado(
+  facturado: number,
+  unidades: number,
+  volumen: number,
+  minimos: MinimosPeso,
+): number {
+  const minimoTotal = unidades * minimos.peso_minimo;
+  if (facturado < minimoTotal) facturado = minimoTotal;
+  if (facturado < volumen && volumen > minimoTotal) facturado = volumen;
+  if (facturado < minimos.peso_minimo_guia && minimos.peso_minimo_guia > minimoTotal) {
+    facturado = minimos.peso_minimo_guia;
+  }
+  return facturado;
 }
 
 /**

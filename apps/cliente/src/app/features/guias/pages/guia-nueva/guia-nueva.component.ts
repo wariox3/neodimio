@@ -3,8 +3,8 @@ import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-i
 import { HttpErrorResponse } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { catchError, debounceTime, forkJoin, of, switchMap, tap } from 'rxjs';
+import { Router, RouterLink } from '@angular/router';
+import { catchError, debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -17,6 +17,8 @@ import { PageHeaderComponent, TrimInputDirective } from '@semantica/ui';
 import { ROUTE_PATHS } from '../../../../core';
 import {
   Ciudad,
+  exigeFlete,
+  GuiaTipo,
   OpcionCatalogo,
   opcionesProducto,
   PRODUCTO_VARIOS,
@@ -29,11 +31,20 @@ import { DestinatarioNuevoComponent } from '../../../destinatarios/components/de
 import { Destinatario, DestinatarioNuevo } from '../../../destinatarios/models/destinatario.model';
 import {
   Adquiriente,
+  CondicionEspecialRequest,
+  CondicionEspecialResponse,
+  cuerpoGuiaNueva,
+  facturadoAlSalirDelFacturado,
+  facturadoAlSalirDelVolumen,
   liquidacionesDisponibles,
   LiquidarRequest,
   LiquidarResponse,
+  MinimosPeso,
   operacionPorDefecto,
+  parametrosCondicion,
   parametrosLiquidacion,
+  pesoRealPorUnidades,
+  pesosAlSalirDelReal,
   tipoIdentificacionGuia,
   TipoIdentificacion,
   TipoLiquidacion,
@@ -71,14 +82,22 @@ export class GuiaNuevaComponent implements OnInit {
   private readonly guiaService = inject(GuiaService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly toastService = inject(ToastService);
+  private readonly router = inject(Router);
 
   readonly listaRoute = ROUTE_PATHS.dashboard.transporte.guias;
 
   readonly errorMessage = signal<string | null>(null);
+  readonly guardando = signal(false);
+  /** Operación por la que ingresa la guía (`codigo_operacion_fk` de la configuración). */
+  private readonly operacionIngreso = signal<string | null>(null);
+  /** Último destinatario elegido, para enlazar la guía con él. */
+  private readonly destinatarioElegido = signal<Destinatario | null>(null);
 
   /** Por defecto es el tercero de la membresía del usuario, como en terbio. */
   readonly adquiriente = signal<Adquiriente | null>(null);
   readonly tipos = signal<OpcionCatalogo[]>([]);
+  /** Tipos habilitados con sus reglas, para validar al guardar. */
+  private readonly tiposGuia = signal<GuiaTipo[]>([]);
   readonly buscarVisible = signal(false);
   readonly nuevoDestinatarioVisible = signal(false);
   /** Lo escrito en la guía al abrir el diálogo, para no digitarlo otra vez. */
@@ -117,6 +136,7 @@ export class GuiaNuevaComponent implements OnInit {
     // terbio exige unidades, peso real y peso facturado mayores que cero.
     peso_real: [0, [Validators.required, Validators.min(0.01)]],
     peso_volumen: [0, [Validators.required, Validators.min(0)]],
+    peso_facturado: [0, [Validators.required, Validators.min(0.01)]],
     vr_declara: [0, [Validators.required, Validators.min(0)]],
     // Valores
     vr_recaudo: [0, [Validators.required, Validators.min(0)]],
@@ -147,8 +167,35 @@ export class GuiaNuevaComponent implements OnInit {
   );
   private readonly parametros$ = toObservable(this.parametros);
 
+  /** Se consulta de nuevo solo cuando cambia el tipo, el destino o el producto. */
+  private readonly parametrosCondicion = computed<CondicionEspecialRequest | null>(
+    () => parametrosCondicion(this.valores(), this.tercero(), this.origen() ?? null),
+    { equal: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
+  );
+  private readonly parametrosCondicion$ = toObservable(this.parametrosCondicion);
+
+  /** Condiciones que se muestran arriba del formulario, como en terbio. */
+  readonly condicion = signal<CondicionEspecialResponse | null>(null);
+
+  /** Sin condiciones consultadas, los pesos se comparan sin mínimos. */
+  private readonly minimosPeso = computed<MinimosPeso>(() => ({
+    peso_minimo: this.condicion()?.peso_minimo ?? 0,
+    peso_minimo_guia: this.condicion()?.peso_minimo_guia ?? 0,
+  }));
+
   private readonly liquidacion = signal<LiquidarResponse | null>(null);
+  /** Parámetros con los que se obtuvo `liquidacion`. */
+  private readonly liquidadoCon = signal<LiquidarRequest | null>(null);
   readonly liquidando = signal(false);
+  /**
+   * Si los valores mostrados corresponden a los datos actuales. Se compara contra los
+   * parámetros de la última liquidación y no solo con `liquidando`, que se enciende después
+   * de que Angular procesa el cambio.
+   */
+  private readonly liquidacionAlDia = computed(() => {
+    const actuales = this.parametros();
+    return actuales === null || JSON.stringify(actuales) === JSON.stringify(this.liquidadoCon());
+  });
   private readonly liquidacionRechazada = signal(false);
 
   /** Motivo por el que no se puede liquidar, si lo hay. */
@@ -162,11 +209,10 @@ export class GuiaNuevaComponent implements OnInit {
     return this.liquidacionRechazada() ? 'No se pudo liquidar con estos datos.' : null;
   });
 
-  /** Sin liquidación, se factura el mayor entre el peso real y el peso volumen. */
-  readonly pesoFacturado = computed(() => {
-    const { peso_real, peso_volumen } = this.valores();
-    return this.liquidacion()?.peso_facturado ?? Math.max(peso_real ?? 0, peso_volumen ?? 0);
-  });
+  /** El que liquidó fluor; mientras tanto, el del formulario. */
+  readonly pesoFacturado = computed(
+    () => this.liquidacion()?.peso_facturado ?? this.valores().peso_facturado ?? 0,
+  );
 
   /** Son informativos: en terbio también son de solo lectura y los liquida el sistema. */
   readonly flete = computed(() => this.liquidacion()?.flete ?? 0);
@@ -192,14 +238,22 @@ export class GuiaNuevaComponent implements OnInit {
       });
     forkJoin({ tipos: this.catalogoService.guiaTipos(), tercero: this.catalogoService.tercero() })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(({ tipos, tercero }) =>
+      .subscribe(({ tipos, tercero }) => {
+        const disponibles = tiposDisponibles(tipos, tercero);
+        this.tiposGuia.set(disponibles);
         this.tipos.set(
-          tiposDisponibles(tipos, tercero).map((t) => ({
+          disponibles.map((t) => ({
             value: t.codigo_guia_tipo_pk,
             label: t.nombre ?? t.codigo_guia_tipo_pk,
           })),
-        ),
-      );
+        );
+        // Como en terbio, queda seleccionado el primero; no se pisa si ya eligió uno.
+        if (!this.form.controls.codigo_guia_tipo_fk.value) {
+          this.form.controls.codigo_guia_tipo_fk.setValue(
+            disponibles[0]?.codigo_guia_tipo_pk ?? '',
+          );
+        }
+      });
     forkJoin({
       operaciones: this.catalogoService.operacionesTercero(),
       // Sin configuración igual se listan las operaciones, solo que sin una por defecto.
@@ -212,6 +266,7 @@ export class GuiaNuevaComponent implements OnInit {
           label: o.nombre ?? o.codigo ?? String(o.codigo_tercero_operacion_pk),
         }));
         this.operaciones.set(opciones);
+        this.operacionIngreso.set(configuracion?.codigo_operacion_fk ?? null);
         this.form.controls.codigo_tercero_operacion_fk.setValue(
           operacionPorDefecto(opciones, configuracion?.codigo_tercero_operacion_fk ?? null),
         );
@@ -232,7 +287,25 @@ export class GuiaNuevaComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((origen) => this.origen.set(origen));
+    this.consultarCondicionAlCambiar();
     this.liquidarAlCambiar();
+  }
+
+  /** Mientras cambian los datos se ocultan las condiciones anteriores, que ya no aplican. */
+  private consultarCondicionAlCambiar(): void {
+    this.parametrosCondicion$
+      .pipe(
+        tap(() => this.condicion.set(null)),
+        debounceTime(ESPERA_LIQUIDACION_MS),
+        switchMap((parametros) =>
+          parametros
+            ? // Es informativo: si falla, la guía se puede seguir llenando sin él.
+              this.guiaService.condicionEspecial(parametros).pipe(catchError(() => of(null)))
+            : of(null),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((condicion) => this.condicion.set(condicion?.error ? null : condicion));
   }
 
   /** Liquida con cada cambio; mientras tanto los valores vuelven a 0, como en terbio. */
@@ -241,28 +314,74 @@ export class GuiaNuevaComponent implements OnInit {
       .pipe(
         tap((parametros) => {
           this.liquidacion.set(null);
+          this.liquidadoCon.set(null);
           this.liquidacionRechazada.set(false);
           this.liquidando.set(parametros !== null);
         }),
         debounceTime(ESPERA_LIQUIDACION_MS),
         switchMap((parametros) => {
-          if (!parametros) return of(null);
+          if (!parametros) return of({ parametros, liquidacion: null });
           return this.guiaService.liquidar(parametros).pipe(
+            map((liquidacion) => ({ parametros, liquidacion })),
             catchError((err: unknown) => {
               // 0, 403, 429 y 500+ ya los avisa el interceptor.
               if (err instanceof HttpErrorResponse && [400, 404, 422].includes(err.status)) {
                 this.liquidacionRechazada.set(true);
               }
-              return of(null);
+              return of({ parametros: null, liquidacion: null });
             }),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((liquidacion) => {
+      .subscribe(({ parametros, liquidacion }) => {
         this.liquidacion.set(liquidacion);
+        this.liquidadoCon.set(liquidacion ? parametros : null);
         this.liquidando.set(false);
       });
+  }
+
+  /*
+   * Los pesos se ajustan al salir de cada campo, como en terbio, y no mientras se escribe:
+   * así el usuario puede digitar un valor y el ajuste aplica cuando termina.
+   */
+
+  /** Sin condiciones no hay peso mínimo con qué calcular, y no se pisa lo digitado. */
+  alSalirDeUnidades(): void {
+    if (!this.condicion()) return;
+    const { unidades } = this.form.getRawValue();
+    this.form.controls.peso_real.setValue(pesoRealPorUnidades(unidades ?? 0, this.minimosPeso()));
+  }
+
+  alSalirDelPesoReal(): void {
+    const { peso_real, peso_volumen } = this.form.getRawValue();
+    this.form.patchValue(
+      pesosAlSalirDelReal(peso_real ?? 0, peso_volumen ?? 0, this.minimosPeso()),
+    );
+  }
+
+  alSalirDelPesoVolumen(): void {
+    const { peso_real, peso_volumen, peso_facturado } = this.form.getRawValue();
+    this.form.controls.peso_facturado.setValue(
+      facturadoAlSalirDelVolumen(
+        peso_volumen ?? 0,
+        peso_real ?? 0,
+        peso_facturado ?? 0,
+        this.minimosPeso(),
+      ),
+    );
+  }
+
+  alSalirDelPesoFacturado(): void {
+    const { peso_facturado, unidades, peso_volumen } = this.form.getRawValue();
+    this.form.controls.peso_facturado.setValue(
+      facturadoAlSalirDelFacturado(
+        peso_facturado ?? 0,
+        unidades ?? 0,
+        peso_volumen ?? 0,
+        this.minimosPeso(),
+      ),
+    );
   }
 
   abrirNuevoDestinatario(): void {
@@ -280,6 +399,7 @@ export class GuiaNuevaComponent implements OnInit {
 
   /** Llena los datos del destinatario elegido en el buscador o recién creado. */
   usarDestinatario(destinatario: Destinatario): void {
+    this.destinatarioElegido.set(destinatario);
     this.form.patchValue({
       codigo_identificacion_destinatario_fk: tipoIdentificacionGuia(
         destinatario.codigo_identificacion_fk,
@@ -316,10 +436,61 @@ export class GuiaNuevaComponent implements OnInit {
       return;
     }
 
-    this.errorMessage.set(null);
-    this.toastService.info(
-      'Registro pendiente',
-      'El registro de guías se habilitará cuando se conecte con el servicio.',
+    const tipo = this.tiposGuia().find(
+      (t) => t.codigo_guia_tipo_pk === this.form.controls.codigo_guia_tipo_fk.value,
     );
+    if (exigeFlete(tipo) && this.flete() <= 0) {
+      this.errorMessage.set('La guía debe tener un flete.');
+      return;
+    }
+
+    const tercero = this.tercero();
+    const origen = this.origen();
+    const operacionIngreso = this.operacionIngreso();
+    if (!tercero || !origen || !operacionIngreso) {
+      this.errorMessage.set(
+        'Tu usuario no tiene una operación de ingreso y un origen configurados.',
+      );
+      return;
+    }
+    // Se guardan los valores que ve el usuario; a medio liquidar estarían en 0 o desfasados.
+    if (this.liquidando() || !this.liquidacionAlDia()) {
+      this.errorMessage.set('Espera a que termine de calcular los valores.');
+      return;
+    }
+
+    this.errorMessage.set(null);
+    this.guardando.set(true);
+    this.guiaService
+      .crear(
+        cuerpoGuiaNueva(this.form.getRawValue(), {
+          tercero,
+          operacionIngreso,
+          origen,
+          ciudades: this.ciudades(),
+          flete: this.flete(),
+          manejo: this.manejo(),
+          destinatario: this.destinatarioElegido(),
+        }),
+      )
+      .pipe(
+        finalize(() => this.guardando.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: ({ codigo_guia_pk }) => {
+          this.toastService.success('Guía creada', `Se creó la guía ${codigo_guia_pk}.`);
+          this.router.navigateByUrl(ROUTE_PATHS.dashboard.transporte.guiaDetalle(codigo_guia_pk));
+        },
+        error: (err: unknown) => {
+          // 0, 403, 429 y 500+ ya los avisa el interceptor.
+          if (err instanceof HttpErrorResponse && [400, 404, 409, 422].includes(err.status)) {
+            const detalle = err.error?.detail;
+            this.errorMessage.set(
+              typeof detalle === 'string' ? detalle : 'No se pudo guardar la guía con estos datos.',
+            );
+          }
+        },
+      });
   }
 }

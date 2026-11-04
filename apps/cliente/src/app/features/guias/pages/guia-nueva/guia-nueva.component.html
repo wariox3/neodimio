@@ -87,6 +87,42 @@
 
       <!-- Columna principal: formulario por secciones -->
       <div class="guia-main">
+        @if (condicion(); as c) {
+          <section class="condiciones" aria-label="Condiciones del cliente para el destino">
+            <div class="condiciones__item">
+              <span class="condiciones__label">Peso mínimo</span>
+              <span class="condiciones__valor">{{ c.peso_minimo | number: '1.0-2' }} kg</span>
+            </div>
+            <div class="condiciones__item">
+              <span class="condiciones__label">Peso mínimo guía</span>
+              <span class="condiciones__valor">{{ c.peso_minimo_guia | number: '1.0-2' }} kg</span>
+            </div>
+            <div class="condiciones__item">
+              <span class="condiciones__label">Manejo mínimo unidad</span>
+              <span class="condiciones__valor"
+                >$ {{ c.manejo_minimo_unidad | number: '1.0-0' }}</span
+              >
+            </div>
+            <div class="condiciones__item">
+              <span class="condiciones__label">Manejo mínimo guía</span>
+              <span class="condiciones__valor">$ {{ c.manejo_minimo_guia | number: '1.0-0' }}</span>
+            </div>
+            @if (c.condicion_especial_flete || c.condicion_especial_manejo) {
+              <p class="condiciones__nota">
+                <i class="pi pi-info-circle" aria-hidden="true"></i>
+                Aplica condición especial de
+                @if (c.condicion_especial_flete && c.condicion_especial_manejo) {
+                  flete y manejo.
+                } @else if (c.condicion_especial_flete) {
+                  flete.
+                } @else {
+                  manejo.
+                }
+              </p>
+            }
+          </section>
+        }
+
         <!-- Información general -->
         <section class="form-section">
           <h3 class="section-title">
@@ -352,6 +388,7 @@
               <p-inputnumber
                 inputId="unidades"
                 formControlName="unidades"
+                (onBlur)="alSalirDeUnidades()"
                 [min]="1"
                 [showButtons]="true"
                 [fluid]="true"
@@ -359,6 +396,8 @@
               />
               @if (errorDe('unidades'); as error) {
                 <small class="form-error">{{ error }}</small>
+              } @else if (condicion(); as c) {
+                <small class="field__hint">$ {{ c.vr_unidad | number: '1.0-0' }} por unidad</small>
               }
             </div>
 
@@ -369,6 +408,7 @@
               <p-inputnumber
                 inputId="peso_real"
                 formControlName="peso_real"
+                (onBlur)="alSalirDelPesoReal()"
                 [min]="0"
                 [maxFractionDigits]="2"
                 [fluid]="true"
@@ -386,6 +426,7 @@
               <p-inputnumber
                 inputId="peso_volumen"
                 formControlName="peso_volumen"
+                (onBlur)="alSalirDelPesoVolumen()"
                 [min]="0"
                 [maxFractionDigits]="2"
                 [fluid]="true"
@@ -393,6 +434,26 @@
               />
               @if (errorDe('peso_volumen'); as error) {
                 <small class="form-error">{{ error }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="peso_facturado" class="field__label">
+                Peso facturado (kg) <span class="form-required">*</span>
+              </label>
+              <p-inputnumber
+                inputId="peso_facturado"
+                formControlName="peso_facturado"
+                (onBlur)="alSalirDelPesoFacturado()"
+                [min]="0"
+                [maxFractionDigits]="2"
+                [fluid]="true"
+                [invalid]="!!errorDe('peso_facturado')"
+              />
+              @if (errorDe('peso_facturado'); as error) {
+                <small class="form-error">{{ error }}</small>
+              } @else if (condicion(); as c) {
+                <small class="field__hint">$ {{ c.vr_peso | number: '1.0-0' }} por kilo</small>
               }
             </div>
           </div>
@@ -482,7 +543,7 @@
             [text]="true"
             [routerLink]="listaRoute"
           />
-          <p-button type="submit" label="Guardar guía" icon="pi pi-check" />
+          <p-button type="submit" label="Guardar guía" icon="pi pi-check" [loading]="guardando()" />
         </div>
       </div>
     </div>

@@ -20,11 +20,13 @@ export const API_ENDPOINTS = {
   },
   guia: {
     lista: '/tte/guia/lista',
+    nuevo: '/tte/guia/nuevo',
     detalle: (id: number) => `/tte/guia/detalle/${id}`,
     formatosImpresion: '/tte/guia/formatos-impresion',
     imprimirGuia: '/tte/guia/imprimir-guia',
     imprimirRotulo: '/tte/guia/imprimir-rotulo',
     liquidar: '/tte/guia/liquidar',
+    condicionEspecial: '/tte/guia/condicion-especial',
   },
   operacion: {
     detalle: (codigo: string) => `/tte/operacion/detalle/${encodeURIComponent(codigo)}`,
