@@ -3,9 +3,12 @@ name: Deploy
 on:
   push:
     branches: [main, dev]
+  # Ejecución manual: despliega todas las apps sin depender de nx affected
+  workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read # nx-set-shas consulta los runs anteriores del workflow
 
 jobs:
   check-affected:
@@ -13,6 +16,7 @@ jobs:
     outputs:
       empleado: ${{ steps.check.outputs.empleado }}
       erp: ${{ steps.check.outputs.erp }}
+      cliente: ${{ steps.check.outputs.cliente }}
 
     steps:
       - name: Checkout
@@ -30,14 +34,23 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Derive SHAs for Nx affected
+        if: github.event_name == 'push'
         uses: nrwl/nx-set-shas@v4
+        with:
+          # Compara contra el último deploy exitoso de la misma rama (dev o main)
+          main-branch-name: ${{ github.ref_name }}
 
       - name: Check affected apps
         id: check
         run: |
-          AFFECTED=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
-          echo "empleado=$(echo "$AFFECTED" | grep -q "^empleado$" && echo true || echo false)" >> $GITHUB_OUTPUT
-          echo "erp=$(echo "$AFFECTED" | grep -q "^erp$" && echo true || echo false)" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            AFFECTED=$(npx nx show projects --type=app)
+          else
+            AFFECTED=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
+          fi
+          for APP in empleado erp cliente; do
+            echo "$APP=$(echo "$AFFECTED" | grep -q "^$APP$" && echo true || echo false)" >> $GITHUB_OUTPUT
+          done
 
   deploy-empleado:
     needs: check-affected
@@ -171,6 +184,75 @@ jobs:
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
             dist/erp/browser/ \
+            ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${{ env.DEPLOY_PATH }}/
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
+
+  deploy-cliente:
+    needs: check-affected
+    if: needs.check-affected.outputs.cliente == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build (staging)
+        if: github.ref == 'refs/heads/dev'
+        run: npx nx build cliente --configuration=staging
+
+      - name: Build (prod)
+        if: github.ref == 'refs/heads/main'
+        run: npx nx build cliente --configuration=production
+
+      - name: Set deploy variables (dev)
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          echo "DEPLOY_HOST=${{ secrets.DEV_HOST }}" >> $GITHUB_ENV
+          echo "DEPLOY_USER=${{ secrets.DEV_SSH_USER }}" >> $GITHUB_ENV
+          echo "DEPLOY_PATH=${{ secrets.CLIENTE_DEV_DEPLOY_PATH }}" >> $GITHUB_ENV
+
+      - name: Set deploy variables (prod)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "DEPLOY_HOST=${{ secrets.PROD_HOST }}" >> $GITHUB_ENV
+          echo "DEPLOY_USER=${{ secrets.PROD_SSH_USER }}" >> $GITHUB_ENV
+          echo "DEPLOY_PATH=${{ secrets.CLIENTE_PROD_DEPLOY_PATH }}" >> $GITHUB_ENV
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          if [ "${{ github.ref }}" = "refs/heads/dev" ]; then
+            echo "${{ secrets.DEV_SSH_KEY }}" > ~/.ssh/deploy_key
+          else
+            echo "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/deploy_key
+          fi
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ env.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Validate deploy path
+        run: |
+          if [[ "$DEPLOY_PATH" == "/var/www/html" || "$DEPLOY_PATH" == "/var/www" || -z "$DEPLOY_PATH" ]]; then
+            echo "ERROR: DEPLOY_PATH '$DEPLOY_PATH' is too broad."
+            exit 1
+          fi
+
+      - name: Deploy via rsync
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            dist/cliente/browser/ \
             ${{ env.DEPLOY_USER }}@${{ env.DEPLOY_HOST }}:${{ env.DEPLOY_PATH }}/
 
       - name: Cleanup SSH key
