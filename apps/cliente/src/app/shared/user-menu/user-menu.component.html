@@ -13,9 +13,16 @@
     <div class="user-menu__header">
       <span class="user-menu__header-avatar" aria-hidden="true">{{ initials() }}</span>
       <div class="user-menu__header-texto">
-        <p class="user-menu__name">{{ displayName() }}</p>
-        @if (displayName() !== email()) {
-          <p class="user-menu__email">{{ email() }}</p>
+        @if (sinNombre()) {
+          <!-- El <wbr> permite cortar en la arroba y no en cualquier letra. -->
+          <p class="user-menu__name user-menu__name--email" [attr.title]="email()">
+            {{ emailPartes().usuario }}<wbr />{{ emailPartes().dominio }}
+          </p>
+        } @else {
+          <p class="user-menu__name">{{ displayName() }}</p>
+          <p class="user-menu__email" [attr.title]="email()">
+            {{ emailPartes().usuario }}<wbr />{{ emailPartes().dominio }}
+          </p>
         }
         @if (activeTenant(); as tenant) {
           <p class="user-menu__tenant">

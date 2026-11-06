@@ -10,6 +10,25 @@
       </a>
     </div>
 
+    <!-- Contenedor activo, alineado con el inicio del contenido -->
+    @if (activeTenant(); as tenant) {
+      <a
+        class="navbar-tenant"
+        [routerLink]="contenedoresRoute"
+        [attr.title]="tenant.nombre + ' · Cambiar de contenedor'"
+        [attr.aria-label]="'Contenedor ' + tenant.nombre + '. Cambiar de contenedor'"
+      >
+        <span class="navbar-tenant__icono" aria-hidden="true">
+          <i class="pi pi-building"></i>
+        </span>
+        <span class="navbar-tenant__texto">
+          <span class="navbar-tenant__label">Contenedor</span>
+          <span class="navbar-tenant__nombre">{{ tenant.nombre }}</span>
+        </span>
+        <i class="pi pi-arrow-right-arrow-left navbar-tenant__cambiar" aria-hidden="true"></i>
+      </a>
+    }
+
     <div class="navbar-end">
       <app-user-menu />
     </div>

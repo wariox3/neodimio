@@ -36,6 +36,21 @@ export class UserMenuComponent {
     return nombre || user.email;
   });
 
+  /** Sin nombre registrado, el correo hace de nombre y se muestra con otro formato. */
+  readonly sinNombre = computed(() => this.displayName() === this.email());
+
+  /**
+   * Correo partido en la `@` para cortarlo por ahí si no cabe: `usuario` y `@dominio`.
+   * Así un correo largo no se parte en mitad de una palabra.
+   */
+  readonly emailPartes = computed(() => {
+    const email = this.email();
+    const arroba = email.lastIndexOf('@');
+    return arroba > 0
+      ? { usuario: email.slice(0, arroba), dominio: email.slice(arroba) }
+      : { usuario: email, dominio: '' };
+  });
+
   readonly initials = computed(() => {
     const name = this.displayName();
     if (!name) return '';

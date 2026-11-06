@@ -81,8 +81,10 @@ export const DASHBOARD_MENU: NavGroup[] = [
   },
   {
     // En terbio solo lo ve quien tiene `gestionTranporte`; fluor aún no expone ese permiso.
+    // Oculto mientras tanto; sus rutas siguen registradas.
     label: 'Gestión logística',
     icon: 'pi pi-truck',
+    oculto: true,
     items: [
       { label: 'Despacho', route: R.gestionLogistica.despachos },
       { label: 'Soporte', route: R.gestionLogistica.soporte },

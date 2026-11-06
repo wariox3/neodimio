@@ -4,12 +4,12 @@ import { NavigationEnd, Router, RouterOutlet, RouterLink, RouterLinkActive } fro
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { DrawerModule } from 'primeng/drawer';
-import { ROUTE_PATHS } from '../../../core';
+import { ActiveTenantService, ROUTE_PATHS } from '../../../core';
 import { UserMenuComponent } from '../../../shared/user-menu/user-menu.component';
 import { DASHBOARD_MENU, NavGroup } from './dashboard-menu';
 
 /**
- * Layout del dashboard: barra superior con logo y menú de usuario, menú lateral
+ * Layout del dashboard: barra superior con logo, contenedor activo y menú de usuario, menú lateral
  * fijo en escritorio y drawer en móvil. El menú se organiza en grupos
  * desplegables, como en terbio.
  */
@@ -32,6 +32,9 @@ export class ShellComponent {
 
   readonly drawerVisible = signal(false);
   readonly inicioRoute = ROUTE_PATHS.dashboard.inicio;
+  readonly contenedoresRoute = ROUTE_PATHS.contenedores.root;
+  /** Empresa en la que está trabajando el usuario, visible siempre en la barra superior. */
+  readonly activeTenant = inject(ActiveTenantService).tenant;
   readonly groups = DASHBOARD_MENU.filter((group) => !group.oculto);
 
   /** Grupos desplegados, por etiqueta. */
