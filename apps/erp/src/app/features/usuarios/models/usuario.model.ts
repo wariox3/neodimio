@@ -54,8 +54,75 @@ export interface UsuarioTenantUpdateRequest {
   cliente_id?: number | null;
 }
 
+/** Permisos y valores por defecto del usuario al crear guías en el portal cliente. */
+export type PermisoGuia =
+  | 'cambiar_valores_guia'
+  | 'bloquear_recaudo'
+  | 'invertir_origen_destino'
+  | 'permite_cambiar_adquiriente'
+  | 'bloquear_adquiriente_credito'
+  | 'bloquear_operacion_cliente'
+  | 'estado_recogido'
+  | 'estado_ingreso';
+
+/** Mismos valores por defecto de fluor para un usuario sin configuración. */
+export const PERMISOS_GUIA_POR_DEFECTO: Record<PermisoGuia, boolean> = {
+  cambiar_valores_guia: false,
+  bloquear_recaudo: false,
+  invertir_origen_destino: false,
+  permite_cambiar_adquiriente: false,
+  bloquear_adquiriente_credito: false,
+  bloquear_operacion_cliente: false,
+  estado_recogido: true,
+  estado_ingreso: true,
+};
+
+/** Textos de cada permiso en el diálogo de configuración, en el orden en que se muestran. */
+export const PERMISOS_GUIA: readonly { campo: PermisoGuia; label: string; hint: string }[] = [
+  {
+    campo: 'cambiar_valores_guia',
+    label: 'Cambiar valores de la guía',
+    hint: 'Puede ajustar el flete y el manejo liquidados.',
+  },
+  {
+    campo: 'bloquear_recaudo',
+    label: 'Bloquear recaudo',
+    hint: 'El recaudo queda en 0 y no lo puede editar.',
+  },
+  {
+    campo: 'invertir_origen_destino',
+    label: 'Invertir origen y destino',
+    hint: 'Las condiciones se consultan con el trayecto al revés.',
+  },
+  {
+    campo: 'permite_cambiar_adquiriente',
+    label: 'Cambiar adquiriente',
+    hint: 'Puede elegir otro adquiriente para la factura electrónica.',
+  },
+  {
+    campo: 'bloquear_adquiriente_credito',
+    label: 'Bloquear adquiriente en crédito',
+    hint: 'En las guías a crédito el adquiriente es siempre su cliente.',
+  },
+  {
+    campo: 'bloquear_operacion_cliente',
+    label: 'Bloquear operación del cliente',
+    hint: 'La operación del cliente queda fija en la configurada.',
+  },
+  {
+    campo: 'estado_recogido',
+    label: 'Guías recogidas',
+    hint: 'Sus guías se crean con estado recogido.',
+  },
+  {
+    campo: 'estado_ingreso',
+    label: 'Guías ingresadas',
+    hint: 'Sus guías se crean con estado ingresado.',
+  },
+];
+
 /** Configuración del usuario en la empresa (`GET /mas/user-tenant-configuracion/{id}`). */
-export interface UsuarioTenantConfiguracion {
+export interface UsuarioTenantConfiguracion extends Record<PermisoGuia, boolean> {
   user_tenant_id: number;
   /** Operación de `tte_operacion` por la que ingresan sus guías. */
   codigo_operacion_fk: string | null;
@@ -67,7 +134,7 @@ export interface UsuarioTenantConfiguracion {
 
 /**
  * Cuerpo de `PATCH /mas/user-tenant-configuracion/{id}/actualizar`. Solo se cambian
- * los campos enviados; `null` los limpia.
+ * los campos enviados; en los códigos `null` los limpia y los permisos no aceptan `null`.
  */
 export type UsuarioTenantConfiguracionUpdateRequest = Partial<
   Omit<UsuarioTenantConfiguracion, 'user_tenant_id'>

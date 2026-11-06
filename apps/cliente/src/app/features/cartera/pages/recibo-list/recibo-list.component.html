@@ -1,0 +1,138 @@
+<div class="page-container">
+  <app-page-header
+    title="Recibos"
+    subtitle="Consulta los recibos de caja aplicados a tu cartera"
+    icon="pi pi-receipt"
+  />
+
+  <div class="card filtros-card">
+    <button
+      type="button"
+      class="filtros-card__header"
+      [attr.aria-expanded]="filtrosVisibles()"
+      aria-controls="recibo-filtros"
+      (click)="toggleFiltros()"
+    >
+      <span class="filtros-card__title">
+        <i class="pi pi-filter" aria-hidden="true"></i>
+        Filtros
+      </span>
+      <i
+        class="pi pi-chevron-down filtros-card__chevron"
+        [class.filtros-card__chevron--open]="filtrosVisibles()"
+        aria-hidden="true"
+      ></i>
+    </button>
+
+    @if (filtrosVisibles()) {
+      <form id="recibo-filtros" [formGroup]="form" (ngSubmit)="buscar()" novalidate>
+        <div class="filtros-grid">
+          <div class="field">
+            <label for="fecha_desde" class="field__label">Fecha desde</label>
+            <p-datepicker
+              inputId="fecha_desde"
+              formControlName="fecha_desde"
+              [showIcon]="true"
+              [fluid]="true"
+              dateFormat="dd/mm/yy"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="fecha_hasta" class="field__label">Fecha hasta</label>
+            <p-datepicker
+              inputId="fecha_hasta"
+              formControlName="fecha_hasta"
+              [showIcon]="true"
+              [fluid]="true"
+              dateFormat="dd/mm/yy"
+              appendTo="body"
+            />
+          </div>
+        </div>
+
+        <div class="filtros-actions">
+          <p-button
+            type="button"
+            label="Limpiar"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            [text]="true"
+            (onClick)="limpiar()"
+          />
+          <p-button type="submit" label="Filtrar" icon="pi pi-search" [loading]="loading()" />
+        </div>
+      </form>
+    }
+  </div>
+
+  @if (loading() && recibos().length === 0) {
+    <app-loading-spinner message="Cargando recibos..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="buscar()" />
+  } @else if (!loading() && recibos().length === 0) {
+    <app-empty-state
+      title="Sin recibos"
+      message="No se encontraron recibos con los filtros seleccionados."
+      icon="pi pi-receipt"
+    />
+  } @else {
+    @if (incompleto()) {
+      <p-message severity="info" styleClass="mb-4">
+        Se revisaron los {{ maxConsulta }} movimientos más recientes. Filtra por fechas para ver
+        recibos anteriores.
+      </p-message>
+    }
+
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-toolbar__count">
+          {{ recibos().length }} {{ recibos().length === 1 ? 'recibo' : 'recibos' }}
+        </span>
+      </div>
+
+      <p-table
+        [value]="recibos()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [first]="first()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onPage)="onPage($event)"
+        [rowHover]="true"
+        [scrollable]="true"
+        scrollHeight="600px"
+        dataKey="codigo_movimiento_pk"
+      >
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Tipo</th>
+            <th>Número</th>
+            <th>Fecha documento</th>
+            <th>Soporte</th>
+            <th class="text-right">Bruto</th>
+            <th class="text-right">Total</th>
+            <th>Comentarios</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-recibo>
+          <tr>
+            <td>{{ recibo.codigo_movimiento_pk }}</td>
+            <td class="nowrap">{{ recibo.movimiento_tipo_nombre ?? '—' }}</td>
+            <td>{{ recibo.numero }}</td>
+            <td class="nowrap">
+              {{ recibo.fecha_documento ? (recibo.fecha_documento | date: 'dd/MM/yyyy') : '—' }}
+            </td>
+            <td class="nowrap">{{ recibo.soporte || '—' }}</td>
+            <td class="text-right nowrap">$ {{ recibo.vr_total_bruto ?? 0 | number: '1.0-0' }}</td>
+            <td class="text-right nowrap">$ {{ recibo.vr_total_neto ?? 0 | number: '1.0-0' }}</td>
+            <td>{{ recibo.comentarios || '—' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

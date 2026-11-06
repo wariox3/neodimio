@@ -1,4 +1,13 @@
 import { Injectable, signal } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+
+/**
+ * Error para las consultas que exigen el cliente de la membresía. Varias listas de fluor
+ * solo filtran por cliente si reciben su id: sin él devolverían los datos de todos.
+ */
+export function sinCliente(): Observable<never> {
+  return throwError(() => new Error('El usuario no tiene un cliente asociado.'));
+}
 
 /**
  * Cliente (tercero) que representa el usuario en la empresa activa y el id de su membresía.

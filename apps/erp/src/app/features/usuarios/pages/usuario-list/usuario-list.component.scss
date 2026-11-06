@@ -222,3 +222,40 @@
     margin: 0;
   }
 }
+
+// Permisos en guías del diálogo de configuración: interruptores con su descripción.
+.permisos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin: 0;
+  padding: 1rem 0 0;
+  border: 0;
+  border-top: 1px solid var(--p-surface-200);
+  min-width: 0;
+}
+
+.permisos__titulo {
+  padding: 0;
+  margin-bottom: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--p-text-muted-color);
+}
+
+.permisos__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+
+  .field-hint {
+    margin-top: 0;
+  }
+}
+
+.permisos__item p-toggleswitch {
+  flex-shrink: 0;
+}

@@ -1,71 +1,109 @@
-import { Ciudad, Tercero } from '../../catalogos/models/catalogo.model';
+import { Ciudad, GuiaTipo, Tercero } from '../../catalogos/models/catalogo.model';
 import { Destinatario } from '../../destinatarios/models/destinatario.model';
 import {
   cuerpoGuiaNueva,
   facturadoAlSalirDelFacturado,
   facturadoAlSalirDelVolumen,
+  CondicionEspecialResponse,
   liquidacionesDisponibles,
+  liquidarGuia,
   operacionPorDefecto,
   parametrosCondicion,
-  parametrosLiquidacion,
   pesoRealPorUnidades,
   pesosAlSalirDelReal,
+  puedeCambiarAdquiriente,
   tipoIdentificacionGuia,
 } from './guia.model';
 
-describe('parametrosLiquidacion', () => {
-  const tercero = {
-    codigo_tercero_pk: 2,
-    codigo_condicion_fk: 18,
-    condicion_codigo_precio_fk: 10,
-  } as Tercero;
-  const ciudades = [
-    {
-      codigo_ciudad_pk: '478',
-      nombre: 'RIONEGRO',
-      departamento_nombre: null,
-      codigo_zona_fk: 'ORI2',
-    },
-  ] as Ciudad[];
-  const valores = {
-    codigo_ciudad_destino_fk: '478',
-    codigo_producto_fk: '17',
-    tipo_liquidacion: 'U' as const,
-    unidades: 1,
-    peso_real: 15,
-    peso_volumen: 0,
-    peso_facturado: 15,
-    vr_declara: 1000,
-  };
+describe('liquidarGuia (fórmulas de terbio)', () => {
+  const condicion = (
+    campos: Partial<CondicionEspecialResponse> = {},
+  ): CondicionEspecialResponse => ({
+    error: false,
+    error_mensaje: null,
+    condicion_especial_flete: false,
+    condicion_especial_manejo: false,
+    cobertura: null,
+    vr_peso: 0,
+    vr_unidad: 0,
+    descuento_peso: 0,
+    descuento_unidad: 0,
+    peso_minimo: 0,
+    peso_minimo_guia: 0,
+    flete_minimo: 0,
+    flete_minimo_guia: 0,
+    porcentaje_manejo: 0,
+    manejo_minimo_unidad: 0,
+    manejo_minimo_guia: 0,
+    reexpedicion: false,
+    ...campos,
+  });
+  const valores = { tipo_liquidacion: 'K' as const, unidades: 1, peso_facturado: 10 };
 
-  it('arma la consulta con el tercero, el origen y la zona del destino', () => {
-    expect(parametrosLiquidacion(valores, tercero, '385', ciudades)).toEqual({
-      tercero: 2,
-      condicion: 18,
-      precio: 10,
-      origen: '385',
-      destino: '478',
-      producto: '17',
-      zona: 'ORI2',
-      tipo_liquidacion: 'U',
-      unidades: 1,
-      peso: 15,
-      volumen: 0,
-      peso_facturado: 15,
-      declarado: 1000,
+  it('no liquida sin forma de liquidar o sin unidades', () => {
+    expect(liquidarGuia({ ...valores, tipo_liquidacion: null }, condicion())).toBeNull();
+    expect(liquidarGuia({ ...valores, unidades: 0 }, condicion())).toBeNull();
+  });
+
+  it('calcula el manejo con el porcentaje sobre el declarado', () => {
+    const c = condicion({ porcentaje_manejo: 5, manejo_minimo_guia: 1250 });
+    expect(liquidarGuia({ ...valores, vr_declara: 100000 }, c)?.manejo).toBe(5000);
+  });
+
+  it('el manejo no baja de los mínimos por unidad y por guía', () => {
+    const conMinimos = { ...valores, unidades: 3, vr_declara: 1000 };
+    const porUnidad = condicion({ porcentaje_manejo: 1, manejo_minimo_unidad: 300 });
+    expect(liquidarGuia(conMinimos, porUnidad)?.manejo).toBe(900);
+    const porGuia = condicion({ porcentaje_manejo: 1, manejo_minimo_guia: 1500 });
+    expect(liquidarGuia(conMinimos, porGuia)?.manejo).toBe(1500);
+  });
+
+  it('por kilo usa el peso facturado digitado y el descuento por peso', () => {
+    const c = condicion({
+      vr_peso: 100,
+      vr_unidad: 1000,
+      descuento_peso: 10,
+      descuento_unidad: 50,
+    });
+    expect(liquidarGuia({ ...valores, peso_facturado: 30 }, c)).toEqual({
+      flete: 2700,
+      manejo: 0,
+      peso_facturado: 30,
     });
   });
 
-  it('no liquida si falta un dato indispensable', () => {
-    expect(parametrosLiquidacion(valores, null, '385', ciudades)).toBeNull();
-    expect(parametrosLiquidacion(valores, tercero, null, ciudades)).toBeNull();
+  it('por unidad usa las unidades y el descuento por unidad', () => {
+    const c = condicion({
+      vr_peso: 100,
+      vr_unidad: 1000,
+      descuento_peso: 50,
+      descuento_unidad: 10,
+    });
+    expect(liquidarGuia({ ...valores, tipo_liquidacion: 'U', unidades: 2 }, c)?.flete).toBe(1800);
+  });
+
+  it('el peso facturado sube a los mínimos de la condición', () => {
+    const c = condicion({ vr_peso: 100, peso_minimo: 10 });
+    expect(liquidarGuia({ ...valores, unidades: 2, peso_facturado: 5 }, c)).toEqual({
+      flete: 2000,
+      manejo: 0,
+      peso_facturado: 20,
+    });
+  });
+
+  it('aplica el flete mínimo de la guía y no el de la unidad', () => {
+    const porUnidad = { ...valores, tipo_liquidacion: 'U' as const, unidades: 2 };
+    expect(liquidarGuia(porUnidad, condicion({ vr_unidad: 100, flete_minimo: 500 }))?.flete).toBe(
+      200,
+    );
     expect(
-      parametrosLiquidacion(valores, { ...tercero, condicion_codigo_precio_fk: null }, '385', []),
-    ).toBeNull();
-    expect(
-      parametrosLiquidacion({ ...valores, codigo_ciudad_destino_fk: null }, tercero, '385', []),
-    ).toBeNull();
-    expect(parametrosLiquidacion({ ...valores, unidades: 0 }, tercero, '385', [])).toBeNull();
+      liquidarGuia(porUnidad, condicion({ vr_unidad: 100, flete_minimo_guia: 500 }))?.flete,
+    ).toBe(500);
+  });
+
+  it('redondea como Math.round', () => {
+    const c = condicion({ porcentaje_manejo: 100 });
+    expect(liquidarGuia({ ...valores, vr_declara: 1250.5 }, c)?.manejo).toBe(1251);
   });
 });
 
@@ -147,6 +185,17 @@ describe('parametrosCondicion', () => {
     );
     expect(parametros?.guia_tipo).toBeNull();
     expect(parametros?.producto).toBeNull();
+  });
+
+  it('invierte el origen y el destino si el usuario lo tiene configurado', () => {
+    const parametros = parametrosCondicion(
+      { codigo_ciudad_destino_fk: '478' },
+      tercero,
+      '385',
+      true,
+    );
+    expect(parametros?.origen).toBe('478');
+    expect(parametros?.destino).toBe('385');
   });
 
   it('devuelve null sin destino, origen o lista de precios', () => {
@@ -236,12 +285,15 @@ describe('cuerpoGuiaNueva', () => {
   };
   const ctx = {
     tercero,
+    adquiriente: 93497,
     operacionIngreso: '11001',
     origen: '1',
     ciudades: [{ codigo_ciudad_pk: '14', codigo_zona_fk: '9' }] as Ciudad[],
     flete: 19468,
     manejo: 1250,
     destinatario: null,
+    estadoRecogido: true,
+    estadoIngreso: true,
   };
 
   it('usa el nombre del cliente si no hay remitente y no reliquida', () => {
@@ -253,6 +305,22 @@ describe('cuerpoGuiaNueva', () => {
     expect(cuerpo.precio).toBe(21);
     expect(cuerpo.zona).toBe('9');
     expect(cuerpo.peso_facturado).toBe(25);
+  });
+
+  it('factura al adquiriente del contexto', () => {
+    expect(cuerpoGuiaNueva(valores, ctx).codigo_adquiriente_fk).toBe(93497);
+    expect(cuerpoGuiaNueva(valores, { ...ctx, adquiriente: 55 }).codigo_adquiriente_fk).toBe(55);
+    expect(cuerpoGuiaNueva(valores, { ...ctx, adquiriente: 55 }).codigo_tercero_fk).toBe(93497);
+  });
+
+  it('nace con los estados de la configuración del usuario', () => {
+    const cuerpo = cuerpoGuiaNueva(valores, {
+      ...ctx,
+      estadoRecogido: false,
+      estadoIngreso: false,
+    });
+    expect(cuerpo.estado_recogido).toBeFalse();
+    expect(cuerpo.estado_ingreso).toBeFalse();
   });
 
   it('enlaza el destinatario elegido solo si sigue siendo el de la guía', () => {
@@ -267,5 +335,28 @@ describe('cuerpoGuiaNueva', () => {
         { ...ctx, destinatario },
       ).codigo_destinatario_fk,
     ).toBeNull();
+  });
+});
+
+describe('puedeCambiarAdquiriente (lupa de terbio)', () => {
+  const credito = { codigo_guia_tipo_pk: 'COR', codigo_pago_fk: 'COR' } as GuiaTipo;
+  const contado = { codigo_guia_tipo_pk: 'CON', codigo_pago_fk: 'CON' } as GuiaTipo;
+
+  it('sin permite_cambiar_adquiriente nunca se puede cambiar', () => {
+    const permisos = { permite_cambiar_adquiriente: false, bloquear_adquiriente_credito: false };
+    expect(puedeCambiarAdquiriente(permisos, contado)).toBeFalse();
+  });
+
+  it('con permiso se cambia en cualquier tipo si no se bloquea el crédito', () => {
+    const permisos = { permite_cambiar_adquiriente: true, bloquear_adquiriente_credito: false };
+    expect(puedeCambiarAdquiriente(permisos, credito)).toBeTrue();
+    expect(puedeCambiarAdquiriente(permisos, contado)).toBeTrue();
+  });
+
+  it('con bloquear_adquiriente_credito no se cambia en los tipos a crédito', () => {
+    const permisos = { permite_cambiar_adquiriente: true, bloquear_adquiriente_credito: true };
+    expect(puedeCambiarAdquiriente(permisos, credito)).toBeFalse();
+    expect(puedeCambiarAdquiriente(permisos, contado)).toBeTrue();
+    expect(puedeCambiarAdquiriente(permisos, undefined)).toBeTrue();
   });
 });

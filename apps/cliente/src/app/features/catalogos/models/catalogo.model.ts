@@ -68,8 +68,95 @@ export function tiposDisponibles(tipos: GuiaTipo[], tercero: Tercero): GuiaTipo[
   });
 }
 
+/** Ciudad general (`GET /gen/ciudad/descargar`); distinta de la de transporte. */
+export interface CiudadGeneral {
+  codigo_ciudad_pk: number;
+  nombre: string | null;
+}
+
+/** Valores generales de la empresa para crear guías (`GET /gen/configuracion/guia-nuevo`). */
+export interface ConfiguracionGeneral {
+  codigo_precio_general_fk: number | null;
+  codigo_condicion_general_fk: number | null;
+  codigo_asesor_general_fk: number | null;
+}
+
+/** Tercero del buscador de adquirientes (`GET /gen/tercero/buscar`, páginas de 10). */
+export interface TerceroBuscar {
+  codigo_tercero_pk: number;
+  numero_identificacion: string | null;
+  nombre_corto: string | null;
+  condicion_nombre: string | null;
+  estado_inactivo: boolean | null;
+}
+
+/** Cuerpo de `POST /gen/tercero/nuevo` (`TerceroCreateRequest` de fluor), lo que usa el portal. */
+export interface TerceroNuevoRequest {
+  codigo_identificacion_fk: string;
+  numero_identificacion: string;
+  digito_verificacion: string | null;
+  codigo_ciudad_fk: number;
+  nombre_corto: string;
+  nombre_extendido: string;
+  codigo_tipo_persona_fk: string | null;
+  codigo_regimen_fk: string | null;
+  nombre1: string;
+  nombre2: string | null;
+  apellido1: string;
+  apellido2: string | null;
+  direccion: string;
+  telefono: string;
+  celular: string;
+  correo: string;
+  codigo_asesor_fk: number;
+  codigo_condicion_fk: number;
+  codigo_operacion_fk: string | null;
+  cliente: boolean;
+  guia_pago_contado: boolean;
+  guia_pago_destino: boolean;
+}
+
+/** Filtros del buscador de terceros, los mismos de `buscarAdquiriente` de terbio. */
+export interface TerceroBuscarParams {
+  page: number;
+  nombre_corto?: string | null;
+  numero_identificacion?: string | null;
+  codigo_tercero_pk?: number | null;
+}
+
+/** Permisos y valores por defecto del usuario al crear guías, como los tenía terbio. */
+export interface PermisosGuia {
+  /** Puede digitar el flete y el manejo en lugar de dejar los liquidados. */
+  cambiar_valores_guia: boolean;
+  /** Puede elegir otro adquiriente para la factura electrónica. */
+  permite_cambiar_adquiriente: boolean;
+  /** Estados con los que nacen sus guías. */
+  estado_recogido: boolean;
+  estado_ingreso: boolean;
+  /** Las condiciones se consultan con el destino como origen y viceversa. */
+  invertir_origen_destino: boolean;
+  /** El recaudo queda en 0 y no se puede editar. */
+  bloquear_recaudo: boolean;
+  /** En los tipos de guía a crédito el adquiriente es siempre su cliente. */
+  bloquear_adquiriente_credito: boolean;
+  /** La operación queda fija en la de su configuración. */
+  bloquear_operacion_cliente: boolean;
+}
+
+/** Los mismos valores por defecto de fluor, para cuando no se puede leer la configuración. */
+export const PERMISOS_GUIA_POR_DEFECTO: PermisosGuia = {
+  cambiar_valores_guia: false,
+  permite_cambiar_adquiriente: false,
+  estado_recogido: true,
+  estado_ingreso: true,
+  invertir_origen_destino: false,
+  bloquear_recaudo: false,
+  bloquear_adquiriente_credito: false,
+  bloquear_operacion_cliente: false,
+};
+
 /** Configuración del usuario en la empresa (`GET /mas/user-tenant-configuracion/{id}`). */
-export interface ConfiguracionUsuario {
+export interface ConfiguracionUsuario extends PermisosGuia {
   user_tenant_id: number;
   /** Operación por la que ingresan las guías del usuario (`tte_operacion`). */
   codigo_operacion_fk: string | null;

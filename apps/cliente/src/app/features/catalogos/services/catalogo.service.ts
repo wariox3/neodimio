@@ -9,6 +9,8 @@ import {
 import { MembresiaClienteService } from '../../contenedores/services/membresia-cliente.service';
 import {
   Ciudad,
+  CiudadGeneral,
+  ConfiguracionGeneral,
   ConfiguracionUsuario,
   FormatoImpresion,
   GuiaTipo,
@@ -16,6 +18,9 @@ import {
   Operacion,
   Servicio,
   Tercero,
+  TerceroBuscar,
+  TerceroBuscarParams,
+  TerceroNuevoRequest,
   TerceroOperacion,
   TerceroProducto,
   TipoImpresion,
@@ -66,6 +71,16 @@ export class CatalogoService extends BaseHttpService {
   }
 
   /**
+   * Descarta la configuración guardada para que la próxima consulta vaya a fluor. Los
+   * permisos los cambia un administrador desde el ERP y deben aplicar sin cerrar sesión.
+   */
+  refrescarConfiguracion(): void {
+    const membresiaId = this.membresiaCliente.membresiaId();
+    if (membresiaId === null) return;
+    this.cache.delete(this.claveCache(API_ENDPOINTS.userTenantConfiguracion.detalle(membresiaId)));
+  }
+
+  /**
    * Ciudad de origen de las guías del usuario, igual que en terbio: la de su configuración
    * y, si no tiene, la de su operación. `null` si no tiene ninguna de las dos.
    */
@@ -111,6 +126,14 @@ export class CatalogoService extends BaseHttpService {
     return this.cachear<Identificacion[]>(API_ENDPOINTS.catalogo.identificaciones);
   }
 
+  ciudadesGenerales(): Observable<CiudadGeneral[]> {
+    return this.cachear<CiudadGeneral[]>(API_ENDPOINTS.catalogo.ciudadesGenerales);
+  }
+
+  configuracionGeneral(): Observable<ConfiguracionGeneral> {
+    return this.cachear<ConfiguracionGeneral>(API_ENDPOINTS.catalogo.configuracionGeneral);
+  }
+
   formatosImpresion(tipo: TipoImpresion): Observable<FormatoImpresion[]> {
     return this.cachear<FormatoImpresion[]>(API_ENDPOINTS.guia.formatosImpresion, { tipo });
   }
@@ -120,8 +143,30 @@ export class CatalogoService extends BaseHttpService {
     this.cache.clear();
   }
 
+  private claveCache(path: string, params?: Record<string, string>): string {
+    return `${this.activeTenant.tenantId()}|${path}|${JSON.stringify(params ?? {})}`;
+  }
+
+  /**
+   * Busca entre todos los terceros de la empresa, como el buscador de adquiriente de terbio.
+   * No se cachea: cada filtro es una consulta distinta.
+   */
+  buscarTerceros(params: TerceroBuscarParams): Observable<PaginatedResponse<TerceroBuscar>> {
+    return this.get<PaginatedResponse<TerceroBuscar>>(API_ENDPOINTS.tercero.buscar, {
+      page: params.page,
+      nombre_corto: params.nombre_corto || null,
+      numero_identificacion: params.numero_identificacion || null,
+      codigo_tercero_pk: params.codigo_tercero_pk ?? null,
+    });
+  }
+
+  /** Crea un tercero; responde con su detalle, como `GET /gen/tercero/detalle/{id}`. */
+  crearTercero(tercero: TerceroNuevoRequest): Observable<Tercero> {
+    return this.post<Tercero>(API_ENDPOINTS.tercero.nuevo, tercero);
+  }
+
   private cachear<T>(path: string, params?: Record<string, string>): Observable<T> {
-    const clave = `${this.activeTenant.tenantId()}|${path}|${JSON.stringify(params ?? {})}`;
+    const clave = this.claveCache(path, params);
     let peticion = this.cache.get(clave) as Observable<T> | undefined;
     if (!peticion) {
       peticion = this.get<T>(path, params).pipe(shareReplay(1));

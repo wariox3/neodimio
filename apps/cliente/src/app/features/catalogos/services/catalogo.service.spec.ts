@@ -238,6 +238,37 @@ describe('Caché de la configuración del usuario', () => {
     http.expectOne('/api/mas/user-tenant-configuracion/12').flush(configuracion);
     http.verify();
   });
+
+  it('vuelve a consultar después de refrescarla, sin perder los demás catálogos', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ENVIRONMENT, useValue: { apiUrl: '/api' } },
+      ],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    TestBed.inject(MembresiaClienteService).set(25, 9);
+    const service = TestBed.inject(CatalogoService);
+
+    service.configuracion().subscribe();
+    http
+      .expectOne('/api/mas/user-tenant-configuracion/9')
+      .flush({ user_tenant_id: 9, cambiar_valores_guia: false });
+    service.ciudades().subscribe();
+    http.expectOne('/api/tte/ciudad/descargar').flush([]);
+
+    service.refrescarConfiguracion();
+    let recibida: unknown;
+    service.configuracion().subscribe((c) => (recibida = c));
+    http
+      .expectOne('/api/mas/user-tenant-configuracion/9')
+      .flush({ user_tenant_id: 9, cambiar_valores_guia: true });
+    expect(recibida).toEqual({ user_tenant_id: 9, cambiar_valores_guia: true });
+
+    service.ciudades().subscribe();
+    http.verify();
+  });
 });
 
 describe('Ciudad de origen del usuario', () => {

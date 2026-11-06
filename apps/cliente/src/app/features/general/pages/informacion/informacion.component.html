@@ -1,0 +1,89 @@
+<div class="page-container">
+  <app-page-header
+    title="Información"
+    subtitle="Tus datos registrados en la empresa"
+    icon="pi pi-info-circle"
+  />
+
+  @if (loading()) {
+    <app-loading-spinner message="Cargando información..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="cargar()" />
+  } @else if (cliente(); as cliente) {
+    <div class="informacion-layout">
+      <div class="informacion-main">
+        <section class="card informacion-card">
+          <h3 class="section-title">
+            <i class="pi pi-building" aria-hidden="true"></i>
+            Datos del cliente
+          </h3>
+
+          <dl class="datos-grid">
+            <div class="dato dato--full dato--destacado">
+              <dt>Nombre</dt>
+              <dd>{{ cliente.nombre_corto ?? '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Identificación</dt>
+              <dd>{{ identificacion(cliente) }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Código</dt>
+              <dd>{{ cliente.codigo_tercero_pk }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Ciudad</dt>
+              <dd>{{ cliente.ciudad_nombre ?? '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Dirección</dt>
+              <dd>{{ cliente.direccion || '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Barrio</dt>
+              <dd>{{ cliente.barrio || '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Teléfono</dt>
+              <dd>{{ cliente.telefono || '—' }}</dd>
+            </div>
+            <div class="dato">
+              <dt>Celular</dt>
+              <dd>{{ cliente.celular || '—' }}</dd>
+            </div>
+            <div class="dato dato--doble">
+              <dt>Correo</dt>
+              <dd>{{ cliente.correo || '—' }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="card informacion-card">
+          <h3 class="section-title">
+            <i class="pi pi-user" aria-hidden="true"></i>
+            Asesor / consultor
+          </h3>
+
+          <dl class="datos-grid">
+            <div class="dato dato--full">
+              <dt>Nombre</dt>
+              <dd>{{ cliente.asesor_nombre ?? 'Sin asesor asignado' }}</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <section class="card informacion-card">
+        <h3 class="section-title">
+          <i class="pi pi-paperclip" aria-hidden="true"></i>
+          Archivos
+        </h3>
+        <app-archivos
+          [modelo]="modeloTercero"
+          [codigo]="cliente.codigo_tercero_pk"
+          mensajeVacio="No tienes archivos cargados."
+        />
+      </section>
+    </div>
+  }
+</div>

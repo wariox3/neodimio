@@ -1,4 +1,10 @@
-import { Ciudad, OpcionCatalogo, Tercero } from '../../catalogos/models/catalogo.model';
+import {
+  Ciudad,
+  GuiaTipo,
+  OpcionCatalogo,
+  PermisosGuia,
+  Tercero,
+} from '../../catalogos/models/catalogo.model';
 import { Destinatario } from '../../destinatarios/models/destinatario.model';
 
 /**
@@ -114,6 +120,34 @@ export interface Adquiriente {
   nombre_corto: string;
 }
 
+/** Adquiriente por defecto: el tercero de la membresía del usuario. */
+export function adquirienteDelCliente(tercero: Tercero): Adquiriente {
+  return {
+    codigo_tercero_pk: tercero.codigo_tercero_pk,
+    codigo_identificacion_fk: tercero.codigo_identificacion_fk ?? '',
+    numero_identificacion: tercero.numero_identificacion ?? '',
+    nombre_corto: tercero.nombre_corto ?? '',
+  };
+}
+
+/** Tipo de guía a crédito (`corriente` en terbio); en fluor es el pago `COR`. */
+export function esTipoCredito(tipo: GuiaTipo | undefined): boolean {
+  return tipo?.codigo_pago_fk === 'COR';
+}
+
+/**
+ * Si el usuario puede elegir otro adquiriente con el tipo de guía actual, como la lupa de
+ * terbio: requiere `permite_cambiar_adquiriente` y, con `bloquear_adquiriente_credito`,
+ * no aplica a los tipos a crédito, donde el adquiriente es siempre el cliente.
+ */
+export function puedeCambiarAdquiriente(
+  permisos: Pick<PermisosGuia, 'permite_cambiar_adquiriente' | 'bloquear_adquiriente_credito'>,
+  tipo: GuiaTipo | undefined,
+): boolean {
+  if (!permisos.permite_cambiar_adquiriente) return false;
+  return !(permisos.bloquear_adquiriente_credito && esTipoCredito(tipo));
+}
+
 export type TipoIdentificacion = 'CC' | 'NI';
 
 /**
@@ -126,75 +160,6 @@ export function tipoIdentificacionGuia(codigo: string | null): TipoIdentificacio
 
 /** Tipo de liquidación de la guía en fluor: por kilo o por unidad. */
 export type TipoLiquidacion = 'K' | 'U';
-
-/** Cuerpo de `POST /tte/guia/liquidar`. */
-export interface LiquidarRequest {
-  tercero: number;
-  condicion: number | null;
-  precio: number;
-  origen: string;
-  destino: string;
-  producto: string;
-  zona: string | null;
-  tipo_liquidacion: TipoLiquidacion;
-  unidades: number;
-  peso: number;
-  volumen: number;
-  /** Lo que se ve en el formulario; fluor aún no lo recibe (ver `parametrosLiquidacion`). */
-  peso_facturado: number;
-  declarado: number;
-}
-
-export interface LiquidarResponse {
-  error: boolean;
-  flete: number;
-  manejo: number;
-  peso_facturado: number;
-}
-
-/** Campos del formulario de la guía nueva que intervienen en la liquidación. */
-export interface ValoresLiquidacion {
-  codigo_ciudad_destino_fk?: string | null;
-  codigo_producto_fk?: string | null;
-  tipo_liquidacion?: TipoLiquidacion | null;
-  unidades?: number | null;
-  peso_real?: number | null;
-  peso_volumen?: number | null;
-  peso_facturado?: number | null;
-  vr_declara?: number | null;
-}
-
-/** Datos para liquidar, o `null` si todavía falta alguno de los indispensables. */
-export function parametrosLiquidacion(
-  valores: ValoresLiquidacion,
-  tercero: Tercero | null,
-  origen: string | null,
-  ciudades: Ciudad[],
-): LiquidarRequest | null {
-  const destino = valores.codigo_ciudad_destino_fk;
-  const producto = valores.codigo_producto_fk;
-  const tipoLiquidacion = valores.tipo_liquidacion;
-  const unidades = valores.unidades ?? 0;
-  const precio = tercero?.condicion_codigo_precio_fk ?? null;
-  if (!tercero || precio === null || !origen || !destino || !producto) return null;
-  if (!tipoLiquidacion || unidades <= 0) return null;
-
-  return {
-    tercero: tercero.codigo_tercero_pk,
-    condicion: tercero.codigo_condicion_fk,
-    precio,
-    origen,
-    destino,
-    producto,
-    zona: ciudades.find((c) => c.codigo_ciudad_pk === destino)?.codigo_zona_fk ?? null,
-    tipo_liquidacion: tipoLiquidacion,
-    unidades,
-    peso: valores.peso_real ?? 0,
-    volumen: valores.peso_volumen ?? 0,
-    peso_facturado: valores.peso_facturado ?? 0,
-    declarado: valores.vr_declara ?? 0,
-  };
-}
 
 /** Cuerpo de `POST /tte/guia/condicion-especial`. */
 export interface CondicionEspecialRequest {
@@ -239,12 +204,15 @@ export interface ValoresCondicion {
 
 /**
  * Datos para consultar las condiciones, o `null` si falta alguno. Como en terbio,
- * se consultan en cuanto hay destino, sin esperar el resto de la mercancía.
+ * se consultan en cuanto hay destino, sin esperar el resto de la mercancía. Con
+ * `invertir` (`invertir_origen_destino` del usuario) se consultan con el trayecto al revés;
+ * la guía igual se guarda con su origen y destino reales.
  */
 export function parametrosCondicion(
   valores: ValoresCondicion,
   tercero: Tercero | null,
   origen: string | null,
+  invertir = false,
 ): CondicionEspecialRequest | null {
   const destino = valores.codigo_ciudad_destino_fk;
   const precio = tercero?.condicion_codigo_precio_fk ?? null;
@@ -252,8 +220,8 @@ export function parametrosCondicion(
 
   return {
     codigo_tercero: tercero.codigo_tercero_pk,
-    origen,
-    destino,
+    origen: invertir ? destino : origen,
+    destino: invertir ? origen : destino,
     precio,
     guia_tipo: valores.codigo_guia_tipo_fk || null,
     producto: valores.codigo_producto_fk || null,
@@ -335,6 +303,8 @@ export interface ValoresGuiaNueva {
 /** Datos de la guía que no salen del formulario. */
 export interface ContextoGuiaNueva {
   tercero: Tercero;
+  /** Tercero al que se factura; por defecto el mismo cliente. */
+  adquiriente: number;
   /** Operación de ingreso de la configuración del usuario. */
   operacionIngreso: string;
   origen: string;
@@ -343,11 +313,14 @@ export interface ContextoGuiaNueva {
   manejo: number;
   /** Destinatario elegido en el buscador, si sigue siendo el de la guía. */
   destinatario: Destinatario | null;
+  /** Estados con los que nace la guía, según la configuración del usuario. */
+  estadoRecogido: boolean;
+  estadoIngreso: boolean;
 }
 
 /**
  * Cuerpo para guardar la guía, como la arma terbio: los valores son los que ve el usuario
- * (`liquidar: false`) y nace recogida e ingresada, los valores por defecto de holmio.
+ * (`liquidar: false`) y los estados iniciales salen de la configuración del usuario.
  */
 export function cuerpoGuiaNueva(v: ValoresGuiaNueva, ctx: ContextoGuiaNueva): GuiaNuevaRequest {
   const destino = v.codigo_ciudad_destino_fk ?? '';
@@ -359,7 +332,7 @@ export function cuerpoGuiaNueva(v: ValoresGuiaNueva, ctx: ContextoGuiaNueva): Gu
     codigo_guia_tipo_fk: v.codigo_guia_tipo_fk,
     codigo_operacion_ingreso_fk: ctx.operacionIngreso,
     codigo_tercero_fk: ctx.tercero.codigo_tercero_pk,
-    codigo_adquiriente_fk: ctx.tercero.codigo_tercero_pk,
+    codigo_adquiriente_fk: ctx.adquiriente,
     codigo_empaque_fk: EMPAQUE_PORTAL,
     codigo_producto_fk: v.codigo_producto_fk,
     codigo_servicio_fk: SERVICIO_PORTAL,
@@ -384,8 +357,8 @@ export function cuerpoGuiaNueva(v: ValoresGuiaNueva, ctx: ContextoGuiaNueva): Gu
     vr_manejo: ctx.manejo,
     vr_declara: v.vr_declara,
     vr_recaudo: v.vr_recaudo,
-    estado_recogido: true,
-    estado_ingreso: true,
+    estado_recogido: ctx.estadoRecogido,
+    estado_ingreso: ctx.estadoIngreso,
     devolver_documento_cliente: v.devolver_documento_cliente,
     liquidar: false,
     condicion: ctx.tercero.codigo_condicion_fk,
@@ -454,6 +427,63 @@ export function facturadoAlSalirDelFacturado(
     facturado = minimos.peso_minimo_guia;
   }
   return facturado;
+}
+
+/** Campos del formulario de la guía nueva que intervienen en la liquidación. */
+export interface ValoresLiquidacion {
+  tipo_liquidacion?: TipoLiquidacion | null;
+  unidades?: number | null;
+  peso_volumen?: number | null;
+  peso_facturado?: number | null;
+  vr_declara?: number | null;
+}
+
+export interface Liquidacion {
+  flete: number;
+  manejo: number;
+  peso_facturado: number;
+}
+
+/**
+ * Liquida la guía con las condiciones del destino, con las fórmulas de `guia/nuevo.html.twig`
+ * de terbio. Devuelve `null` si todavía no hay forma de liquidar o unidades. Como en terbio,
+ * no se aplica `flete_minimo` (por unidad), solo `flete_minimo_guia`.
+ */
+export function liquidarGuia(
+  valores: ValoresLiquidacion,
+  condicion: CondicionEspecialResponse,
+): Liquidacion | null {
+  const unidades = valores.unidades ?? 0;
+  if (!valores.tipo_liquidacion || unidades <= 0) return null;
+
+  const pesoFacturado = facturadoAlSalirDelFacturado(
+    valores.peso_facturado ?? 0,
+    unidades,
+    valores.peso_volumen ?? 0,
+    condicion,
+  );
+
+  let flete: number;
+  if (valores.tipo_liquidacion === 'K') {
+    flete = pesoFacturado * condicion.vr_peso;
+    if (condicion.descuento_peso > 0) flete -= (flete * condicion.descuento_peso) / 100;
+  } else {
+    flete = unidades * condicion.vr_unidad;
+    if (condicion.descuento_unidad > 0) flete -= (flete * condicion.descuento_unidad) / 100;
+  }
+  if (condicion.flete_minimo_guia > flete) flete = condicion.flete_minimo_guia;
+
+  let manejo = ((valores.vr_declara ?? 0) * condicion.porcentaje_manejo) / 100;
+  if (manejo < unidades * condicion.manejo_minimo_unidad) {
+    manejo = unidades * condicion.manejo_minimo_unidad;
+  }
+  if (manejo < condicion.manejo_minimo_guia) manejo = condicion.manejo_minimo_guia;
+
+  return {
+    flete: Math.round(flete),
+    manejo: Math.round(manejo),
+    peso_facturado: pesoFacturado,
+  };
 }
 
 /**

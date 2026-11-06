@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { extractErrorMessage } from '@semantica/core';
 import {
+  ArchivosComponent,
   ErrorAlertComponent,
   LoadingSpinnerComponent,
   PageHeaderComponent,
@@ -14,7 +15,6 @@ import {
 import { ROUTE_PATHS } from '../../../../core';
 import { DespachoDeGuia } from '../../../despachos/models/despacho.model';
 import { DespachoService } from '../../../despachos/services/despacho.service';
-import { GuiaArchivosComponent } from '../../components/guia-archivos/guia-archivos.component';
 import { GuiaImprimirComponent } from '../../components/guia-imprimir/guia-imprimir.component';
 import { GuiaDetalle, GuiaNovedad } from '../../models/guia.model';
 import { GuiaService } from '../../services/guia.service';
@@ -43,7 +43,7 @@ interface PasoSeguimiento {
     LoadingSpinnerComponent,
     ErrorAlertComponent,
     GuiaImprimirComponent,
-    GuiaArchivosComponent,
+    ArchivosComponent,
   ],
   templateUrl: './guia-detalle.component.html',
   styleUrl: './guia-detalle.component.scss',

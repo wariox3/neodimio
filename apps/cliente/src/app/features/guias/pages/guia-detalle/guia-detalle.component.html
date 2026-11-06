@@ -261,7 +261,11 @@
             <i class="pi pi-paperclip" aria-hidden="true"></i>
             Archivos
           </h3>
-          <app-guia-archivos [guiaId]="guia.codigo_guia_pk" />
+          <app-archivos
+            modelo="TteGuia"
+            [codigo]="guia.codigo_guia_pk"
+            mensajeVacio="Esta guía no tiene archivos."
+          />
         </section>
       </div>
 

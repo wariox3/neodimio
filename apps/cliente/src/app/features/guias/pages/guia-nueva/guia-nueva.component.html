@@ -22,10 +22,46 @@
       <!-- Columna lateral: adquiriente y resumen de valores -->
       <aside class="guia-aside">
         <section class="guia-aside__card">
-          <h3 class="section-title">
-            <i class="pi pi-building" aria-hidden="true"></i>
-            Adquiriente
-          </h3>
+          <div class="section-header">
+            <h3 class="section-title">
+              <i class="pi pi-building" aria-hidden="true"></i>
+              Adquiriente
+            </h3>
+            @if (puedeCambiarAdquiriente()) {
+              <div class="section-header__acciones">
+                @if (adquirienteCambiado()) {
+                  <p-button
+                    type="button"
+                    icon="pi pi-undo"
+                    severity="secondary"
+                    [text]="true"
+                    size="small"
+                    ariaLabel="Volver al adquiriente del cliente"
+                    pTooltip="Volver al del cliente"
+                    (onClick)="restaurarAdquiriente()"
+                  />
+                }
+                <p-button
+                  type="button"
+                  label="Nuevo"
+                  icon="pi pi-plus"
+                  severity="secondary"
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="adquirienteNuevoVisible.set(true)"
+                />
+                <p-button
+                  type="button"
+                  label="Cambiar"
+                  icon="pi pi-search"
+                  severity="secondary"
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="adquirienteBuscarVisible.set(true)"
+                />
+              </div>
+            }
+          </div>
           @if (adquiriente(); as adq) {
             <div class="readonly">
               <div class="readonly__item">
@@ -43,6 +79,7 @@
                 <span class="readonly__value">{{ adq.codigo_tercero_pk }}</span>
               </div>
             </div>
+            <p class="resumen__nota">Adquiriente para la factura electrónica.</p>
           } @else {
             <p class="resumen__nota">Los datos del cliente no están disponibles.</p>
           }
@@ -58,6 +95,12 @@
               <dt>Origen</dt>
               <dd>{{ origenTexto() }}</dd>
             </div>
+            @if (permisos().invertir_origen_destino) {
+              <div class="resumen__fila">
+                <dt>Tarifa</dt>
+                <dd>{{ trayectoInvertido() ?? 'Elige un destino' }}</dd>
+              </div>
+            }
             <div class="resumen__fila">
               <dt>Peso facturado</dt>
               <dd>{{ pesoFacturado() | number: '1.0-2' }} kg</dd>
@@ -75,12 +118,58 @@
               <dd>$ {{ total() | number: '1.0-0' }}</dd>
             </div>
           </dl>
+          @if (permisos().invertir_origen_destino) {
+            <p class="aviso-invertido" role="note">
+              <i class="pi pi-arrow-right-arrow-left" aria-hidden="true"></i>
+              <span>
+                Tu usuario liquida con el trayecto invertido: la tarifa se busca del destino al
+                origen. La guía se guarda con su origen y destino reales.
+              </span>
+            </p>
+          }
           @if (avisoLiquidacion(); as aviso) {
             <small class="form-error">{{ aviso }}</small>
           } @else if (liquidando()) {
             <p class="resumen__nota">Calculando valores...</p>
+          } @else if (permisos().cambiar_valores_guia) {
+            <p class="resumen__nota">
+              El flete y el manejo salen de la tarifa del cliente; puedes ajustarlos en Valores.
+            </p>
           } @else {
             <p class="resumen__nota">El flete y el manejo salen de la tarifa del cliente.</p>
+          }
+        </section>
+
+        <!-- TEMPORAL: parámetros con los nombres de terbio; quitar junto con `parametrosTerbio`. -->
+        <section class="guia-aside__card">
+          <div
+            style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem"
+          >
+            <h3 class="section-title" style="margin: 0">
+              <i class="pi pi-database" aria-hidden="true"></i>
+              Parámetros liquidación
+            </h3>
+            <p-button
+              type="button"
+              size="small"
+              severity="secondary"
+              [text]="true"
+              [icon]="parametrosTerbioVisible() ? 'pi pi-eye-slash' : 'pi pi-eye'"
+              [label]="parametrosTerbioVisible() ? 'Ocultar' : 'Mostrar'"
+              (onClick)="parametrosTerbioVisible.set(!parametrosTerbioVisible())"
+            />
+          </div>
+          @if (parametrosTerbioVisible()) {
+            <dl class="resumen__lista">
+              @for (parametro of parametrosTerbio(); track parametro.clave) {
+                <div class="resumen__fila">
+                  <dt style="overflow-wrap: anywhere">{{ parametro.clave }}</dt>
+                  <dd>{{ parametro.valor }}</dd>
+                </div>
+              } @empty {
+                <p class="resumen__nota">Elige un destino para consultar las condiciones.</p>
+              }
+            </dl>
           }
         </section>
       </aside>
@@ -181,10 +270,13 @@
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccione una operación"
-                [showClear]="true"
+                [showClear]="!permisos().bloquear_operacion_cliente"
                 [fluid]="true"
                 appendTo="body"
               />
+              @if (permisos().bloquear_operacion_cliente) {
+                <small class="field__hint">Tu usuario tiene la operación fija.</small>
+              }
             </div>
 
             <div class="field">
@@ -503,8 +595,58 @@
               />
               @if (errorDe('vr_recaudo'); as error) {
                 <small class="form-error">{{ error }}</small>
+              } @else if (permisos().bloquear_recaudo) {
+                <small class="field__hint">Tu usuario no puede registrar recaudo.</small>
               }
             </div>
+
+            @if (permisos().cambiar_valores_guia) {
+              <div class="field">
+                <label for="vr_flete" class="field__label">
+                  Flete <span class="form-required">*</span>
+                </label>
+                <p-inputnumber
+                  inputId="vr_flete"
+                  formControlName="vr_flete"
+                  mode="currency"
+                  currency="COP"
+                  locale="es-CO"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="0"
+                  [min]="0"
+                  [fluid]="true"
+                  [invalid]="!!errorDe('vr_flete')"
+                />
+                @if (errorDe('vr_flete'); as error) {
+                  <small class="form-error">{{ error }}</small>
+                } @else {
+                  <small class="field__hint">Se llena al liquidar; puedes ajustarlo.</small>
+                }
+              </div>
+
+              <div class="field">
+                <label for="vr_manejo" class="field__label">
+                  Manejo <span class="form-required">*</span>
+                </label>
+                <p-inputnumber
+                  inputId="vr_manejo"
+                  formControlName="vr_manejo"
+                  mode="currency"
+                  currency="COP"
+                  locale="es-CO"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="0"
+                  [min]="0"
+                  [fluid]="true"
+                  [invalid]="!!errorDe('vr_manejo')"
+                />
+                @if (errorDe('vr_manejo'); as error) {
+                  <small class="form-error">{{ error }}</small>
+                } @else {
+                  <small class="field__hint">Se llena al liquidar; puedes ajustarlo.</small>
+                }
+              </div>
+            }
 
             <div class="field field--full field--check">
               <p-checkbox
@@ -550,6 +692,11 @@
   </form>
 </div>
 
+<app-adquiriente-buscar
+  [(visible)]="adquirienteBuscarVisible"
+  (seleccionado)="usarAdquiriente($event)"
+/>
+<app-adquiriente-nuevo [(visible)]="adquirienteNuevoVisible" (creado)="adquiriente.set($event)" />
 <app-destinatario-buscar [(visible)]="buscarVisible" (seleccionado)="usarDestinatario($event)" />
 <app-destinatario-nuevo
   [(visible)]="nuevoDestinatarioVisible"

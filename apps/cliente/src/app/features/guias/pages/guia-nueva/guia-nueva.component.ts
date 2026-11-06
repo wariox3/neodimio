@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DecimalPipe } from '@angular/common';
@@ -12,6 +12,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
+import { TooltipModule } from 'primeng/tooltip';
 import { ToastService, trimFormValues } from '@semantica/core';
 import { PageHeaderComponent, TrimInputDirective } from '@semantica/ui';
 import { ROUTE_PATHS } from '../../../../core';
@@ -21,8 +22,11 @@ import {
   GuiaTipo,
   OpcionCatalogo,
   opcionesProducto,
+  PERMISOS_GUIA_POR_DEFECTO,
+  PermisosGuia,
   PRODUCTO_VARIOS,
   Tercero,
+  TerceroBuscar,
   tiposDisponibles,
 } from '../../../catalogos/models/catalogo.model';
 import { CatalogoService } from '../../../catalogos/services/catalogo.service';
@@ -31,28 +35,32 @@ import { DestinatarioNuevoComponent } from '../../../destinatarios/components/de
 import { Destinatario, DestinatarioNuevo } from '../../../destinatarios/models/destinatario.model';
 import {
   Adquiriente,
+  adquirienteDelCliente,
   CondicionEspecialRequest,
   CondicionEspecialResponse,
   cuerpoGuiaNueva,
   facturadoAlSalirDelFacturado,
   facturadoAlSalirDelVolumen,
   liquidacionesDisponibles,
-  LiquidarRequest,
-  LiquidarResponse,
+  liquidarGuia,
   MinimosPeso,
   operacionPorDefecto,
   parametrosCondicion,
-  parametrosLiquidacion,
   pesoRealPorUnidades,
   pesosAlSalirDelReal,
+  puedeCambiarAdquiriente,
   tipoIdentificacionGuia,
   TipoIdentificacion,
   TipoLiquidacion,
 } from '../../models/guia.model';
 import { GuiaService } from '../../services/guia.service';
+import { AdquirienteBuscarComponent } from '../../components/adquiriente-buscar/adquiriente-buscar.component';
+import { AdquirienteNuevoComponent } from '../../components/adquiriente-nuevo/adquiriente-nuevo.component';
 
-/** Espera tras el último cambio antes de liquidar, para no consultar por cada tecla. */
-const ESPERA_LIQUIDACION_MS = 400;
+/** Espera tras el último cambio antes de consultar las condiciones del destino. */
+const ESPERA_CONDICION_MS = 400;
+
+const MENSAJE_SIN_CONDICIONES = 'No se pudieron consultar las condiciones para liquidar.';
 
 @Component({
   selector: 'app-guia-nueva',
@@ -68,10 +76,13 @@ const ESPERA_LIQUIDACION_MS = 400;
     MessageModule,
     SelectModule,
     TextareaModule,
+    TooltipModule,
     PageHeaderComponent,
     TrimInputDirective,
     DestinatarioBuscarComponent,
     DestinatarioNuevoComponent,
+    AdquirienteBuscarComponent,
+    AdquirienteNuevoComponent,
   ],
   templateUrl: './guia-nueva.component.html',
   styleUrl: './guia-nueva.component.scss',
@@ -90,11 +101,17 @@ export class GuiaNuevaComponent implements OnInit {
   readonly guardando = signal(false);
   /** Operación por la que ingresa la guía (`codigo_operacion_fk` de la configuración). */
   private readonly operacionIngreso = signal<string | null>(null);
+  /** Permisos del usuario al crear guías; mientras carga, los de fluor por defecto. */
+  readonly permisos = signal<PermisosGuia>(PERMISOS_GUIA_POR_DEFECTO);
   /** Último destinatario elegido, para enlazar la guía con él. */
   private readonly destinatarioElegido = signal<Destinatario | null>(null);
 
-  /** Por defecto es el tercero de la membresía del usuario, como en terbio. */
+  /** El tercero de la membresía del usuario, adquiriente por defecto como en terbio. */
+  private readonly adquirienteCliente = signal<Adquiriente | null>(null);
+  /** Adquiriente de la factura electrónica; solo cambia con `permite_cambiar_adquiriente`. */
   readonly adquiriente = signal<Adquiriente | null>(null);
+  readonly adquirienteBuscarVisible = signal(false);
+  readonly adquirienteNuevoVisible = signal(false);
   readonly tipos = signal<OpcionCatalogo[]>([]);
   /** Tipos habilitados con sus reglas, para validar al guardar. */
   private readonly tiposGuia = signal<GuiaTipo[]>([]);
@@ -140,6 +157,9 @@ export class GuiaNuevaComponent implements OnInit {
     vr_declara: [0, [Validators.required, Validators.min(0)]],
     // Valores
     vr_recaudo: [0, [Validators.required, Validators.min(0)]],
+    // Solo se digitan con `cambiar_valores_guia`; si no, se usan los liquidados.
+    vr_flete: [0, [Validators.required, Validators.min(0)]],
+    vr_manejo: [0, [Validators.required, Validators.min(0)]],
     devolver_documento_cliente: [false],
     comentario: ['', Validators.maxLength(500)],
   });
@@ -149,6 +169,33 @@ export class GuiaNuevaComponent implements OnInit {
   });
 
   private readonly tercero = signal<Tercero | null>(null);
+
+  private readonly tipoSeleccionado = computed(() =>
+    this.tiposGuia().find((t) => t.codigo_guia_tipo_pk === this.valores().codigo_guia_tipo_fk),
+  );
+
+  /** Si se muestra el botón para buscar otro adquiriente (la lupa de terbio). */
+  readonly puedeCambiarAdquiriente = computed(() =>
+    puedeCambiarAdquiriente(this.permisos(), this.tipoSeleccionado()),
+  );
+
+  readonly adquirienteCambiado = computed(
+    () => this.adquiriente()?.codigo_tercero_pk !== this.adquirienteCliente()?.codigo_tercero_pk,
+  );
+
+  /**
+   * Si el tipo elegido no permite cambiar el adquiriente (crédito con
+   * `bloquear_adquiriente_credito`) y ya se había cambiado, vuelve al del cliente. terbio
+   * avisaba y recargaba la página; aquí se avisa y se conserva lo demás digitado.
+   */
+  private readonly restaurarAdquirienteBloqueado = effect(() => {
+    if (this.puedeCambiarAdquiriente() || !this.adquirienteCambiado()) return;
+    this.adquiriente.set(this.adquirienteCliente());
+    this.toastService.warn(
+      'Adquiriente restablecido',
+      'Este tipo de guía no permite cambiar el adquiriente; se dejó el del cliente.',
+    );
+  });
   /** Ciudad de origen del usuario; `undefined` mientras se resuelve. */
   private readonly origen = signal<string | null | undefined>(undefined);
 
@@ -159,22 +206,33 @@ export class GuiaNuevaComponent implements OnInit {
     return ciudad?.nombre ? `${ciudad.nombre} [${origen}]` : origen;
   });
 
-  /** Se recalcula solo cuando cambia algún dato que afecta la liquidación. */
-  private readonly parametros = computed<LiquidarRequest | null>(
-    () =>
-      parametrosLiquidacion(this.valores(), this.tercero(), this.origen() ?? null, this.ciudades()),
-    { equal: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
-  );
-  private readonly parametros$ = toObservable(this.parametros);
+  /**
+   * Con `invertir_origen_destino`, trayecto con el que se busca la tarifa (destino → origen),
+   * para que el usuario entienda por qué el valor no es el del trayecto de la guía.
+   * `null` si la opción está apagada o aún no hay destino.
+   */
+  readonly trayectoInvertido = computed(() => {
+    const parametros = this.parametrosCondicion();
+    if (!this.permisos().invertir_origen_destino || !parametros) return null;
+    const nombre = (codigo: string) =>
+      this.ciudades().find((c) => c.codigo_ciudad_pk === codigo)?.nombre ?? codigo;
+    return `${nombre(parametros.origen)} → ${nombre(parametros.destino)}`;
+  });
 
   /** Se consulta de nuevo solo cuando cambia el tipo, el destino o el producto. */
   private readonly parametrosCondicion = computed<CondicionEspecialRequest | null>(
-    () => parametrosCondicion(this.valores(), this.tercero(), this.origen() ?? null),
+    () =>
+      parametrosCondicion(
+        this.valores(),
+        this.tercero(),
+        this.origen() ?? null,
+        this.permisos().invertir_origen_destino,
+      ),
     { equal: (a, b) => JSON.stringify(a) === JSON.stringify(b) },
   );
   private readonly parametrosCondicion$ = toObservable(this.parametrosCondicion);
 
-  /** Condiciones que se muestran arriba del formulario, como en terbio. */
+  /** Parámetros con los que se liquida; también se muestran arriba del formulario, como en terbio. */
   readonly condicion = signal<CondicionEspecialResponse | null>(null);
 
   /** Sin condiciones consultadas, los pesos se comparan sin mínimos. */
@@ -183,18 +241,25 @@ export class GuiaNuevaComponent implements OnInit {
     peso_minimo_guia: this.condicion()?.peso_minimo_guia ?? 0,
   }));
 
-  private readonly liquidacion = signal<LiquidarResponse | null>(null);
-  /** Parámetros con los que se obtuvo `liquidacion`. */
-  private readonly liquidadoCon = signal<LiquidarRequest | null>(null);
+  /** Se calcula aquí, como en terbio: fluor solo entrega las condiciones. */
+  private readonly liquidacion = computed(() => {
+    const condicion = this.condicion();
+    return condicion ? liquidarGuia(this.valores(), condicion) : null;
+  });
+  /** Parámetros con los que se consultó `condicion`. */
+  private readonly condicionConsultadaCon = signal<CondicionEspecialRequest | null>(null);
   readonly liquidando = signal(false);
   /**
-   * Si los valores mostrados corresponden a los datos actuales. Se compara contra los
-   * parámetros de la última liquidación y no solo con `liquidando`, que se enciende después
-   * de que Angular procesa el cambio.
+   * Si las condiciones corresponden a los datos actuales. Se compara contra los parámetros
+   * de la última consulta y no solo con `liquidando`, que se enciende después de que Angular
+   * procesa el cambio.
    */
-  private readonly liquidacionAlDia = computed(() => {
-    const actuales = this.parametros();
-    return actuales === null || JSON.stringify(actuales) === JSON.stringify(this.liquidadoCon());
+  private readonly condicionAlDia = computed(() => {
+    const actuales = this.parametrosCondicion();
+    return (
+      actuales === null ||
+      JSON.stringify(actuales) === JSON.stringify(this.condicionConsultadaCon())
+    );
   });
   private readonly liquidacionRechazada = signal(false);
 
@@ -206,7 +271,7 @@ export class GuiaNuevaComponent implements OnInit {
     if (tercero.condicion_codigo_precio_fk === null) {
       return 'El cliente no tiene una lista de precios asignada.';
     }
-    return this.liquidacionRechazada() ? 'No se pudo liquidar con estos datos.' : null;
+    return this.liquidacionRechazada() ? MENSAJE_SIN_CONDICIONES : null;
   });
 
   /** El que liquidó fluor; mientras tanto, el del formulario. */
@@ -214,23 +279,70 @@ export class GuiaNuevaComponent implements OnInit {
     () => this.liquidacion()?.peso_facturado ?? this.valores().peso_facturado ?? 0,
   );
 
-  /** Son informativos: en terbio también son de solo lectura y los liquida el sistema. */
-  readonly flete = computed(() => this.liquidacion()?.flete ?? 0);
-  readonly manejo = computed(() => this.liquidacion()?.manejo ?? 0);
+  /** Flete y manejo liquidados; solo cambia cuando cambia alguno de los dos. */
+  private readonly valoresLiquidados = computed(
+    () => ({
+      flete: this.liquidacion()?.flete ?? 0,
+      manejo: this.liquidacion()?.manejo ?? 0,
+    }),
+    { equal: (a, b) => a.flete === b.flete && a.manejo === b.manejo },
+  );
+
+  /**
+   * Como en terbio, la liquidación llena el flete y el manejo editables y el usuario con
+   * `cambiar_valores_guia` puede corregirlos; lo digitado se pisa solo si se vuelve a liquidar.
+   */
+  private readonly llenarValoresEditables = effect(() => {
+    const { flete, manejo } = this.valoresLiquidados();
+    this.form.patchValue({ vr_flete: flete, vr_manejo: manejo });
+  });
+
+  /** Sin `cambiar_valores_guia` son de solo lectura, como en terbio, y los liquida el sistema. */
+  readonly flete = computed(() =>
+    this.permisos().cambiar_valores_guia
+      ? (this.valores().vr_flete ?? 0)
+      : this.valoresLiquidados().flete,
+  );
+  readonly manejo = computed(() =>
+    this.permisos().cambiar_valores_guia
+      ? (this.valores().vr_manejo ?? 0)
+      : this.valoresLiquidados().manejo,
+  );
   readonly total = computed(() => this.flete() + this.manejo());
 
+  // TEMPORAL: parámetros con los nombres de terbio; quitar junto con su card en el HTML.
+  readonly parametrosTerbioVisible = signal(true);
+  readonly parametrosTerbio = computed(() => {
+    const c = this.condicion();
+    if (!c) return [];
+    return [
+      { clave: 'condicionEspecialFlete', valor: c.condicion_especial_flete ? 'Sí' : 'No' },
+      { clave: 'condicionEspecialManejo', valor: c.condicion_especial_manejo ? 'Sí' : 'No' },
+      { clave: 'descuentoPeso', valor: c.descuento_peso },
+      { clave: 'descuentoUnidad', valor: c.descuento_unidad },
+      { clave: 'fleteMinimo', valor: c.flete_minimo },
+      { clave: 'fleteMinimoGuia', valor: c.flete_minimo_guia },
+      { clave: 'pesoMinimo', valor: c.peso_minimo },
+      { clave: 'pesoMinimoGuia', valor: c.peso_minimo_guia },
+      { clave: 'porcentajeManejo', valor: c.porcentaje_manejo },
+      { clave: 'manejoMinimoUnidad', valor: c.manejo_minimo_unidad },
+      { clave: 'manejoMinimoGuia', valor: c.manejo_minimo_guia },
+      { clave: 'vrPeso', valor: c.vr_peso },
+      { clave: 'vrUnidad', valor: c.vr_unidad },
+    ];
+  });
+
   ngOnInit(): void {
+    // Los permisos pudieron cambiar desde el ERP desde la última vez que se abrió.
+    this.catalogoService.refrescarConfiguracion();
     this.catalogoService
       .tercero()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((t) => {
         this.tercero.set(t);
-        this.adquiriente.set({
-          codigo_tercero_pk: t.codigo_tercero_pk,
-          codigo_identificacion_fk: t.codigo_identificacion_fk ?? '',
-          numero_identificacion: t.numero_identificacion ?? '',
-          nombre_corto: t.nombre_corto ?? '',
-        });
+        const adquiriente = adquirienteDelCliente(t);
+        this.adquirienteCliente.set(adquiriente);
+        this.adquiriente.set(adquiriente);
         // Como en terbio, queda seleccionada la primera opción disponible.
         const liquidaciones = liquidacionesDisponibles(t);
         this.liquidaciones.set(liquidaciones);
@@ -271,6 +383,17 @@ export class GuiaNuevaComponent implements OnInit {
           operacionPorDefecto(opciones, configuracion?.codigo_tercero_operacion_fk ?? null),
         );
       });
+    // Aparte de las operaciones, para que los permisos apliquen apenas llegue la configuración.
+    this.catalogoService
+      .configuracion()
+      .pipe(
+        catchError(() => of(null)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      // Lo que no venga en la configuración queda con el valor por defecto de fluor.
+      .subscribe((configuracion) =>
+        this.aplicarPermisos({ ...PERMISOS_GUIA_POR_DEFECTO, ...configuracion }),
+      );
     this.catalogoService
       .productosTercero()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -288,55 +411,48 @@ export class GuiaNuevaComponent implements OnInit {
       )
       .subscribe((origen) => this.origen.set(origen));
     this.consultarCondicionAlCambiar();
-    this.liquidarAlCambiar();
   }
 
-  /** Mientras cambian los datos se ocultan las condiciones anteriores, que ya no aplican. */
+  /** Bloquea los campos que el usuario no puede cambiar, como terbio los dejaba de solo lectura. */
+  private aplicarPermisos(permisos: PermisosGuia): void {
+    this.permisos.set(permisos);
+    if (permisos.bloquear_recaudo) {
+      this.form.controls.vr_recaudo.setValue(0);
+      this.form.controls.vr_recaudo.disable();
+    }
+    // Queda la operación por defecto de la configuración, que se asigna al cargar las operaciones.
+    if (permisos.bloquear_operacion_cliente) {
+      this.form.controls.codigo_tercero_operacion_fk.disable();
+    }
+  }
+
+  /** Mientras cambian los datos no hay condiciones, y los valores vuelven a 0, como en terbio. */
   private consultarCondicionAlCambiar(): void {
     this.parametrosCondicion$
       .pipe(
-        tap(() => this.condicion.set(null)),
-        debounceTime(ESPERA_LIQUIDACION_MS),
-        switchMap((parametros) =>
-          parametros
-            ? // Es informativo: si falla, la guía se puede seguir llenando sin él.
-              this.guiaService.condicionEspecial(parametros).pipe(catchError(() => of(null)))
-            : of(null),
-        ),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((condicion) => this.condicion.set(condicion?.error ? null : condicion));
-  }
-
-  /** Liquida con cada cambio; mientras tanto los valores vuelven a 0, como en terbio. */
-  private liquidarAlCambiar(): void {
-    this.parametros$
-      .pipe(
         tap((parametros) => {
-          this.liquidacion.set(null);
-          this.liquidadoCon.set(null);
+          this.condicion.set(null);
+          this.condicionConsultadaCon.set(null);
           this.liquidacionRechazada.set(false);
           this.liquidando.set(parametros !== null);
         }),
-        debounceTime(ESPERA_LIQUIDACION_MS),
+        debounceTime(ESPERA_CONDICION_MS),
         switchMap((parametros) => {
-          if (!parametros) return of({ parametros, liquidacion: null });
-          return this.guiaService.liquidar(parametros).pipe(
-            map((liquidacion) => ({ parametros, liquidacion })),
-            catchError((err: unknown) => {
-              // 0, 403, 429 y 500+ ya los avisa el interceptor.
-              if (err instanceof HttpErrorResponse && [400, 404, 422].includes(err.status)) {
-                this.liquidacionRechazada.set(true);
-              }
-              return of({ parametros: null, liquidacion: null });
-            }),
+          const sinCondicion = { parametros, condicion: null as CondicionEspecialResponse | null };
+          if (!parametros) return of(sinCondicion);
+          return this.guiaService.condicionEspecial(parametros).pipe(
+            map((condicion) => ({ parametros, condicion })),
+            // 0, 403, 429 y 500+ ya los avisa el interceptor; aquí queda el aviso de la liquidación.
+            catchError(() => of(sinCondicion)),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe(({ parametros, liquidacion }) => {
-        this.liquidacion.set(liquidacion);
-        this.liquidadoCon.set(liquidacion ? parametros : null);
+      .subscribe(({ parametros, condicion }) => {
+        const valida = condicion?.error ? null : condicion;
+        this.condicion.set(valida);
+        this.condicionConsultadaCon.set(parametros);
+        this.liquidacionRechazada.set(parametros !== null && !valida);
         this.liquidando.set(false);
       });
   }
@@ -414,6 +530,23 @@ export class GuiaNuevaComponent implements OnInit {
     this.form.controls.codigo_identificacion_destinatario_fk.markAsTouched();
   }
 
+  /**
+   * Usa el tercero elegido en el buscador. `/gen/tercero/buscar` no trae el tipo de
+   * identificación, así que se muestra solo el número.
+   */
+  usarAdquiriente(tercero: TerceroBuscar): void {
+    this.adquiriente.set({
+      codigo_tercero_pk: tercero.codigo_tercero_pk,
+      codigo_identificacion_fk: '',
+      numero_identificacion: tercero.numero_identificacion ?? '',
+      nombre_corto: tercero.nombre_corto ?? '',
+    });
+  }
+
+  restaurarAdquiriente(): void {
+    this.adquiriente.set(this.adquirienteCliente());
+  }
+
   /** Mensaje de error de un control, o `null` si es válido o no se ha tocado. */
   errorDe(nombre: keyof typeof this.form.controls): string | null {
     const control = this.form.controls[nombre];
@@ -436,9 +569,7 @@ export class GuiaNuevaComponent implements OnInit {
       return;
     }
 
-    const tipo = this.tiposGuia().find(
-      (t) => t.codigo_guia_tipo_pk === this.form.controls.codigo_guia_tipo_fk.value,
-    );
+    const tipo = this.tipoSeleccionado();
     if (exigeFlete(tipo) && this.flete() <= 0) {
       this.errorMessage.set('La guía debe tener un flete.');
       return;
@@ -454,8 +585,13 @@ export class GuiaNuevaComponent implements OnInit {
       return;
     }
     // Se guardan los valores que ve el usuario; a medio liquidar estarían en 0 o desfasados.
-    if (this.liquidando() || !this.liquidacionAlDia()) {
+    if (this.liquidando() || !this.condicionAlDia()) {
       this.errorMessage.set('Espera a que termine de calcular los valores.');
+      return;
+    }
+    // Con `cambiar_valores_guia` puede guardar con los valores que digitó, como en terbio.
+    if (this.liquidacionRechazada() && !this.permisos().cambiar_valores_guia) {
+      this.errorMessage.set(MENSAJE_SIN_CONDICIONES);
       return;
     }
 
@@ -463,15 +599,25 @@ export class GuiaNuevaComponent implements OnInit {
     this.guardando.set(true);
     this.guiaService
       .crear(
-        cuerpoGuiaNueva(this.form.getRawValue(), {
-          tercero,
-          operacionIngreso,
-          origen,
-          ciudades: this.ciudades(),
-          flete: this.flete(),
-          manejo: this.manejo(),
-          destinatario: this.destinatarioElegido(),
-        }),
+        // El facturado es el liquidado: pudo subir por un mínimo sin pasar por el campo.
+        cuerpoGuiaNueva(
+          { ...this.form.getRawValue(), peso_facturado: this.pesoFacturado() },
+          {
+            tercero,
+            // Sin permiso para cambiarlo con este tipo, siempre se factura al cliente.
+            adquiriente: this.puedeCambiarAdquiriente()
+              ? (this.adquiriente()?.codigo_tercero_pk ?? tercero.codigo_tercero_pk)
+              : tercero.codigo_tercero_pk,
+            operacionIngreso,
+            origen,
+            ciudades: this.ciudades(),
+            flete: this.flete(),
+            manejo: this.manejo(),
+            destinatario: this.destinatarioElegido(),
+            estadoRecogido: this.permisos().estado_recogido,
+            estadoIngreso: this.permisos().estado_ingreso,
+          },
+        ),
       )
       .pipe(
         finalize(() => this.guardando.set(false)),

@@ -25,7 +25,6 @@ export const API_ENDPOINTS = {
     formatosImpresion: '/tte/guia/formatos-impresion',
     imprimirGuia: '/tte/guia/imprimir-guia',
     imprimirRotulo: '/tte/guia/imprimir-rotulo',
-    liquidar: '/tte/guia/liquidar',
     condicionEspecial: '/tte/guia/condicion-especial',
   },
   operacion: {
@@ -41,6 +40,8 @@ export const API_ENDPOINTS = {
   },
   tercero: {
     detalle: (id: number) => `/gen/tercero/detalle/${id}`,
+    buscar: '/gen/tercero/buscar',
+    nuevo: '/gen/tercero/nuevo',
   },
   terceroOperacion: {
     lista: '/tte/tercero-operacion/lista',
@@ -52,10 +53,23 @@ export const API_ENDPOINTS = {
     lista: '/tte/despacho/lista',
     deGuia: (guiaId: number) => `/tte/despacho-detalle/guia/${guiaId}`,
   },
+  cartera: {
+    pendientes: '/car/cuenta-cobrar/pendiente',
+    movimientos: '/car/movimiento/lista',
+  },
+  factura: {
+    lista: '/tur/factura/lista',
+  },
+  programacion: {
+    lista: '/tur/programacion/lista',
+  },
   catalogo: {
     ciudades: '/tte/ciudad/descargar',
     guiaTipos: '/tte/guia-tipo/descargar',
     servicios: '/tte/servicio/descargar',
     identificaciones: '/gen/identificacion/descargar',
+    /** Ciudades de `gen_ciudad`, las que usa el tercero (código numérico). */
+    ciudadesGenerales: '/gen/ciudad/descargar',
+    configuracionGeneral: '/gen/configuracion/guia-nuevo',
   },
 } as const;

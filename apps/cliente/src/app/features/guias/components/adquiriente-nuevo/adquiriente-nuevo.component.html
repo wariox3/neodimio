@@ -1,0 +1,237 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  header="Nuevo adquiriente"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(720px, 95vw)' }"
+>
+  @if (visible()) {
+    <form [formGroup]="form" (ngSubmit)="guardar()" novalidate class="adquiriente-nuevo">
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+      }
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="adq-codigo_identificacion_fk" class="field__label">
+            Tipo de identificación <span class="form-required">*</span>
+          </label>
+          <p-select
+            inputId="adq-codigo_identificacion_fk"
+            formControlName="codigo_identificacion_fk"
+            [options]="identificaciones()"
+            optionLabel="nombre"
+            optionValue="codigo_identificacion_pk"
+            placeholder="Seleccione un tipo"
+            [fluid]="true"
+            appendTo="body"
+            [invalid]="!!errorDe('codigo_identificacion_fk')"
+          />
+          @if (errorDe('codigo_identificacion_fk'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="adq-numero_identificacion" class="field__label"
+            >Número de identificación <span class="form-required">*</span></label
+          >
+          <input
+            pInputText
+            id="adq-numero_identificacion"
+            formControlName="numero_identificacion"
+            fluid
+            [invalid]="!!errorDe('numero_identificacion')"
+          />
+          @if (errorDe('numero_identificacion'); as error) {
+            <small class="form-error">{{ error }}</small>
+          } @else {
+            <small class="field__hint">Para NIT, sin el dígito de verificación.</small>
+          }
+        </div>
+
+        <div class="field field--full">
+          <label for="adq-nombre_corto" class="field__label"
+            >Nombre o razón social <span class="form-required">*</span></label
+          >
+          <input
+            pInputText
+            id="adq-nombre_corto"
+            formControlName="nombre_corto"
+            fluid
+            [invalid]="!!errorDe('nombre_corto')"
+          />
+          @if (errorDe('nombre_corto'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="adq-nombre1" class="field__label"
+            >Primer nombre <span class="form-required">*</span></label
+          >
+          <input
+            pInputText
+            id="adq-nombre1"
+            formControlName="nombre1"
+            fluid
+            [invalid]="!!errorDe('nombre1')"
+          />
+          @if (errorDe('nombre1'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="adq-nombre2" class="field__label">Segundo nombre</label>
+          <input
+            pInputText
+            id="adq-nombre2"
+            formControlName="nombre2"
+            fluid
+            [invalid]="!!errorDe('nombre2')"
+          />
+          @if (errorDe('nombre2'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="adq-apellido1" class="field__label"
+            >Primer apellido <span class="form-required">*</span></label
+          >
+          <input
+            pInputText
+            id="adq-apellido1"
+            formControlName="apellido1"
+            fluid
+            [invalid]="!!errorDe('apellido1')"
+          />
+          @if (errorDe('apellido1'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="adq-apellido2" class="field__label">Segundo apellido</label>
+          <input
+            pInputText
+            id="adq-apellido2"
+            formControlName="apellido2"
+            fluid
+            [invalid]="!!errorDe('apellido2')"
+          />
+          @if (errorDe('apellido2'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field field--full">
+          <label for="adq-direccion" class="field__label"
+            >Dirección <span class="form-required">*</span></label
+          >
+          <input
+            pInputText
+            id="adq-direccion"
+            formControlName="direccion"
+            fluid
+            [invalid]="!!errorDe('direccion')"
+          />
+          @if (errorDe('direccion'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="adq-telefono" class="field__label"
+            >Teléfono <span class="form-required">*</span></label
+          >
+          <input
+            pInputText
+            id="adq-telefono"
+            type="tel"
+            formControlName="telefono"
+            fluid
+            [invalid]="!!errorDe('telefono')"
+          />
+          @if (errorDe('telefono'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="adq-celular" class="field__label"
+            >Celular <span class="form-required">*</span></label
+          >
+          <input
+            pInputText
+            id="adq-celular"
+            type="tel"
+            formControlName="celular"
+            fluid
+            [invalid]="!!errorDe('celular')"
+          />
+          @if (errorDe('celular'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="adq-correo" class="field__label"
+            >Correo <span class="form-required">*</span></label
+          >
+          <input
+            pInputText
+            id="adq-correo"
+            type="email"
+            formControlName="correo"
+            fluid
+            [invalid]="!!errorDe('correo')"
+          />
+          @if (errorDe('correo'); as error) {
+            <small class="form-error">{{ error }}</small>
+          } @else {
+            <small class="field__hint">Se usa para la factura electrónica.</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="adq-codigo_ciudad_fk" class="field__label">
+            Ciudad <span class="form-required">*</span>
+          </label>
+          <p-select
+            inputId="adq-codigo_ciudad_fk"
+            formControlName="codigo_ciudad_fk"
+            [options]="ciudades()"
+            optionLabel="nombre"
+            optionValue="codigo_ciudad_pk"
+            placeholder="Seleccione una ciudad"
+            [filter]="true"
+            filterBy="nombre"
+            [virtualScroll]="true"
+            [virtualScrollItemSize]="40"
+            [fluid]="true"
+            appendTo="body"
+            [invalid]="!!errorDe('codigo_ciudad_fk')"
+          />
+          @if (errorDe('codigo_ciudad_fk'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [text]="true"
+          (onClick)="visible.set(false)"
+        />
+        <p-button type="submit" label="Guardar" icon="pi pi-check" [loading]="guardando()" />
+      </div>
+    </form>
+  }
+</p-dialog>

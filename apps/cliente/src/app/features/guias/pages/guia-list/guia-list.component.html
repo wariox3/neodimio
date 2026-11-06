@@ -388,7 +388,11 @@
     [style]="{ width: 'min(640px, 95vw)' }"
   >
     @if (guiaArchivos(); as guia) {
-      <app-guia-archivos [guiaId]="guia.codigo_guia_pk" />
+      <app-archivos
+        modelo="TteGuia"
+        [codigo]="guia.codigo_guia_pk"
+        mensajeVacio="Esta guía no tiene archivos."
+      />
     }
   </p-dialog>
 </div>

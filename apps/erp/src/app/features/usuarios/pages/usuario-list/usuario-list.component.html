@@ -383,6 +383,24 @@
             <span class="field-hint">Déjalo vacío para usar la ciudad de su operación.</span>
           }
         </div>
+
+        <fieldset class="permisos" formGroupName="permisos">
+          <legend class="permisos__titulo">Permisos en guías</legend>
+          @for (permiso of permisosGuia; track permiso.campo) {
+            <div class="switch-field permisos__item">
+              <div class="permisos__texto">
+                <label [for]="'user-' + permiso.campo" class="form-label">
+                  {{ permiso.label }}
+                </label>
+                <span class="field-hint">{{ permiso.hint }}</span>
+              </div>
+              <p-toggleswitch
+                [inputId]="'user-' + permiso.campo"
+                [formControlName]="permiso.campo"
+              />
+            </div>
+          }
+        </fieldset>
       </form>
     }
   }

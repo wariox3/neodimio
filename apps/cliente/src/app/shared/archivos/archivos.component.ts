@@ -3,14 +3,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { Fichero, FicherosService, extractErrorMessage } from '@semantica/core';
-import { ErrorAlertComponent, LoadingSpinnerComponent } from '../../../../shared';
+import { ErrorAlertComponent, LoadingSpinnerComponent } from '@semantica/ui';
 
-/** Modelo con el que fluor guarda los archivos de una guía. */
-const MODELO_GUIA = 'TteGuia';
-
-/** Archivos adjuntos de una guía, con su descarga (detalle de guía de terbio). */
+/**
+ * Archivos que fluor guarda para un registro (`/doc/fichero/modelo/{modelo}/{codigo}`),
+ * con su descarga. Lo usan el detalle de la guía y la información del cliente.
+ */
 @Component({
-  selector: 'app-guia-archivos',
+  selector: 'app-archivos',
   standalone: true,
   imports: [DatePipe, ButtonModule, LoadingSpinnerComponent, ErrorAlertComponent],
   template: `
@@ -19,7 +19,7 @@ const MODELO_GUIA = 'TteGuia';
     } @else if (error()) {
       <app-error-alert [message]="error()!" [retryable]="true" (retry)="cargar()" />
     } @else if (archivos().length === 0) {
-      <p class="sin-archivos">Esta guía no tiene archivos.</p>
+      <p class="sin-archivos">{{ mensajeVacio() }}</p>
     } @else {
       <ul class="archivos">
         @for (archivo of archivos(); track archivo.codigo_fichero_pk) {
@@ -83,11 +83,15 @@ const MODELO_GUIA = 'TteGuia';
     }
   `,
 })
-export class GuiaArchivosComponent implements OnInit {
+export class ArchivosComponent implements OnInit {
   private readonly ficherosService = inject(FicherosService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly guiaId = input.required<number>();
+  /** Modelo de fluor, por ejemplo `TteGuia` o `GenTercero`. */
+  readonly modelo = input.required<string>();
+  /** Id del registro dentro del modelo. */
+  readonly codigo = input.required<number | string>();
+  readonly mensajeVacio = input('No hay archivos.');
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
@@ -101,7 +105,7 @@ export class GuiaArchivosComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     this.ficherosService
-      .getFicheros(MODELO_GUIA, String(this.guiaId()))
+      .getFicheros(this.modelo(), String(this.codigo()))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (archivos) => {

@@ -20,7 +20,15 @@ export const DASHBOARD_ROUTES: Routes = [
       },
       {
         path: 'general',
-        children: [enConstruccion('informacion', 'Información')],
+        children: [
+          {
+            path: 'informacion',
+            loadComponent: () =>
+              import('../general/pages/informacion/informacion.component').then(
+                (m) => m.InformacionComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'crm',
@@ -36,17 +44,45 @@ export const DASHBOARD_ROUTES: Routes = [
       },
       {
         path: 'programacion',
-        children: [enConstruccion('empleados', 'Programación de empleados')],
+        children: [
+          {
+            path: 'empleados',
+            loadComponent: () =>
+              import('../programacion/pages/programacion-list/programacion-list.component').then(
+                (m) => m.ProgramacionListComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'venta',
-        children: [enConstruccion('facturas', 'Facturas')],
+        children: [
+          {
+            path: 'facturas',
+            loadComponent: () =>
+              import('../facturas/pages/factura-list/factura-list.component').then(
+                (m) => m.FacturaListComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'cartera',
         children: [
-          enConstruccion('pendientes', 'Cartera pendiente'),
-          enConstruccion('recibos', 'Recibos'),
+          {
+            path: 'pendientes',
+            loadComponent: () =>
+              import('../cartera/pages/pendiente-list/pendiente-list.component').then(
+                (m) => m.PendienteListComponent,
+              ),
+          },
+          {
+            path: 'recibos',
+            loadComponent: () =>
+              import('../cartera/pages/recibo-list/recibo-list.component').then(
+                (m) => m.ReciboListComponent,
+              ),
+          },
         ],
       },
       {

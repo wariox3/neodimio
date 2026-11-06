@@ -8,9 +8,30 @@ import { ENVIRONMENT } from '@semantica/core';
 import { MembresiaClienteService } from '../../../contenedores/services/membresia-cliente.service';
 import { GuiaNuevaComponent } from './guia-nueva.component';
 
-const URL_LIQUIDAR = '/api/tte/guia/liquidar';
 const URL_CONDICION = '/api/tte/guia/condicion-especial';
 const URL_NUEVO = '/api/tte/guia/nuevo';
+
+/** Respuesta de las condiciones; cada prueba indica solo lo que le importa. */
+const condicion = (campos: object = {}) => ({
+  error: false,
+  error_mensaje: null,
+  condicion_especial_flete: false,
+  condicion_especial_manejo: false,
+  cobertura: null,
+  vr_peso: 0,
+  vr_unidad: 0,
+  descuento_peso: 0,
+  descuento_unidad: 0,
+  peso_minimo: 0,
+  peso_minimo_guia: 0,
+  flete_minimo: 0,
+  flete_minimo_guia: 0,
+  porcentaje_manejo: 0,
+  manejo_minimo_unidad: 0,
+  manejo_minimo_guia: 0,
+  reexpedicion: false,
+  ...campos,
+});
 
 describe('GuiaNuevaComponent: liquidación', () => {
   let fixture: ComponentFixture<GuiaNuevaComponent>;
@@ -21,6 +42,7 @@ describe('GuiaNuevaComponent: liquidación', () => {
   function cargarCatalogos(
     tercero = { condicion_codigo_precio_fk: 10 as number | null },
     tipos: object[] = [],
+    permisos: object = {},
   ): void {
     const responder = (url: string, cuerpo: object) =>
       http.expectOne((r) => r.url === url).flush(cuerpo);
@@ -45,6 +67,7 @@ describe('GuiaNuevaComponent: liquidación', () => {
       codigo_operacion_fk: 'MED',
       codigo_tercero_operacion_fk: null,
       codigo_ciudad_origen_fk: null,
+      ...permisos,
     });
     responder('/api/tte/operacion/detalle/MED', { codigo_ciudad_fk: '385' });
     avanzar();
@@ -75,28 +98,16 @@ describe('GuiaNuevaComponent: liquidación', () => {
     component = fixture.componentInstance;
   });
 
-  it('liquida con el origen de la operación y muestra los valores', fakeAsync(() => {
+  it('liquida con las condiciones de fluor y muestra los valores', fakeAsync(() => {
     avanzar();
     cargarCatalogos();
     expect(component.origenTexto()).toBe('MEDELLIN [385]');
 
     component.form.patchValue({ codigo_ciudad_destino_fk: '478', codigo_producto_fk: '17' });
     avanzar(400);
-
-    const req = http.expectOne(URL_LIQUIDAR);
-    expect(req.request.body).toEqual(
-      jasmine.objectContaining({
-        tercero: 2,
-        condicion: 18,
-        precio: 10,
-        origen: '385',
-        destino: '478',
-        producto: '17',
-        zona: 'ORI2',
-        tipo_liquidacion: 'U',
-      }),
-    );
-    req.flush({ error: false, flete: 10507, manejo: 20, peso_facturado: 15 });
+    http
+      .expectOne(URL_CONDICION)
+      .flush(condicion({ vr_unidad: 10507, manejo_minimo_guia: 20, peso_minimo: 15 }));
     avanzar();
 
     expect(component.flete()).toBe(10507);
@@ -105,29 +116,47 @@ describe('GuiaNuevaComponent: liquidación', () => {
     fixture.destroy();
   }));
 
-  it('al cambiar un dato pone los valores en 0 y consulta una sola vez tras la espera', fakeAsync(() => {
+  it('recalcula sin consultar a fluor al cambiar los valores de la mercancía', fakeAsync(() => {
     avanzar();
     cargarCatalogos();
     component.form.patchValue({ codigo_ciudad_destino_fk: '478' });
     avanzar(400);
     http
-      .expectOne(URL_LIQUIDAR)
-      .flush({ error: false, flete: 10507, manejo: 0, peso_facturado: 15 });
+      .expectOne(URL_CONDICION)
+      .flush(condicion({ vr_unidad: 10507, porcentaje_manejo: 5, manejo_minimo_guia: 1250 }));
+    avanzar();
+    expect(component.manejo()).toBe(1250);
+
+    component.form.patchValue({ unidades: 3, vr_declara: 100000 });
+    avanzar(400);
+
+    http.expectNone(URL_CONDICION);
+    expect(component.flete()).toBe(31521);
+    expect(component.manejo()).toBe(5000);
+    fixture.destroy();
+  }));
+
+  it('al cambiar el destino pone los valores en 0 y consulta una sola vez tras la espera', fakeAsync(() => {
+    avanzar();
+    cargarCatalogos();
+    component.form.patchValue({ codigo_ciudad_destino_fk: '478' });
+    avanzar(400);
+    http.expectOne(URL_CONDICION).flush(condicion({ vr_unidad: 10507 }));
     avanzar();
 
-    component.form.patchValue({ unidades: 2 });
+    component.form.patchValue({ codigo_ciudad_destino_fk: '385' });
     avanzar(100);
     expect(component.flete()).toBe(0);
-    component.form.patchValue({ unidades: 3 });
+    component.form.patchValue({ codigo_ciudad_destino_fk: '500' });
     avanzar(100);
-    http.expectNone(URL_LIQUIDAR);
+    http.expectNone(URL_CONDICION);
 
     avanzar(400);
-    const req = http.expectOne(URL_LIQUIDAR);
-    expect(req.request.body.unidades).toBe(3);
-    req.flush({ error: false, flete: 31521, manejo: 0, peso_facturado: 15 });
+    const req = http.expectOne(URL_CONDICION);
+    expect(req.request.body.destino).toBe('500');
+    req.flush(condicion({ vr_unidad: 200 }));
     avanzar();
-    expect(component.flete()).toBe(31521);
+    expect(component.flete()).toBe(200);
     fixture.destroy();
   }));
 
@@ -138,23 +167,25 @@ describe('GuiaNuevaComponent: liquidación', () => {
     component.form.patchValue({ codigo_ciudad_destino_fk: '478' });
     avanzar(400);
 
-    http.expectNone(URL_LIQUIDAR);
+    http.expectNone(URL_CONDICION);
     expect(component.avisoLiquidacion()).toBe('El cliente no tiene una lista de precios asignada.');
     fixture.destroy();
   }));
 
-  it('avisa si fluor rechaza los datos', fakeAsync(() => {
+  it('avisa si no se pueden consultar las condiciones', fakeAsync(() => {
     avanzar();
     cargarCatalogos();
     component.form.patchValue({ codigo_ciudad_destino_fk: '478' });
     avanzar(400);
 
     http
-      .expectOne(URL_LIQUIDAR)
-      .flush({ detail: 'Inválido' }, { status: 422, statusText: 'Unprocessable' });
+      .expectOne(URL_CONDICION)
+      .flush({ detail: 'Falla' }, { status: 500, statusText: 'Server Error' });
     avanzar();
 
-    expect(component.avisoLiquidacion()).toBe('No se pudo liquidar con estos datos.');
+    expect(component.avisoLiquidacion()).toBe(
+      'No se pudieron consultar las condiciones para liquidar.',
+    );
     expect(component.liquidando()).toBeFalse();
     fixture.destroy();
   }));
@@ -174,15 +205,15 @@ describe('GuiaNuevaComponent: liquidación', () => {
       guia_tipo: 'COR',
       producto: 'VARIOS',
     });
-    req.flush({
-      error: false,
-      condicion_especial_flete: true,
-      condicion_especial_manejo: false,
-      peso_minimo: 5,
-      peso_minimo_guia: 20,
-      manejo_minimo_unidad: 300,
-      manejo_minimo_guia: 1500,
-    });
+    req.flush(
+      condicion({
+        condicion_especial_flete: true,
+        peso_minimo: 5,
+        peso_minimo_guia: 20,
+        manejo_minimo_unidad: 300,
+        manejo_minimo_guia: 1500,
+      }),
+    );
     avanzar();
 
     expect(component.condicion()?.peso_minimo_guia).toBe(20);
@@ -200,7 +231,7 @@ describe('GuiaNuevaComponent: liquidación', () => {
 
     component.form.patchValue({ codigo_ciudad_destino_fk: '478' });
     avanzar(400);
-    http.expectOne(URL_CONDICION).flush({ error: false, peso_minimo: 5 });
+    http.expectOne(URL_CONDICION).flush(condicion({ peso_minimo: 5 }));
     avanzar();
     expect(component.condicion()).not.toBeNull();
 
@@ -215,12 +246,9 @@ describe('GuiaNuevaComponent: liquidación', () => {
     cargarCatalogos();
     component.form.patchValue({ codigo_ciudad_destino_fk: '478' });
     avanzar(400);
-    http.expectOne(URL_CONDICION).flush({
-      error: false,
-      condicion_especial_flete: true,
-      peso_minimo: 25,
-      peso_minimo_guia: 25,
-    });
+    http
+      .expectOne(URL_CONDICION)
+      .flush(condicion({ condicion_especial_flete: true, peso_minimo: 25, peso_minimo_guia: 25 }));
     avanzar();
 
     component.form.patchValue({ unidades: 2 });
@@ -291,7 +319,7 @@ describe('GuiaNuevaComponent: liquidación', () => {
 
       llenarGuia('CPT');
       avanzar(400);
-      http.expectOne(URL_LIQUIDAR).flush({ error: false, flete: 0, manejo: 0, peso_facturado: 10 });
+      http.expectOne(URL_CONDICION).flush(condicion());
       avanzar();
       component.onSubmit();
       expect(component.errorMessage()).toBeNull();
@@ -307,8 +335,8 @@ describe('GuiaNuevaComponent: liquidación', () => {
       component.form.patchValue({ direccion_destinatario: '  Calle   1  # 2 ' });
       avanzar(400);
       http
-        .expectOne(URL_LIQUIDAR)
-        .flush({ error: false, flete: 19468, manejo: 1250, peso_facturado: 25 });
+        .expectOne(URL_CONDICION)
+        .flush(condicion({ vr_unidad: 19468, manejo_minimo_guia: 1250, peso_minimo: 25 }));
       avanzar();
 
       component.onSubmit();
@@ -326,6 +354,7 @@ describe('GuiaNuevaComponent: liquidación', () => {
           direccion_destinatario: 'Calle 1 # 2',
           vr_flete: 19468,
           vr_manejo: 1250,
+          peso_facturado: 25,
           liquidar: false,
           zona: 'ORI2',
           estado_recogido: true,
@@ -346,9 +375,7 @@ describe('GuiaNuevaComponent: liquidación', () => {
       cargarCatalogos(undefined, tipos);
       llenarGuia('COR');
       avanzar(400);
-      http
-        .expectOne(URL_LIQUIDAR)
-        .flush({ error: false, flete: 100, manejo: 0, peso_facturado: 10 });
+      http.expectOne(URL_CONDICION).flush(condicion({ vr_unidad: 100 }));
       avanzar();
 
       component.onSubmit();
@@ -361,6 +388,24 @@ describe('GuiaNuevaComponent: liquidación', () => {
       fixture.destroy();
     }));
 
+    it('no guarda si no se pudieron consultar las condiciones', fakeAsync(() => {
+      avanzar();
+      cargarCatalogos(undefined, tipos);
+      llenarGuia('CPT');
+      avanzar(400);
+      http
+        .expectOne(URL_CONDICION)
+        .flush({ detail: 'Falla' }, { status: 500, statusText: 'Server Error' });
+      avanzar();
+
+      component.onSubmit();
+      expect(component.errorMessage()).toBe(
+        'No se pudieron consultar las condiciones para liquidar.',
+      );
+      http.expectNone(URL_NUEVO);
+      fixture.destroy();
+    }));
+
     it('no guarda mientras se está liquidando', fakeAsync(() => {
       avanzar();
       cargarCatalogos(undefined, tipos);
@@ -368,6 +413,200 @@ describe('GuiaNuevaComponent: liquidación', () => {
       component.onSubmit();
       expect(component.errorMessage()).toBe('Espera a que termine de calcular los valores.');
       http.expectNone(URL_NUEVO);
+      fixture.destroy();
+    }));
+  });
+  describe('permisos del usuario', () => {
+    const tipos = [
+      {
+        codigo_guia_tipo_pk: 'COR',
+        nombre: 'CORRIENTE',
+        codigo_pago_fk: null,
+        validar_flete: true,
+      },
+    ];
+
+    function llenarGuia(): void {
+      component.form.patchValue({
+        numero_identificacion_destinatario: '123',
+        nombre_destinatario: 'Ana',
+        direccion_destinatario: 'Calle 1',
+        telefono_destinatario: '300',
+        codigo_ciudad_destino_fk: '478',
+        peso_real: 10,
+        peso_facturado: 10,
+      });
+    }
+
+    it('sin configuración deja los campos editables y la guía recogida e ingresada', fakeAsync(() => {
+      avanzar();
+      cargarCatalogos(undefined, tipos);
+      expect(component.trayectoInvertido()).toBeNull();
+      expect((fixture.nativeElement as HTMLElement).querySelector('.aviso-invertido')).toBeNull();
+      expect(component.form.controls.vr_recaudo.enabled).toBeTrue();
+      expect(component.form.controls.codigo_tercero_operacion_fk.enabled).toBeTrue();
+      expect(component.permisos().cambiar_valores_guia).toBeFalse();
+      fixture.destroy();
+    }));
+
+    it('bloquea el recaudo y la operación', fakeAsync(() => {
+      avanzar();
+      cargarCatalogos(undefined, tipos, {
+        bloquear_recaudo: true,
+        bloquear_operacion_cliente: true,
+      });
+      expect(component.form.controls.vr_recaudo.disabled).toBeTrue();
+      expect(component.form.controls.vr_recaudo.value).toBe(0);
+      expect(component.form.controls.codigo_tercero_operacion_fk.disabled).toBeTrue();
+      fixture.destroy();
+    }));
+
+    it('consulta las condiciones con el origen y el destino invertidos', fakeAsync(() => {
+      avanzar();
+      cargarCatalogos(undefined, tipos, { invertir_origen_destino: true });
+      component.form.patchValue({ codigo_ciudad_destino_fk: '478' });
+      avanzar(400);
+
+      const req = http.expectOne(URL_CONDICION);
+      expect(req.request.body.origen).toBe('478');
+      expect(req.request.body.destino).toBe('385');
+      req.flush(condicion());
+      avanzar();
+
+      expect(component.trayectoInvertido()).toBe('RIONEGRO → MEDELLIN');
+      const texto = (fixture.nativeElement as HTMLElement).querySelector('.resumen')?.textContent;
+      expect(texto).toContain('RIONEGRO → MEDELLIN');
+      expect(texto).toContain('trayecto invertido');
+      fixture.destroy();
+    }));
+
+    it('guarda con los estados de la configuración', fakeAsync(() => {
+      avanzar();
+      cargarCatalogos(undefined, tipos, { estado_recogido: false, estado_ingreso: false });
+      llenarGuia();
+      avanzar(400);
+      http.expectOne(URL_CONDICION).flush(condicion({ vr_unidad: 100 }));
+      avanzar();
+
+      component.onSubmit();
+      expect(http.expectOne(URL_NUEVO).request.body).toEqual(
+        jasmine.objectContaining({ estado_recogido: false, estado_ingreso: false }),
+      );
+      fixture.destroy();
+    }));
+
+    it('con cambiar_valores_guia llena el flete liquidado y guarda el que digita', fakeAsync(() => {
+      avanzar();
+      cargarCatalogos(undefined, tipos, { cambiar_valores_guia: true });
+      llenarGuia();
+      avanzar(400);
+      http
+        .expectOne(URL_CONDICION)
+        .flush(condicion({ vr_unidad: 10507, manejo_minimo_guia: 1250 }));
+      avanzar();
+      expect(component.form.controls.vr_flete.value).toBe(10507);
+      expect(component.form.controls.vr_manejo.value).toBe(1250);
+
+      component.form.patchValue({ vr_flete: 9000, remitente: 'Bodega' });
+      avanzar();
+      expect(component.form.controls.vr_flete.value).toBe(9000);
+      expect(component.total()).toBe(10250);
+
+      component.onSubmit();
+      expect(http.expectOne(URL_NUEVO).request.body).toEqual(
+        jasmine.objectContaining({ vr_flete: 9000, vr_manejo: 1250 }),
+      );
+      fixture.destroy();
+    }));
+
+    describe('adquiriente', () => {
+      const tiposPago = [
+        {
+          codigo_guia_tipo_pk: 'CON',
+          nombre: 'CONTADO',
+          codigo_pago_fk: 'CON',
+          validar_flete: false,
+        },
+        {
+          codigo_guia_tipo_pk: 'COR',
+          nombre: 'CREDITO',
+          codigo_pago_fk: 'COR',
+          validar_flete: false,
+        },
+      ];
+      const otro = {
+        codigo_tercero_pk: 55,
+        numero_identificacion: '900',
+        nombre_corto: 'OTRO SAS',
+        condicion_nombre: null,
+        estado_inactivo: false,
+      };
+      const terceroConPagos = {
+        condicion_codigo_precio_fk: 10,
+        guia_pago_contado: true,
+        guia_pago_credito: true,
+      };
+
+      it('sin permite_cambiar_adquiriente no muestra el botón para cambiarlo', fakeAsync(() => {
+        avanzar();
+        cargarCatalogos(terceroConPagos, tiposPago);
+        expect(component.puedeCambiarAdquiriente()).toBeFalse();
+        const texto = (fixture.nativeElement as HTMLElement).textContent;
+        expect(texto).not.toContain('Cambiar');
+        fixture.destroy();
+      }));
+
+      it('guarda con el adquiriente elegido en el buscador', fakeAsync(() => {
+        avanzar();
+        cargarCatalogos(terceroConPagos, tiposPago, { permite_cambiar_adquiriente: true });
+        expect(component.puedeCambiarAdquiriente()).toBeTrue();
+        component.usarAdquiriente(otro);
+        llenarGuia();
+        avanzar(400);
+        http.expectOne(URL_CONDICION).flush(condicion({ vr_unidad: 100 }));
+        avanzar();
+
+        component.onSubmit();
+        const cuerpo = http.expectOne(URL_NUEVO).request.body;
+        expect(cuerpo.codigo_adquiriente_fk).toBe(55);
+        expect(cuerpo.codigo_tercero_fk).toBe(2);
+        fixture.destroy();
+      }));
+
+      it('con bloquear_adquiriente_credito vuelve al del cliente al elegir crédito', fakeAsync(() => {
+        avanzar();
+        cargarCatalogos(terceroConPagos, tiposPago, {
+          permite_cambiar_adquiriente: true,
+          bloquear_adquiriente_credito: true,
+        });
+        expect(component.form.controls.codigo_guia_tipo_fk.value).toBe('CON');
+        component.usarAdquiriente(otro);
+        avanzar();
+        expect(component.adquiriente()?.codigo_tercero_pk).toBe(55);
+
+        component.form.patchValue({ codigo_guia_tipo_fk: 'COR' });
+        avanzar();
+        expect(component.puedeCambiarAdquiriente()).toBeFalse();
+        expect(component.adquiriente()?.codigo_tercero_pk).toBe(2);
+        fixture.destroy();
+      }));
+    });
+
+    it('con cambiar_valores_guia guarda aunque no haya condiciones', fakeAsync(() => {
+      avanzar();
+      cargarCatalogos(undefined, tipos, { cambiar_valores_guia: true });
+      llenarGuia();
+      avanzar(400);
+      http
+        .expectOne(URL_CONDICION)
+        .flush({ detail: 'Falla' }, { status: 500, statusText: 'Server Error' });
+      avanzar();
+
+      component.form.patchValue({ vr_flete: 15000 });
+      avanzar();
+      component.onSubmit();
+      expect(component.errorMessage()).toBeNull();
+      expect(http.expectOne(URL_NUEVO).request.body.vr_flete).toBe(15000);
       fixture.destroy();
     }));
   });

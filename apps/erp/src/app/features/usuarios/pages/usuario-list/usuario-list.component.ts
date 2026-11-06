@@ -21,6 +21,10 @@ import {
   CODIGO_CIUDAD_ORIGEN_MAX_LENGTH,
   CODIGO_OPERACION_MAX_LENGTH,
   CODIGO_USUARIO_MAX_LENGTH,
+  PERMISOS_GUIA,
+  PERMISOS_GUIA_POR_DEFECTO,
+  PermisoGuia,
+  UsuarioTenantConfiguracion,
   UsuarioTenantItem,
 } from '../../models/usuario.model';
 import { ActiveTenantService, extractErrorMessage } from '../../../../core';
@@ -118,7 +122,10 @@ export class UsuarioListComponent implements OnInit {
     codigoOperacion: ['', Validators.maxLength(CODIGO_OPERACION_MAX_LENGTH)],
     codigoTerceroOperacion: [null as number | null],
     codigoCiudadOrigen: ['', Validators.maxLength(CODIGO_CIUDAD_ORIGEN_MAX_LENGTH)],
+    // Con los mismos nombres del API para enviarlos tal cual.
+    permisos: this.fb.nonNullable.group({ ...PERMISOS_GUIA_POR_DEFECTO }),
   });
+  readonly permisosGuia = PERMISOS_GUIA;
 
   constructor() {
     // Las búsquedas de texto se debouncean para no disparar una petición por tecla.
@@ -277,6 +284,7 @@ export class UsuarioListComponent implements OnInit {
           codigoOperacion: configuracion.codigo_operacion_fk ?? '',
           codigoTerceroOperacion: configuracion.codigo_tercero_operacion_fk,
           codigoCiudadOrigen: configuracion.codigo_ciudad_origen_fk ?? '',
+          permisos: this.permisosDe(configuracion),
         });
         this.cargandoConfiguracion.set(false);
       },
@@ -288,6 +296,15 @@ export class UsuarioListComponent implements OnInit {
     });
   }
 
+  /** Permisos de la configuración; si falta alguno queda el valor por defecto de fluor. */
+  private permisosDe(configuracion: UsuarioTenantConfiguracion): Record<PermisoGuia, boolean> {
+    const permisos = { ...PERMISOS_GUIA_POR_DEFECTO };
+    for (const campo of Object.keys(permisos) as PermisoGuia[]) {
+      permisos[campo] = configuracion[campo] ?? permisos[campo];
+    }
+    return permisos;
+  }
+
   submitConfiguracion(): void {
     const usuario = this.configurandoUsuario();
     if (!usuario || this.cargandoConfiguracion() || this.errorConfiguracion()) return;
@@ -296,7 +313,7 @@ export class UsuarioListComponent implements OnInit {
       return;
     }
 
-    const { codigoOperacion, codigoTerceroOperacion, codigoCiudadOrigen } =
+    const { codigoOperacion, codigoTerceroOperacion, codigoCiudadOrigen, permisos } =
       this.configuracionForm.getRawValue();
 
     this.guardandoConfiguracion.set(true);
@@ -306,6 +323,7 @@ export class UsuarioListComponent implements OnInit {
         codigo_operacion_fk: codigoOperacion.trim() || null,
         codigo_tercero_operacion_fk: codigoTerceroOperacion,
         codigo_ciudad_origen_fk: codigoCiudadOrigen.trim() || null,
+        ...permisos,
       })
       .subscribe({
         next: () => {

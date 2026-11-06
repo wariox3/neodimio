@@ -17,6 +17,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ToastService, extractErrorMessage } from '@semantica/core';
 import { TrimInputDirective } from '@semantica/ui';
 import {
+  ArchivosComponent,
   EmptyStateComponent,
   ErrorAlertComponent,
   LoadingSpinnerComponent,
@@ -31,7 +32,6 @@ import {
 } from '../../../../core';
 import { Ciudad, OpcionCatalogo } from '../../../catalogos/models/catalogo.model';
 import { CatalogoService } from '../../../catalogos/services/catalogo.service';
-import { GuiaArchivosComponent } from '../../components/guia-archivos/guia-archivos.component';
 import { GuiaImprimirComponent } from '../../components/guia-imprimir/guia-imprimir.component';
 import { Guia, GuiaEstadoFiltro } from '../../models/guia.model';
 import { GuiaService } from '../../services/guia.service';
@@ -64,7 +64,7 @@ const MAX_EXPORTAR = 5000;
     EmptyStateComponent,
     ErrorAlertComponent,
     GuiaImprimirComponent,
-    GuiaArchivosComponent,
+    ArchivosComponent,
   ],
   templateUrl: './guia-list.component.html',
   styleUrls: ['../../../../shared/styles/listado.scss', './guia-list.component.scss'],
