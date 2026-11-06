@@ -104,10 +104,12 @@ ui        → @semantica/core (solo para ENVIRONMENT token en Turnstile)
 ### Auth pattern
 
 Each app's `AuthService` extends `BaseAuthService<TUser>` from `@semantica/core`:
+
 - Empleado adds: `register()`, `asociarEmpresa()`, `hasTenant` computed
 - ERP adds: `forceLogout()`, overrides `logout()`
 
 Injection tokens connect shared libs to app-specific code:
+
 ```typescript
 // In app.config.ts
 { provide: ENVIRONMENT, useValue: environment },
@@ -119,6 +121,7 @@ Injection tokens connect shared libs to app-specific code:
 ### Error handling
 
 Centralized in `errorInterceptor` from `@semantica/core`:
+
 - Status 0: toast "Error de conexión"
 - 401: automatic token refresh via `TokenRefreshService` queue pattern; retries original request
 - 403: toast "Acceso denegado" (skips if `is_verified === false`)
@@ -134,7 +137,7 @@ HTTP-only cookies gestionadas por el backend. El `authInterceptor` agrega `withC
 
 ### Environment
 
-`src/environments/environment.ts` sets `apiUrl: '/api'` (proxied via `proxy.conf.json` in dev). Production uses `https://api.semanticaapi.com.co`, staging uses `https://api.semanticaapi.uk`.
+`src/environments/environment.ts` sets `apiUrl: '/api'` (proxied via `proxy.conf.json` in dev). Production uses `https://api.semanticaapi.com.co`, staging uses `https://api.semanticaerp.uk`.
 
 ## Commits
 
