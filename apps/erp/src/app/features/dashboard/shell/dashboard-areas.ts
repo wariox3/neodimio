@@ -95,7 +95,7 @@ export const DASHBOARD_AREAS: Record<DashboardArea, DashboardAreaConfig> = {
         id: 'transporte-administradores',
         label: 'Administradores',
         icon: 'pi pi-folder',
-        children: [{ label: 'Guía', route: ROUTE_PATHS.dashboard.transporte.guias }],
+        children: [{ label: 'Guías', route: ROUTE_PATHS.dashboard.transporte.guias }],
       },
     ],
   },

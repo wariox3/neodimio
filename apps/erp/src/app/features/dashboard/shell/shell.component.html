@@ -2,11 +2,9 @@
   <!-- Navbar -->
   <header class="shell-navbar">
     <div class="navbar-start">
-      @if (hasSidebar()) {
-        <button class="hamburger-btn" (click)="toggleDrawer()" aria-label="Abrir menú">
-          <i class="pi pi-bars"></i>
-        </button>
-      }
+      <button class="hamburger-btn" (click)="toggleDrawer()" aria-label="Abrir menú">
+        <i class="pi pi-bars"></i>
+      </button>
       <a class="navbar-brand" [routerLink]="inicioRoute" aria-label="Ir al inicio">
         <img src="logo_navbar.png" alt="Semantica Seguridad" class="navbar-logo-img" />
       </a>
