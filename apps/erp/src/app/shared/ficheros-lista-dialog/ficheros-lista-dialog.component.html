@@ -33,6 +33,7 @@
         <table class="ficheros-tabla">
           <thead>
             <tr>
+              <th class="ficheros-tabla__id">ID</th>
               <th class="ficheros-tabla__fecha">Fecha</th>
               <th>Nombre</th>
               <th class="ficheros-tabla__tamano">Tamaño</th>
@@ -43,6 +44,7 @@
             @for (fichero of ficheros(); track fichero.codigo_fichero_pk) {
               @let nombre = nombreCompleto(fichero);
               <tr>
+                <td class="ficheros-tabla__id">{{ fichero.codigo_fichero_pk }}</td>
                 <td class="ficheros-tabla__fecha">
                   {{ fichero.fecha | date: 'dd/MM/yyyy HH:mm' }}
                 </td>
