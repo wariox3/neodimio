@@ -5,9 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Serve an app (dev server at http://localhost:4200 with proxy)
-npx nx serve empleado
-npx nx serve erp
+# Serve an app (dev server with proxy; each app has its own port and they can run together)
+npx nx serve empleado   # http://localhost:4200
+npx nx serve erp        # http://localhost:4201
+npx nx serve cliente    # http://localhost:4202
 
 # Serve against the local backend (http://localhost:8000) instead of staging
 npx nx serve empleado --proxy-config=apps/empleado/proxy.conf.local.json
