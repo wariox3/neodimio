@@ -70,7 +70,7 @@ export class GuiaDetailComponent implements OnInit {
   readonly breadcrumbItems = computed<readonly BreadcrumbItem[]>(() => [
     TRANSPORTE_MIGA_RAIZ,
     { label: 'Guías', routerLink: this.listaRoute },
-    { label: this.titulo() },
+    { label: `ID ${this.id()}` },
   ]);
 
   readonly estado = computed(() => {
