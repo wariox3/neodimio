@@ -1,0 +1,154 @@
+<div class="page-container">
+  <app-page-header
+    title="Seguridad social"
+    subtitle="Consulta la planilla de seguridad social del personal asignado a tus puestos"
+  />
+
+  <div class="card filtros-card">
+    <button
+      type="button"
+      class="filtros-card__header"
+      [attr.aria-expanded]="filtrosVisibles()"
+      aria-controls="seguridad-social-filtros"
+      (click)="toggleFiltros()"
+    >
+      <span class="filtros-card__title">
+        <i class="pi pi-filter" aria-hidden="true"></i>
+        Filtros
+      </span>
+      <i
+        class="pi pi-chevron-down filtros-card__chevron"
+        [class.filtros-card__chevron--open]="filtrosVisibles()"
+        aria-hidden="true"
+      ></i>
+    </button>
+
+    @if (filtrosVisibles()) {
+      <form id="seguridad-social-filtros" [formGroup]="form" (ngSubmit)="buscar()" novalidate>
+        <div class="filtros-grid">
+          <div class="field">
+            <label for="mes" class="field__label">Mes</label>
+            <p-datepicker
+              inputId="mes"
+              formControlName="mes"
+              view="month"
+              dateFormat="mm/yy"
+              [maxDate]="mesMaximo"
+              [readonlyInput]="true"
+              [showIcon]="true"
+              [fluid]="true"
+              appendTo="body"
+            />
+          </div>
+        </div>
+
+        <div class="filtros-actions">
+          <p-button
+            type="button"
+            label="Mes actual"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            [text]="true"
+            (onClick)="limpiar()"
+          />
+          <p-button
+            type="submit"
+            label="Filtrar"
+            icon="pi pi-search"
+            [loading]="loading()"
+            [disabled]="sinMes()"
+          />
+        </div>
+      </form>
+    }
+  </div>
+
+  @if (loading() && registros().length === 0) {
+    <app-loading-spinner message="Cargando seguridad social..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="buscar()" />
+  } @else if (!loading() && registros().length === 0) {
+    <app-empty-state
+      title="Sin seguridad social"
+      message="No hay personal de tus puestos en la planilla del mes seleccionado."
+      icon="pi pi-shield"
+    />
+  } @else {
+    @if (incompleto()) {
+      <p-message severity="warn" styleClass="mb-4">
+        El mes tiene más de {{ maxConsulta }} empleados; solo se muestran los primeros.
+      </p-message>
+    }
+
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-toolbar__count">
+          {{ registros().length }} {{ registros().length === 1 ? 'empleado' : 'empleados' }}
+        </span>
+      </div>
+
+      <p-table
+        [value]="registros()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [first]="first()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onPage)="onPage($event)"
+        [rowHover]="true"
+        [scrollable]="true"
+        dataKey="codigo_aporte_contrato_pk"
+      >
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Cód.</th>
+            <th>Empleado</th>
+            <th>Identificación</th>
+            <th>Soporte</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-registro>
+          <tr>
+            <td>{{ registro.codigo_aporte_contrato_pk }}</td>
+            <td>{{ registro.codigo_empleado_fk ?? '—' }}</td>
+            <td class="nowrap">{{ registro.empleado_nombre ?? '—' }}</td>
+            <td>{{ registro.numero_identificacion ?? '—' }}</td>
+            <td>
+              @if (registro.cantidad_archivos > 0) {
+                <p-button
+                  icon="pi pi-paperclip"
+                  [label]="registro.cantidad_archivos > 1 ? '' + registro.cantidad_archivos : ''"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  pTooltip="Ver soporte"
+                  tooltipPosition="top"
+                  [ariaLabel]="'Ver soporte de ' + (registro.empleado_nombre ?? 'el empleado')"
+                  (onClick)="registroArchivos.set(registro)"
+                />
+              } @else {
+                <p-tag value="Pendiente" severity="secondary" />
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <p-dialog
+    [visible]="registroArchivos() !== null"
+    (visibleChange)="registroArchivos.set(null)"
+    [header]="'Soporte de ' + (registroArchivos()?.empleado_nombre ?? 'el empleado')"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: 'min(640px, 95vw)' }"
+  >
+    @if (registroArchivos(); as registro) {
+      <app-seguridad-social-archivos [registro]="registro" />
+    }
+  </p-dialog>
+</div>

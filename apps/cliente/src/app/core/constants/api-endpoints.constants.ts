@@ -63,6 +63,12 @@ export const API_ENDPOINTS = {
   programacion: {
     lista: '/tur/programacion/lista',
   },
+  seguridadSocial: {
+    lista: '/rhu/aporte_contrato/lista-portal',
+    archivos: (aporteContratoId: number) => `/rhu/aporte_contrato/${aporteContratoId}/archivos`,
+    descargar: (aporteContratoId: number, archivoId: number) =>
+      `/rhu/aporte_contrato/${aporteContratoId}/archivo/${archivoId}/descargar`,
+  },
   catalogo: {
     ciudades: '/tte/ciudad/descargar',
     guiaTipos: '/tte/guia-tipo/descargar',
