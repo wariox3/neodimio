@@ -94,10 +94,6 @@
     />
   } @else {
     <div class="table-card">
-      <div class="table-count">
-        {{ totalRecords() }} {{ totalRecords() === 1 ? 'guía' : 'guías' }}
-      </div>
-
       <p-table
         [value]="guias()"
         [lazy]="true"
@@ -108,7 +104,6 @@
         [rowHover]="true"
         [paginator]="true"
         [rows]="rows()"
-        [rowsPerPageOptions]="[25, 50, 100]"
         (onLazyLoad)="onLazyLoad($event)"
         [scrollable]="true"
         scrollHeight="600px"
