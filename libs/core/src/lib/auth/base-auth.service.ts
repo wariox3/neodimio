@@ -1,8 +1,13 @@
 import { computed, inject, signal } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, catchError, of, tap } from 'rxjs';
-import { AuthResponse, BaseUsuario, LoginRequest, ResendVerificationRequest } from '../models/auth.model';
+import {
+  AuthResponse,
+  BaseUsuario,
+  LoginRequest,
+  ResendVerificationRequest,
+} from '../models/auth.model';
 import { ENVIRONMENT } from '../tokens';
 import { TokenRefreshService } from '../services/token-refresh.service';
 
@@ -58,10 +63,9 @@ export abstract class BaseAuthService<TUser extends BaseUsuario> {
    */
   login(credentials: LoginRequest): Observable<AuthResponse<TUser>> {
     return this.http
-      .post<AuthResponse<TUser>>(
-        `${this.environment.apiUrl}${this.apiEndpoints.login}`,
-        credentials,
-      )
+      .post<
+        AuthResponse<TUser>
+      >(`${this.environment.apiUrl}${this.apiEndpoints.login}`, credentials)
       .pipe(
         tap((response) => {
           this._currentUser.set(response.user);
@@ -71,30 +75,30 @@ export abstract class BaseAuthService<TUser extends BaseUsuario> {
 
   /**
    * Obtiene el usuario autenticado usando la cookie HTTP-only vigente.
-   * Retorna el usuario si la cookie es valida, o `null` si expiro.
+   *
+   * `null` significa una sola cosa: no hay sesion (401). Cualquier otro error se relanza, porque
+   * una caida momentanea de red o un 500 no deben cerrarle la sesion a nadie.
    */
   me(): Observable<TUser | null> {
-    return this.http
-      .get<TUser>(`${this.environment.apiUrl}${this.apiEndpoints.me}`)
-      .pipe(
-        tap((user) => {
-          this._currentUser.set(user);
-        }),
-        catchError(() => {
+    return this.http.get<TUser>(`${this.environment.apiUrl}${this.apiEndpoints.me}`).pipe(
+      tap((user) => {
+        this._currentUser.set(user);
+      }),
+      catchError((error: unknown) => {
+        if (error instanceof HttpErrorResponse && error.status === 401) {
           this._currentUser.set(null);
           return of(null);
-        }),
-      );
+        }
+        throw error;
+      }),
+    );
   }
 
   /**
    * Renueva las cookies HTTP-only llamando al endpoint de refresh.
    */
   refresh(): Observable<void> {
-    return this.http.post<void>(
-      `${this.environment.apiUrl}${this.apiEndpoints.refresh}`,
-      {},
-    );
+    return this.http.post<void>(`${this.environment.apiUrl}${this.apiEndpoints.refresh}`, {});
   }
 
   /**
@@ -114,27 +118,21 @@ export abstract class BaseAuthService<TUser extends BaseUsuario> {
    * Envia un correo de recuperacion de contrasena al email indicado.
    */
   forgotPassword(email: string, captchaToken?: string): Observable<void> {
-    return this.http.post<void>(
-      `${this.environment.apiUrl}${this.apiEndpoints.forgotPassword}`,
-      {
-        email,
-        ...(captchaToken && { turnstile_token: captchaToken }),
-      },
-    );
+    return this.http.post<void>(`${this.environment.apiUrl}${this.apiEndpoints.forgotPassword}`, {
+      email,
+      ...(captchaToken && { turnstile_token: captchaToken }),
+    });
   }
 
   /**
    * Establece una nueva contrasena usando el token de recuperacion.
    */
   resetPassword(token: string, password: string, captchaToken?: string): Observable<void> {
-    return this.http.post<void>(
-      `${this.environment.apiUrl}${this.apiEndpoints.resetPassword}`,
-      {
-        token,
-        nueva_clave: password,
-        ...(captchaToken && { turnstile_token: captchaToken }),
-      },
-    );
+    return this.http.post<void>(`${this.environment.apiUrl}${this.apiEndpoints.resetPassword}`, {
+      token,
+      nueva_clave: password,
+      ...(captchaToken && { turnstile_token: captchaToken }),
+    });
   }
 
   /**
@@ -152,19 +150,22 @@ export abstract class BaseAuthService<TUser extends BaseUsuario> {
    */
   verifyEmail(token: string): Observable<void> {
     const params = new HttpParams().set('token', token);
-    return this.http.get<void>(
-      `${this.environment.apiUrl}${this.apiEndpoints.verifyEmail}`,
-      { params },
-    );
+    return this.http.get<void>(`${this.environment.apiUrl}${this.apiEndpoints.verifyEmail}`, {
+      params,
+    });
   }
 
   /**
-   * Limpia la sesion local y redirige a login.
+   * Limpia la sesion local y redirige a login si habia una sesion abierta; un visitante sin
+   * sesion en una pagina publica se queda donde esta.
    * Expuesto publicamente para uso en el error interceptor.
    */
   clearSession(): void {
+    const hadSession = !!this._currentUser();
     this._currentUser.set(null);
     this.tokenRefresh.reset();
-    this.router.navigate([this.loginRoute]);
+    if (hadSession) {
+      this.router.navigate([this.loginRoute]);
+    }
   }
 }
