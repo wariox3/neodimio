@@ -1,0 +1,103 @@
+// ─── Filtros ──────────────────────────────────────────────────────────────────
+.filtros-card {
+  padding: 1.25rem 1.5rem;
+}
+
+.filtros-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.field__label {
+  font-size: 0.855rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.filtros-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 1.25rem;
+}
+
+// ─── Tabla ────────────────────────────────────────────────────────────────────
+.table-count {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--p-surface-200);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-muted-color);
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.guia-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  &__numero {
+    font-weight: 700;
+    color: var(--p-text-color);
+  }
+
+  &__tipo {
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+}
+
+.persona-cell {
+  max-width: 200px;
+}
+
+.estado-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  white-space: nowrap;
+}
+
+.novedad-icon {
+  color: var(--p-red-500);
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 1100px) {
+  .filtros-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 576px) {
+  .filtros-card {
+    padding: 1rem;
+  }
+
+  .filtros-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filtros-actions {
+    flex-direction: column-reverse;
+
+    ::ng-deep .p-button {
+      width: 100%;
+    }
+  }
+}

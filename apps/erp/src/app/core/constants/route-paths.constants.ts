@@ -29,6 +29,7 @@ export const ROUTE_PATHS = {
       root: '/dashboard/transporte',
       inicio: '/dashboard/transporte/inicio',
       guias: '/dashboard/transporte/guias',
+      guiaDetalle: (id: number) => `/dashboard/transporte/guias/detalle/${id}`,
     },
   },
 } as const;

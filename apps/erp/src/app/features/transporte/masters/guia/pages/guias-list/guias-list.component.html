@@ -1,11 +1,188 @@
 <div class="page-container">
-  <app-page-header title="Guías" />
+  <app-page-header title="Guías" subtitle="Consulta las guías de transporte de la empresa" />
 
-  <div class="card">
+  <form class="card filtros-card" [formGroup]="form" (ngSubmit)="buscar()" novalidate>
+    <div class="filtros-grid">
+      <div class="field">
+        <label for="fecha_desde" class="field__label">Fecha desde</label>
+        <p-datepicker
+          inputId="fecha_desde"
+          formControlName="fecha_desde"
+          [showIcon]="true"
+          [fluid]="true"
+          dateFormat="dd/mm/yy"
+          appendTo="body"
+        />
+      </div>
+
+      <div class="field">
+        <label for="fecha_hasta" class="field__label">Fecha hasta</label>
+        <p-datepicker
+          inputId="fecha_hasta"
+          formControlName="fecha_hasta"
+          [showIcon]="true"
+          [fluid]="true"
+          dateFormat="dd/mm/yy"
+          appendTo="body"
+        />
+      </div>
+
+      <div class="field">
+        <label for="estado" class="field__label">Estado</label>
+        <p-select
+          inputId="estado"
+          formControlName="estado"
+          [options]="estadoOpciones"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todos"
+          [showClear]="true"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </div>
+
+      <div class="field">
+        <label for="codigo_guia_pk" class="field__label">Guía</label>
+        <p-inputnumber
+          inputId="codigo_guia_pk"
+          formControlName="codigo_guia_pk"
+          [useGrouping]="false"
+          [min]="1"
+          [max]="numeroMaximo"
+          [fluid]="true"
+          placeholder="Número de guía"
+        />
+      </div>
+
+      <div class="field">
+        <label for="documento_cliente" class="field__label">Documento</label>
+        <input
+          pInputText
+          id="documento_cliente"
+          formControlName="documento_cliente"
+          [fluid]="true"
+          placeholder="Documento del cliente"
+        />
+      </div>
+    </div>
+
+    <div class="filtros-actions">
+      <p-button
+        type="button"
+        label="Limpiar"
+        icon="pi pi-filter-slash"
+        severity="secondary"
+        [text]="true"
+        (onClick)="limpiar()"
+      />
+      <p-button type="submit" label="Filtrar" icon="pi pi-search" [loading]="loading()" />
+    </div>
+  </form>
+
+  @if (loading() && guias().length === 0) {
+    <app-loading-spinner message="Cargando guías..." />
+  } @else if (error(); as mensaje) {
+    <app-error-alert [message]="mensaje" [retryable]="true" (retry)="buscar()" />
+  } @else if (!loading() && guias().length === 0) {
     <app-empty-state
-      icon="pi pi-truck"
-      title="Administrador en construcción"
-      message="Aquí podrás gestionar las guías de transporte."
+      title="Sin guías"
+      message="No se encontraron guías con los filtros seleccionados."
+      icon="pi pi-box"
     />
-  </div>
+  } @else {
+    <div class="table-card">
+      <div class="table-count">
+        {{ totalRecords() }} {{ totalRecords() === 1 ? 'guía' : 'guías' }}
+      </div>
+
+      <p-table
+        [value]="guias()"
+        [lazy]="true"
+        [lazyLoadOnInit]="false"
+        [first]="first()"
+        [totalRecords]="totalRecords()"
+        [loading]="loading()"
+        [rowHover]="true"
+        [paginator]="true"
+        [rows]="rows()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onLazyLoad)="onLazyLoad($event)"
+        [scrollable]="true"
+        scrollHeight="600px"
+        dataKey="codigo_guia_pk"
+        [tableStyle]="{ 'min-width': '76rem' }"
+      >
+        <ng-template #header>
+          <tr>
+            <th>Guía</th>
+            <th>Fecha</th>
+            <th>Documento</th>
+            <th>Remitente</th>
+            <th>Destinatario</th>
+            <th>Origen</th>
+            <th>Destino</th>
+            <th class="text-right" pTooltip="Unidades" tooltipPosition="top">Und</th>
+            <th class="text-right" pTooltip="Peso facturado (kg)" tooltipPosition="top">Peso</th>
+            <th class="text-right">Declarado</th>
+            <th class="text-right">Flete</th>
+            <th class="text-right">Manejo</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-guia>
+          <tr>
+            <td>
+              <div class="guia-cell">
+                <span class="guia-cell__numero">{{ guia.codigo_guia_pk }}</span>
+                @if (guia.codigo_guia_tipo_fk) {
+                  <span class="guia-cell__tipo">{{ guia.codigo_guia_tipo_fk }}</span>
+                }
+              </div>
+            </td>
+            <td class="nowrap">
+              {{ guia.fecha_ingreso ? (guia.fecha_ingreso | date: 'dd/MM/yyyy HH:mm') : '—' }}
+            </td>
+            <td>{{ guia.documento_cliente ?? '—' }}</td>
+            <td class="persona-cell text-truncate">{{ guia.remitente ?? '—' }}</td>
+            <td class="persona-cell text-truncate">{{ guia.nombre_destinatario ?? '—' }}</td>
+            <td class="nowrap">{{ nombreCiudad(guia.codigo_ciudad_origen_fk) }}</td>
+            <td class="nowrap">{{ nombreCiudad(guia.codigo_ciudad_destino_fk) }}</td>
+            <td class="text-right">{{ guia.unidades ?? 0 | number: '1.0-2' }}</td>
+            <td class="text-right">{{ guia.peso_facturado ?? 0 | number: '1.0-2' }}</td>
+            <td class="text-right">{{ guia.vr_declara ?? 0 | number: '1.0-0' }}</td>
+            <td class="text-right">{{ guia.vr_flete ?? 0 | number: '1.0-0' }}</td>
+            <td class="text-right">{{ guia.vr_manejo ?? 0 | number: '1.0-0' }}</td>
+            <td>
+              <div class="estado-cell">
+                <p-tag [value]="getEstado(guia).label" [severity]="getEstado(guia).severity" />
+                @if (tieneNovedad(guia)) {
+                  <i
+                    class="pi pi-exclamation-triangle novedad-icon"
+                    pTooltip="Tiene novedad sin solucionar"
+                    tooltipPosition="top"
+                    aria-label="Tiene novedad sin solucionar"
+                  ></i>
+                }
+              </div>
+            </td>
+            <td>
+              <p-button
+                icon="pi pi-eye"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
+                [ariaLabel]="'Ver detalle de la guía ' + guia.codigo_guia_pk"
+                [routerLink]="detalleRoute(guia.codigo_guia_pk)"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
 </div>

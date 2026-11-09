@@ -44,4 +44,9 @@ export const API_ENDPOINTS = {
     update: (id: number) => `/gen/formato-imagen/${id}/actualizar`,
     delete: (id: number) => `/gen/formato-imagen/${id}/eliminar`,
   },
+  guia: {
+    lista: '/tte/guia/lista',
+    detalle: (id: number) => `/tte/guia/detalle/${id}`,
+    ciudades: '/tte/ciudad/descargar',
+  },
 } as const;

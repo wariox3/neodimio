@@ -1,0 +1,154 @@
+<div class="page-container">
+  <div class="detalle-acciones">
+    <p-button
+      label="Volver"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [outlined]="true"
+      [routerLink]="listaRoute"
+    />
+  </div>
+
+  @if (loading()) {
+    <app-loading-spinner message="Cargando guía..." />
+  } @else if (error(); as mensaje) {
+    <app-error-alert [message]="mensaje" [retryable]="true" (retry)="cargar()" />
+  } @else {
+    <div class="detalle">
+      <h1 class="titulo-accesible">{{ titulo() }}</h1>
+
+      <app-detail-section title="Seguimiento" icon="pi pi-map">
+        <p sectionActions class="seguimiento-resumen">
+          @if (ultimoMovimiento(); as movimiento) {
+            Último movimiento: <strong>{{ movimiento.titulo }}</strong>
+            @if (movimiento.fecha) {
+              <time [attr.datetime]="movimiento.fecha">
+                · {{ movimiento.fecha | date: 'dd/MM/yyyy HH:mm' }}
+              </time>
+            }
+          } @else {
+            Aún sin movimientos
+          }
+        </p>
+
+        <ol class="trayecto" [style.--pasos]="seguimiento().length">
+          @for (paso of seguimiento(); track $index; let last = $last) {
+            <li
+              class="paso"
+              [class.paso--completado]="paso.completado"
+              [class.paso--actual]="$index === pasoActual()"
+              [attr.aria-current]="$index === pasoActual() ? 'step' : null"
+            >
+              <div class="paso__via" aria-hidden="true">
+                <span class="paso__nodo"><i [class]="paso.icono"></i></span>
+                @if (!last) {
+                  <span
+                    class="paso__tramo"
+                    [class.paso__tramo--recorrido]="$index < pasoActual()"
+                  ></span>
+                }
+              </div>
+
+              <div class="paso__texto">
+                <span class="paso__titulo">{{ paso.titulo }}</span>
+                @if (paso.fecha) {
+                  <time class="paso__fecha" [attr.datetime]="paso.fecha">
+                    {{ paso.fecha | date: 'dd/MM/yyyy HH:mm' }}
+                  </time>
+                }
+                @if (paso.detalle) {
+                  <span class="paso__detalle">{{ paso.detalle }}</span>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      </app-detail-section>
+
+      <ng-template #camposTpl let-campos>
+        <dl class="datos">
+          @for (campo of campos; track campo.label) {
+            <div
+              class="dato"
+              [class.dato--completo]="campo.completo"
+              [class.dato--destacado]="campo.destacado"
+              [class.dato--mono]="campo.mono"
+              [class.dato--vacio]="(campo.valor ?? null) === null"
+            >
+              <dt>{{ campo.label }}</dt>
+              <dd>{{ campo.valor ?? '—' }}</dd>
+            </div>
+          }
+        </dl>
+      </ng-template>
+
+      @if (ficha(); as ficha) {
+        <app-detail-section [title]="ficha.informacion.titulo" icon="pi pi-info-circle">
+          @if (estado(); as estado) {
+            <span sectionActions class="estado" [class]="'estado--' + estado.severity">
+              <span class="estado__punto" aria-hidden="true"></span>
+              {{ estado.label }}
+            </span>
+          }
+          <div class="cuerpo">
+            <ng-container
+              *ngTemplateOutlet="camposTpl; context: { $implicit: ficha.informacion.campos }"
+            />
+          </div>
+        </app-detail-section>
+
+        <app-detail-section title="Remitente, destinatario y ruta" icon="pi pi-directions">
+          <div class="grupos">
+            @for (grupo of ficha.partes; track grupo.titulo) {
+              <div class="grupo">
+                <h3 class="grupo__titulo">{{ grupo.titulo }}</h3>
+                <ng-container *ngTemplateOutlet="camposTpl; context: { $implicit: grupo.campos }" />
+              </div>
+            }
+          </div>
+        </app-detail-section>
+
+        <app-detail-section [title]="ficha.mercancia.titulo" icon="pi pi-box">
+          <div class="cuerpo">
+            <ng-container
+              *ngTemplateOutlet="camposTpl; context: { $implicit: ficha.mercancia.campos }"
+            />
+          </div>
+        </app-detail-section>
+      }
+
+      <app-detail-section title="Estados y condiciones" icon="pi pi-check-square">
+        <p-button
+          sectionActions
+          [label]="verTodasLasCondiciones() ? 'Ver solo las activas' : 'Ver todas'"
+          severity="secondary"
+          [text]="true"
+          [ariaExpanded]="verTodasLasCondiciones()"
+          (onClick)="verTodasLasCondiciones.set(!verTodasLasCondiciones())"
+        />
+
+        <div class="cuerpo">
+          @if (condicionesVisibles().length > 0) {
+            <ul class="condiciones">
+              @for (indicador of condicionesVisibles(); track indicador.label) {
+                <li
+                  class="condicion"
+                  [class.condicion--activa]="indicador.activo"
+                  [class.condicion--alerta]="indicador.alerta"
+                >
+                  <i
+                    [class]="indicador.activo ? 'pi pi-check' : 'pi pi-minus'"
+                    aria-hidden="true"
+                  ></i>
+                  {{ indicador.label }}
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="condiciones__vacio">Esta guía no tiene condiciones activas.</p>
+          }
+        </div>
+      </app-detail-section>
+    </div>
+  }
+</div>
