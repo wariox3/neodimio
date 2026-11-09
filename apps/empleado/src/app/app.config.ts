@@ -9,60 +9,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
-import { definePreset, palette } from '@primeuix/themes';
-import Aura from '@primeng/themes/aura';
-
-const SemanticaPreset = definePreset(Aura, {
-  primitive: {
-    navy: palette('#143049'),
-    sky: palette('#77aad7'),
-  },
-  semantic: {
-    primary: {
-      50: '{navy.50}',
-      100: '{navy.100}',
-      200: '{navy.200}',
-      300: '{navy.300}',
-      400: '{navy.400}',
-      500: '{navy.500}',
-      600: '{navy.600}',
-      700: '{navy.700}',
-      800: '{navy.800}',
-      900: '{navy.900}',
-      950: '{navy.950}',
-    },
-    colorScheme: {
-      light: {
-        primary: {
-          color: '{navy.500}',
-          inverseColor: '#ffffff',
-          hoverColor: '{navy.600}',
-          activeColor: '{navy.700}',
-        },
-        highlight: {
-          background: '{navy.50}',
-          focusBackground: '{navy.100}',
-          color: '{navy.700}',
-          focusColor: '{navy.800}',
-        },
-      },
-      dark: {
-        primary: {
-          color: '{sky.400}',
-          inverseColor: '{navy.950}',
-          hoverColor: '{sky.300}',
-          activeColor: '{sky.200}',
-        },
-        highlight: {
-          background: 'rgba(119, 170, 215, 0.16)',
-          focusBackground: 'rgba(119, 170, 215, 0.24)',
-          color: 'rgba(255, 255, 255, 0.87)',
-          focusColor: 'rgba(255, 255, 255, 0.87)',
-        },
-      },
-    },
-  },
-});
+import { SEMANTICA_THEME } from '@semantica/core';
 
 import { MessageService } from 'primeng/api';
 import { firstValueFrom } from 'rxjs';
@@ -115,10 +62,7 @@ export const appConfig: ApplicationConfig = {
     }),
     provideAnimationsAsync(),
     providePrimeNG({
-      theme: {
-        preset: SemanticaPreset,
-        options: { darkModeSelector: '.dark-mode' },
-      },
+      theme: SEMANTICA_THEME,
     }),
   ],
 };

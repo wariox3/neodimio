@@ -6,7 +6,7 @@
 
 body {
   margin: 0;
-  font-family: 'Geist', system-ui, sans-serif;
+  font-family: var(--p-font-family);
   background: var(--p-surface-ground);
   color: var(--p-text-color);
   overflow-x: hidden;

@@ -1,0 +1,21 @@
+// Diálogo de confirmación estándar. Fuera de `@layer`, igual que `_button.scss`.
+
+// PrimeNG no le da ancho propio: sin tope, un mensaje largo ocupa toda la pantalla en una línea.
+.p-confirmdialog {
+  width: min(28rem, calc(100vw - 2rem));
+}
+
+// Una sola acción con color: cancelar va sin relleno, para que no pese igual que la acción que
+// compromete algo. La acción usa el primario o `p-button-danger` si destruye.
+.p-confirmdialog .p-confirmdialog-reject-button {
+  background: transparent;
+  border-color: var(--p-content-border-color);
+  color: var(--p-text-color);
+
+  &:not(:disabled):hover {
+    background: var(--p-content-hover-background);
+    border-color: var(--p-content-border-color);
+    color: var(--p-text-color);
+    box-shadow: none;
+  }
+}

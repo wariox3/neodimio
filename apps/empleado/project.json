@@ -18,11 +18,6 @@
           {
             "glob": "**/*",
             "input": "apps/empleado/public"
-          },
-          {
-            "glob": "*.woff2",
-            "input": "node_modules/geist/dist/fonts/geist-sans",
-            "output": "fonts/geist"
           }
         ],
         "styles": ["apps/empleado/src/styles.scss"],
@@ -104,11 +99,6 @@
           {
             "glob": "**/*",
             "input": "apps/empleado/public"
-          },
-          {
-            "glob": "*.woff2",
-            "input": "node_modules/geist/dist/fonts/geist-sans",
-            "output": "fonts/geist"
           }
         ],
         "styles": ["apps/empleado/src/styles.scss"],

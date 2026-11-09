@@ -18,11 +18,6 @@
           {
             "glob": "**/*",
             "input": "apps/cliente/public"
-          },
-          {
-            "glob": "*.woff2",
-            "input": "node_modules/geist/dist/fonts/geist-sans",
-            "output": "fonts/geist"
           }
         ],
         "styles": ["apps/cliente/src/styles.scss"],
@@ -92,11 +87,6 @@
           {
             "glob": "**/*",
             "input": "apps/cliente/public"
-          },
-          {
-            "glob": "*.woff2",
-            "input": "node_modules/geist/dist/fonts/geist-sans",
-            "output": "fonts/geist"
           }
         ],
         "styles": ["apps/cliente/src/styles.scss"],

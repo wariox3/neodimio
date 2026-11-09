@@ -11,6 +11,9 @@ export {
   type AuthServiceContract,
 } from './lib/tokens';
 
+// Theme
+export { SemanticaPreset, SEMANTICA_THEME } from './lib/theme/semantica-preset';
+
 // Guards
 export { authGuard } from './lib/guards/auth.guard';
 export { publicGuard } from './lib/guards/public.guard';
