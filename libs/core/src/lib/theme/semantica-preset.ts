@@ -23,6 +23,10 @@ export const SemanticaPreset = definePreset(Aura, {
     },
     colorScheme: {
       light: {
+        // Bordes tenues teñidos de navy: la estructura se define por líneas, no por contraste.
+        content: {
+          borderColor: 'rgba(20, 48, 73, 0.12)',
+        },
         primary: {
           color: '{navy.500}',
           inverseColor: '#ffffff',

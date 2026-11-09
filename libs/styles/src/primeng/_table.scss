@@ -1,0 +1,67 @@
+// Tabla estándar: densa y calmada. Fuera de `@layer`, igual que `_button.scss`.
+.p-datatable {
+  .p-datatable-table {
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .p-datatable-thead > tr > th {
+    padding: 0.6rem 0.75rem;
+    background: color-mix(in srgb, var(--p-text-color) 3%, var(--p-content-background));
+    border-bottom: 1px solid var(--p-content-border-color);
+    color: var(--p-text-muted-color);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .p-datatable-tbody > tr > td {
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--p-text-color) 6%, transparent);
+    vertical-align: middle;
+  }
+
+  .p-datatable-tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+
+  // Las acciones de fila no deben dictar el alto de la fila.
+  .p-datatable-tbody > tr > td:has(.p-button) {
+    padding-block: 0.2rem;
+  }
+
+  .p-tag {
+    padding: 0.1rem 0.45rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+}
+
+.p-paginator {
+  font-size: 0.8rem;
+
+  .p-paginator-page,
+  .p-paginator-first,
+  .p-paginator-prev,
+  .p-paginator-next,
+  .p-paginator-last {
+    font-size: 0.8rem;
+  }
+}
+
+@media not (pointer: coarse) {
+  :root {
+    --p-paginator-nav-button-width: 2rem;
+    --p-paginator-nav-button-height: 2rem;
+  }
+
+  .p-datatable-tbody .p-button {
+    min-height: 28px;
+  }
+
+  .p-datatable-tbody .p-button-icon-only {
+    width: 28px;
+  }
+}

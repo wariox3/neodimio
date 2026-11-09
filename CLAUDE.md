@@ -81,7 +81,7 @@ libs/
 
 - `_variables.scss` — CSS custom properties (brand palette)
 - `_base.scss` — box-sizing reset, body styles
-- `primeng/` — estándares globales de PrimeNG (botones, menús, confirmaciones), fuera de `@layer`
+- `primeng/` — estándares globales de PrimeNG (botones, menús, confirmaciones, campos, tablas), fuera de `@layer`
 - `_components.scss` — `.page-container`, `.card`, `.table-card`, `.form-error`
 - `_utilities.scss` — `.w-full`, `.mb-4`, `.mt-2`, `.text-truncate`
 
