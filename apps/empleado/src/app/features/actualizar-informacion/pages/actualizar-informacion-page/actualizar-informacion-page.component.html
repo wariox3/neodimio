@@ -2,7 +2,6 @@
   <app-page-header
     title="Actualizar información"
     subtitle="Consulta y solicita cambios en tu información de contacto"
-    icon="pi pi-user-edit"
   />
 
   @if (isLoading()) {
@@ -89,9 +88,7 @@
                     aria-describedby="celular-error"
                   />
                   @if (celularControl.invalid && celularControl.touched) {
-                    <small id="celular-error" class="form-error">
-                      El celular es obligatorio
-                    </small>
+                    <small id="celular-error" class="form-error"> El celular es obligatorio </small>
                   }
                 </div>
 
@@ -129,9 +126,7 @@
                     aria-describedby="barrio-error"
                   />
                   @if (barrioControl.invalid && barrioControl.touched) {
-                    <small id="barrio-error" class="form-error">
-                      El barrio es obligatorio
-                    </small>
+                    <small id="barrio-error" class="form-error"> El barrio es obligatorio </small>
                   }
                 </div>
 
@@ -155,9 +150,7 @@
                     [invalid]="ciudadControl.invalid && ciudadControl.touched"
                   />
                   @if (ciudadControl.invalid && ciudadControl.touched) {
-                    <small class="form-error">
-                      La ciudad es obligatoria
-                    </small>
+                    <small class="form-error"> La ciudad es obligatoria </small>
                   }
                 </div>
               </div>

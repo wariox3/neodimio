@@ -73,7 +73,7 @@ libs/
 - `EmptyStateComponent` — icon-wrap + title + message + ng-content
 - `ErrorAlertComponent` — PrimeNG error message + retry button
 - `LoadingSpinnerComponent` — PrimeNG progress spinner + message
-- `PageHeaderComponent` — title + optional icon + subtitle + actions slot
+- `PageHeaderComponent` — title + subtitle + actions slot
 - `TurnstileComponent` — Cloudflare Turnstile CAPTCHA (uses `ENVIRONMENT` token)
 
 **`@semantica/styles`** (`libs/styles/`):

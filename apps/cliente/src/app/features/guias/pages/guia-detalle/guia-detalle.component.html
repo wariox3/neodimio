@@ -8,7 +8,6 @@
           (guia()!.ciudad_destino_nombre ?? guia()!.codigo_ciudad_destino_fk ?? '')
         : ''
     "
-    icon="pi pi-box"
   >
     @if (guia(); as guia) {
       <app-guia-imprimir [guiaId]="guia.codigo_guia_pk" etiqueta="Imprimir" />
