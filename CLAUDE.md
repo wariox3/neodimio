@@ -50,7 +50,7 @@ Prettier is configured in `.prettierrc.json` (printWidth 100, singleQuote, angul
 ```
 apps/
   empleado/     — Employee HR portal (pagos, reclamos, turnos, etc.)
-  erp/          — API keys & security admin (api-keys, formatos)
+  erp/          — API keys, seguridad, formatos y transporte (guías)
 libs/
   core/         — @semantica/core (guards, interceptors, services, utils, BaseAuthService)
   ui/           — @semantica/ui (shared UI components)
@@ -76,6 +76,7 @@ libs/
 - `LoadingSpinnerComponent` — PrimeNG progress spinner + message
 - `PageHeaderComponent` — title + subtitle + actions slot
 - `DetailSectionComponent` — tarjeta de detalle con barra de título (ícono + nombre + acciones)
+- `DataTableComponent` — tabla paginada por columnas declaradas, con celdas propias, acciones y filas expandibles
 - `BreadcrumbComponent` — ruta de la página con migajas navegables y botón de copiar enlace
 - `TurnstileComponent` — Cloudflare Turnstile CAPTCHA (uses `ENVIRONMENT` token)
 

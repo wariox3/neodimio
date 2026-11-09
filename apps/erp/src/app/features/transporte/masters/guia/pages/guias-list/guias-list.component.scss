@@ -30,14 +30,6 @@
 }
 
 // ─── Tabla ────────────────────────────────────────────────────────────────────
-.text-right {
-  text-align: right !important;
-}
-
-.nowrap {
-  white-space: nowrap;
-}
-
 .guia-cell {
   display: flex;
   flex-direction: column;
@@ -52,10 +44,6 @@
     font-size: 0.75rem;
     color: var(--p-text-muted-color);
   }
-}
-
-.persona-cell {
-  max-width: 200px;
 }
 
 .estado-cell {

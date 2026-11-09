@@ -1,0 +1,88 @@
+:host {
+  display: block;
+}
+
+.data-table {
+  &__action-col {
+    width: 2.75rem;
+    text-align: center;
+  }
+
+  &__cell--nowrap {
+    white-space: nowrap;
+  }
+
+  &__cell--truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__row-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease;
+
+    i {
+      font-size: 0.85rem;
+    }
+
+    &:hover {
+      border-color: var(--p-content-border-color);
+      background: var(--nav-hover-background);
+      color: var(--p-text-color);
+    }
+
+    &:focus-visible {
+      outline: 2px solid color-mix(in srgb, var(--brand-accent) 50%, transparent);
+      outline-offset: 1px;
+    }
+
+    &--danger {
+      color: var(--p-red-600);
+
+      &:hover {
+        background: color-mix(in srgb, var(--p-red-500) 10%, transparent);
+        color: var(--p-red-600);
+      }
+    }
+
+    @media (pointer: coarse) {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  &__placeholder {
+    min-height: 12rem;
+  }
+
+  &__count {
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--p-text-muted-color);
+  }
+
+  &__visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

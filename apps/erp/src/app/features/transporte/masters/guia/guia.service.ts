@@ -1,7 +1,7 @@
 import { formatDate } from '@angular/common';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { API_ENDPOINTS, BaseHttpService, PaginatedResponse } from '../../../../core';
+import { API_ENDPOINTS, BaseHttpService, PaginatedResponse } from '@erp/core';
 import { GUIA_ESTADO_PARAMS } from './guia.constants';
 import { Guia, GuiaCiudad, GuiaDetalle, GuiaFiltros } from './guia.model';
 

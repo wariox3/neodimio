@@ -10,10 +10,11 @@ import {
   ErrorAlertComponent,
   LoadingSpinnerComponent,
 } from '@semantica/ui';
-import { ROUTE_PATHS, extractErrorMessage } from '../../../../../../core';
+import { ROUTE_PATHS, extractErrorMessage } from '@erp/core';
+import { TRANSPORTE_MIGA_RAIZ } from '../../guia.constants';
 import { GuiaDetalle } from '../../guia.model';
 import { GuiaService } from '../../guia.service';
-import { fichaGuia, seguimientoGuia, ultimoPasoCompletado } from '../../utils/guia-detalle';
+import { fichaGuia, seguimientoGuia, ultimoPasoCompletado } from '../../guia.format';
 import { getEstadoGuia, getIndicadoresGuia } from '../../utils/guia-estado';
 
 /** Ficha de solo lectura de una guía. */
@@ -52,7 +53,7 @@ export class GuiaDetailComponent implements OnInit {
   });
 
   readonly breadcrumbItems = computed<readonly BreadcrumbItem[]>(() => [
-    { label: 'Transporte', routerLink: ROUTE_PATHS.dashboard.transporte.inicio },
+    TRANSPORTE_MIGA_RAIZ,
     { label: 'Guías', routerLink: this.listaRoute },
     { label: this.titulo() },
   ]);

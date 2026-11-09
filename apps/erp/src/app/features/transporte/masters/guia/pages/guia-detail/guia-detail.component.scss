@@ -169,7 +169,7 @@
   // Dónde va la guía ahora: lo único con relleno sólido del trayecto.
   &--actual &__nodo {
     background: var(--brand-accent);
-    color: #ffffff;
+    color: var(--brand-white);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-accent) 18%, transparent);
   }
 }

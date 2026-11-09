@@ -1,28 +1,36 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import {
   BreadcrumbComponent,
   BreadcrumbItem,
-  EmptyStateComponent,
+  DATA_TABLE_PAGE_SIZE,
+  DataTableCellDirective,
+  DataTableComponent,
+  DataTableRowActionEvent,
   ErrorAlertComponent,
-  LoadingSpinnerComponent,
   PageHeaderComponent,
 } from '@semantica/ui';
-import { ROUTE_PATHS, extractErrorMessage } from '../../../../../../core';
-import { GUIA_ESTADO_OPCIONES, GUIA_NUMERO_MAXIMO, GuiaEstadoFiltro } from '../../guia.constants';
-import { Guia, GuiaCiudad } from '../../guia.model';
+import { ROUTE_PATHS, extractErrorMessage } from '@erp/core';
+import {
+  GUIAS_COLUMNS,
+  GUIAS_ROW_ACTIONS,
+  GUIA_ACCION_VER,
+  GUIA_ESTADO_OPCIONES,
+  GUIA_NUMERO_MAXIMO,
+  GuiaEstadoFiltro,
+  TRANSPORTE_MIGA_RAIZ,
+} from '../../guia.constants';
+import { Guia, GuiaCiudad, GuiaFila } from '../../guia.model';
 import { GuiaService } from '../../guia.service';
 import { getEstadoGuia, tieneNovedadAbierta } from '../../utils/guia-estado';
 
@@ -32,37 +40,30 @@ import { getEstadoGuia, tieneNovedadAbierta } from '../../utils/guia-estado';
   standalone: true,
   imports: [
     BreadcrumbComponent,
-    DatePipe,
-    DecimalPipe,
+    DataTableCellDirective,
+    DataTableComponent,
     ReactiveFormsModule,
-    RouterLink,
     ButtonModule,
     DatePickerModule,
     InputNumberModule,
     InputTextModule,
     SelectModule,
-    TableModule,
     TagModule,
     TooltipModule,
-    EmptyStateComponent,
     ErrorAlertComponent,
-    LoadingSpinnerComponent,
     PageHeaderComponent,
   ],
   templateUrl: './guias-list.component.html',
   styleUrl: './guias-list.component.scss',
 })
 export class GuiasListComponent implements OnInit {
-  readonly breadcrumbItems: readonly BreadcrumbItem[] = [
-    { label: 'Transporte', routerLink: ROUTE_PATHS.dashboard.transporte.inicio },
-    { label: 'Guías' },
-  ];
+  readonly breadcrumbItems: readonly BreadcrumbItem[] = [TRANSPORTE_MIGA_RAIZ, { label: 'Guías' }];
 
   private readonly fb = inject(FormBuilder);
   private readonly guiaService = inject(GuiaService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
 
-  readonly detalleRoute = ROUTE_PATHS.dashboard.transporte.guiaDetalle;
   readonly estadoOpciones = GUIA_ESTADO_OPCIONES;
   readonly numeroMaximo = GUIA_NUMERO_MAXIMO;
   readonly getEstado = getEstadoGuia;
@@ -72,13 +73,23 @@ export class GuiasListComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly guias = signal<Guia[]>([]);
   readonly totalRecords = signal(0);
-  readonly rows = signal(25);
-  /** Índice de la primera fila; permite resetear el paginador a la página 1. */
-  readonly first = signal(0);
+  /** Página actual, empezando en cero. */
+  readonly pagina = signal(0);
 
   private readonly ciudades = signal<GuiaCiudad[]>([]);
   private readonly nombresCiudad = computed(
     () => new Map(this.ciudades().map((c) => [c.codigo_ciudad_pk, c.nombre])),
+  );
+
+  readonly columnas = GUIAS_COLUMNS;
+  readonly acciones = GUIAS_ROW_ACTIONS;
+
+  readonly filas = computed<GuiaFila[]>(() =>
+    this.guias().map((guia) => ({
+      ...guia,
+      origen_nombre: this.nombreCiudad(guia.codigo_ciudad_origen_fk),
+      destino_nombre: this.nombreCiudad(guia.codigo_ciudad_destino_fk),
+    })),
   );
 
   readonly form = this.fb.group({
@@ -99,8 +110,7 @@ export class GuiasListComponent implements OnInit {
 
   /** Aplica los filtros desde la primera página. */
   buscar(): void {
-    this.first.set(0);
-    this.cargar(1);
+    this.irAPagina(0);
   }
 
   limpiar(): void {
@@ -108,18 +118,22 @@ export class GuiasListComponent implements OnInit {
     this.buscar();
   }
 
-  onLazyLoad(event: TableLazyLoadEvent): void {
-    const first = event.first ?? 0;
-    const rows = event.rows ?? this.rows();
-    this.first.set(first);
-    this.rows.set(rows);
-    this.cargar(Math.floor(first / rows) + 1);
+  irAPagina(pagina: number): void {
+    this.pagina.set(pagina);
+    this.cargar(pagina + 1);
   }
 
-  /** Nombre de la ciudad; mientras no haya catálogo se muestra su código. */
-  nombreCiudad(codigo: string | null): string {
-    if (!codigo) return '—';
-    return this.nombresCiudad().get(codigo) ?? codigo;
+  onAccion({ actionId, row }: DataTableRowActionEvent<GuiaFila>): void {
+    if (actionId === GUIA_ACCION_VER) {
+      void this.router.navigateByUrl(
+        ROUTE_PATHS.dashboard.transporte.guiaDetalle(row.codigo_guia_pk),
+      );
+    }
+  }
+
+  /** Mientras no haya catálogo se muestra el código de la ciudad. */
+  private nombreCiudad(codigo: string | null): string | null {
+    return codigo ? (this.nombresCiudad().get(codigo) ?? codigo) : null;
   }
 
   private cargar(page: number): void {
@@ -128,7 +142,7 @@ export class GuiasListComponent implements OnInit {
 
     this.carga?.unsubscribe();
     this.carga = this.guiaService
-      .listar(page, this.rows(), this.form.getRawValue())
+      .listar(page, DATA_TABLE_PAGE_SIZE, this.form.getRawValue())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {

@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 /** Migaja del breadcrumb. El último ítem es la página actual y normalmente no lleva enlace. */
@@ -147,11 +154,22 @@ export class BreadcrumbComponent {
   /** Alterna el ícono a check tras copiar. */
   protected readonly copied = signal(false);
 
+  private copiedTimer?: ReturnType<typeof setTimeout>;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.copiedTimer));
+  }
+
   protected copyLink(): void {
-    // `clipboard` solo existe en contextos seguros; sin él no se confirma una copia que no ocurrió.
-    navigator.clipboard?.writeText(window.location.href).then(() => {
-      this.copied.set(true);
-      setTimeout(() => this.copied.set(false), COPIADO_MS);
-    });
+    // `clipboard` solo existe en contextos seguros y el navegador puede negar el permiso; en
+    // ambos casos no se confirma una copia que no ocurrió.
+    navigator.clipboard
+      ?.writeText(window.location.href)
+      .then(() => {
+        this.copied.set(true);
+        clearTimeout(this.copiedTimer);
+        this.copiedTimer = setTimeout(() => this.copied.set(false), COPIADO_MS);
+      })
+      .catch(() => undefined);
   }
 }

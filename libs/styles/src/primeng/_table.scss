@@ -28,8 +28,14 @@
   }
 
   // Las acciones de fila no deben dictar el alto de la fila.
-  .p-datatable-tbody > tr > td:has(.p-button) {
+  .p-datatable-tbody > tr > td:has(.p-button, .data-table__row-action) {
     padding-block: 0.2rem;
+  }
+
+  // Scrollbar fina y discreta dentro de la tabla.
+  .p-datatable-table-container {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--p-text-color) 22%, transparent) transparent;
   }
 
   .p-tag {
@@ -64,4 +70,9 @@
   .p-datatable-tbody .p-button-icon-only {
     width: 28px;
   }
+}
+
+// El menú ⋮ se monta en `<body>`, fuera del SCSS encapsulado de la tabla.
+.data-table-menu-item--danger :where(.p-menu-item-link, .p-menu-item-label, .p-menu-item-icon) {
+  color: var(--p-red-600);
 }

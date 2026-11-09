@@ -1,0 +1,147 @@
+<p-table
+  [value]="mutableItems()"
+  [lazy]="true"
+  [paginator]="true"
+  [rows]="pageSize()"
+  [first]="currentPage() * pageSize()"
+  [totalRecords]="totalRecords()"
+  [loading]="loading()"
+  [rowHover]="true"
+  [scrollable]="true"
+  [scrollHeight]="scrollHeight()"
+  [dataKey]="dataKey()"
+  [expandedRowKeys]="expandedRows()"
+  [tableStyle]="tableMinWidth() ? { 'min-width': tableMinWidth() } : undefined"
+  (onPage)="onPage($event)"
+>
+  <ng-template #header>
+    <tr>
+      @if (expansion()) {
+        <th class="data-table__action-col">
+          <span class="data-table__visually-hidden">Expandir fila</span>
+        </th>
+      }
+      @for (col of columns(); track col.field) {
+        <th
+          [style.width]="col.width"
+          [style.text-align]="col.align ?? 'left'"
+          [pTooltip]="col.tooltip"
+          tooltipPosition="top"
+        >
+          {{ col.header }}
+        </th>
+      }
+      @for (action of inlineActions(); track action.id) {
+        <th class="data-table__action-col">
+          <span class="data-table__visually-hidden">{{ action.label }}</span>
+        </th>
+      }
+      @if (menuActions().length > 0) {
+        <th class="data-table__action-col">
+          <span class="data-table__visually-hidden">Más acciones</span>
+        </th>
+      }
+    </tr>
+  </ng-template>
+
+  <ng-template #body let-row let-expanded="expanded">
+    <tr>
+      @if (expansion()) {
+        <td class="data-table__action-col">
+          <button
+            type="button"
+            class="data-table__row-action"
+            [pRowToggler]="row"
+            [attr.aria-expanded]="expanded"
+            [attr.aria-label]="expanded ? 'Contraer fila' : 'Expandir fila'"
+          >
+            <i [class]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
+          </button>
+        </td>
+      }
+      @for (col of columns(); track col.field) {
+        <td
+          [style.text-align]="col.align ?? 'left'"
+          [style.max-width]="col.maxWidth"
+          [class.data-table__cell--nowrap]="isNowrap(col)"
+          [class.data-table__cell--truncate]="col.maxWidth"
+          [attr.title]="col.maxWidth ? displayValue(row, col) : null"
+        >
+          @if (cellTemplates().get(col.field); as template) {
+            <ng-container
+              [ngTemplateOutlet]="template"
+              [ngTemplateOutletContext]="{ $implicit: row }"
+            />
+          } @else {
+            {{ displayValue(row, col) }}
+          }
+        </td>
+      }
+      @for (action of inlineActions(); track action.id) {
+        <td class="data-table__action-col">
+          @if (isActionVisible(action, row)) {
+            <button
+              type="button"
+              class="data-table__row-action"
+              [class.data-table__row-action--danger]="action.severity === 'danger'"
+              [pTooltip]="action.label"
+              tooltipPosition="top"
+              [attr.aria-label]="action.ariaLabelFor?.(row) ?? action.label"
+              (click)="invokeAction(action, row)"
+            >
+              <i [class]="action.icon"></i>
+            </button>
+          }
+        </td>
+      }
+      @if (menuActions().length > 0) {
+        <td class="data-table__action-col">
+          @if (hasMenuActions(row)) {
+            <button
+              type="button"
+              class="data-table__row-action"
+              aria-label="Más acciones"
+              (click)="openRowMenu($event, row)"
+            >
+              <i class="pi pi-ellipsis-v"></i>
+            </button>
+          }
+        </td>
+      }
+    </tr>
+  </ng-template>
+
+  <ng-template #expandedrow let-row>
+    <tr>
+      <td [attr.colspan]="columnCount()">
+        <ng-container
+          [ngTemplateOutlet]="expansion()!.template"
+          [ngTemplateOutletContext]="{ $implicit: row }"
+        />
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template #emptymessage>
+    <tr>
+      <td [attr.colspan]="columnCount()">
+        @if (loading()) {
+          <div class="data-table__placeholder"></div>
+        } @else {
+          <app-empty-state [title]="emptyTitle()" [message]="emptyMessage()" [icon]="emptyIcon()" />
+        }
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template #paginatorright>
+    @if (totalRecords() > 0) {
+      <span class="data-table__count">
+        {{ rangeStart() | number }}–{{ rangeEnd() | number }} de {{ totalRecords() | number }}
+        {{ recordsLabel() }}
+      </span>
+    }
+  </ng-template>
+</p-table>
+
+<p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" appendTo="body" />

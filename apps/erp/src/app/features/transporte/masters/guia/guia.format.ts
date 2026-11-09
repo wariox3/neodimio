@@ -1,5 +1,7 @@
 import { formatNumber } from '@angular/common';
-import { GuiaDetalle } from '../guia.model';
+import { APP_LOCALE } from '@semantica/core';
+import { TIPOS_LIQUIDACION } from './guia.constants';
+import { GuiaDetalle } from './guia.model';
 
 /** Dato de la ficha; sin valor se muestra un guion. */
 export interface CampoGuia {
@@ -34,12 +36,12 @@ export interface PasoSeguimiento {
   detalle?: string;
 }
 
-/** Valores de `tipo_liquidacion` con los que fluor calcula el flete. */
-const TIPOS_LIQUIDACION: Record<string, string> = { K: 'Por kilo', U: 'Por unidad' };
-
-const cantidad = (valor: number | null) => formatNumber(valor ?? 0, 'en-US', '1.0-2');
-const peso = (valor: number | null) => `${cantidad(valor)} kg`;
-const dinero = (valor: number | null) => `$ ${formatNumber(valor ?? 0, 'en-US', '1.0-0')}`;
+/** Sin dato no es lo mismo que cero: un flete nulo se muestra con guion, no como `$ 0`. */
+const cantidad = (valor: number | null) =>
+  valor == null ? null : formatNumber(valor, APP_LOCALE, '1.0-0');
+const peso = (valor: number | null) => (valor == null ? null : `${cantidad(valor)} kg`);
+const dinero = (valor: number | null) =>
+  valor == null ? null : `$ ${formatNumber(valor, APP_LOCALE, '1.0-0')}`;
 
 /** Une las partes presentes; si no hay ninguna devuelve `null`. */
 function unir(...partes: (string | null)[]): string | null {
