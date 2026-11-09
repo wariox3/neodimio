@@ -1,3 +1,69 @@
+// Modal estándar: `styleClass="app-dialog"` en el `<p-dialog>`. Va global porque PrimeNG monta el
+// marco fuera del SCSS encapsulado de quien lo declara. Ver `.interface-design/system.md`.
+.app-dialog.p-dialog {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    0 4px 6px color-mix(in srgb, var(--p-text-color) 4%, transparent),
+    0 20px 60px color-mix(in srgb, var(--p-text-color) 14%, transparent);
+
+  .p-dialog-header {
+    padding: 1.5rem 1.5rem 0;
+    border-bottom: none;
+  }
+
+  .p-dialog-content {
+    padding: 1.25rem 1.5rem 1rem;
+  }
+
+  .p-dialog-footer {
+    margin: 0 1.5rem;
+    padding: 1rem 0 1.1rem;
+    border-top: 1px solid var(--p-content-border-color);
+  }
+}
+
+// Encabezado del modal: ícono en tesela + título + subtítulo.
+.app-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 0;
+
+  &__icono {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
+    color: var(--p-primary-color);
+  }
+
+  &__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+
+  &__titulo {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--p-text-color);
+  }
+
+  &__subtitulo {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--p-text-muted-color);
+  }
+}
+
 // Diálogo de confirmación estándar. Fuera de `@layer`, igual que `_button.scss`.
 
 // PrimeNG no le da ancho propio: sin tope, un mensaje largo ocupa toda la pantalla en una línea.

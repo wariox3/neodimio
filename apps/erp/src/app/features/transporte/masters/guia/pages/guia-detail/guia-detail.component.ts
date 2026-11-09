@@ -2,7 +2,9 @@ import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { MenuModule } from 'primeng/menu';
 import {
   BreadcrumbComponent,
   BreadcrumbItem,
@@ -11,6 +13,7 @@ import {
   LoadingSpinnerComponent,
 } from '@semantica/ui';
 import { ROUTE_PATHS, extractErrorMessage } from '@erp/core';
+import { FicherosListaDialogComponent } from '@erp/shared/ficheros-lista-dialog/ficheros-lista-dialog.component';
 import { TRANSPORTE_MIGA_RAIZ } from '../../guia.constants';
 import { GuiaDetalle } from '../../guia.model';
 import { GuiaService } from '../../guia.service';
@@ -26,9 +29,11 @@ import { getEstadoGuia, getIndicadoresGuia } from '../../utils/guia-estado';
     NgTemplateOutlet,
     RouterLink,
     ButtonModule,
+    MenuModule,
     BreadcrumbComponent,
     DetailSectionComponent,
     ErrorAlertComponent,
+    FicherosListaDialogComponent,
     LoadingSpinnerComponent,
   ],
   templateUrl: './guia-detail.component.html',
@@ -46,6 +51,16 @@ export class GuiaDetailComponent implements OnInit {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly guia = signal<GuiaDetalle | null>(null);
+  readonly ficherosVisible = signal(false);
+
+  /** Referencia estable: un modelo nuevo en cada detección haría perder el primer clic. */
+  readonly opcionesItems: MenuItem[] = [
+    {
+      label: 'Ficheros',
+      icon: 'pi pi-folder',
+      command: () => this.ficherosVisible.set(true),
+    },
+  ];
 
   readonly titulo = computed(() => {
     const guia = this.guia();

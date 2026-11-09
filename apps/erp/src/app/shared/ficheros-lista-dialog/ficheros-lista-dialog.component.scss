@@ -1,0 +1,95 @@
+// El modal se pinta `fixed`: el host no debe cobrar separación en quien lo declara.
+:host {
+  display: contents;
+}
+
+.ficheros-tabla-caja {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 10px;
+}
+
+.ficheros-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--p-content-border-color);
+    background: var(--p-content-background);
+    color: var(--p-text-muted-color);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  td {
+    padding: 0.35rem 0.75rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--p-text-color) 6%, transparent);
+    color: var(--p-text-color);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  &__fecha {
+    width: 9.5rem;
+    white-space: nowrap;
+  }
+
+  th.ficheros-tabla__tamano,
+  &__tamano {
+    width: 5.5rem;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  &__acciones {
+    width: 3.5rem;
+    text-align: right;
+  }
+
+  // Lo único elástico de la fila: se trunca antes de empujar al resto.
+  &__nombre {
+    max-width: 0;
+  }
+
+  &__texto {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__detalle {
+    display: none;
+    color: var(--p-text-muted-color);
+    font-size: 0.72rem;
+  }
+}
+
+// Sin ancho para cuatro columnas, fecha y tamaño pasan bajo el nombre.
+@media (max-width: 575px) {
+  .ficheros-tabla {
+    th.ficheros-tabla__fecha,
+    td.ficheros-tabla__fecha,
+    th.ficheros-tabla__tamano,
+    td.ficheros-tabla__tamano {
+      display: none;
+    }
+
+    &__detalle {
+      display: block;
+    }
+  }
+}

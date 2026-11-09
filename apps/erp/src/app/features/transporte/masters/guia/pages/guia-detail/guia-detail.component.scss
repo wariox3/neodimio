@@ -1,5 +1,8 @@
 // ─── Layout ───────────────────────────────────────────────────────────────────
 .detalle-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
 

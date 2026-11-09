@@ -1,0 +1,85 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '620px', maxWidth: '94vw' }"
+  styleClass="app-dialog"
+>
+  <ng-template #header>
+    <div class="app-dialog-header">
+      <span class="app-dialog-header__icono"><i class="pi pi-folder" aria-hidden="true"></i></span>
+      <div class="app-dialog-header__texto">
+        <h2 class="app-dialog-header__titulo">Ficheros</h2>
+        <p class="app-dialog-header__subtitulo">{{ subtitulo() }}</p>
+      </div>
+    </div>
+  </ng-template>
+
+  @if (visible()) {
+    @if (cargando()) {
+      <app-loading-spinner message="Cargando ficheros..." size="2rem" />
+    } @else if (error(); as mensaje) {
+      <app-error-alert [message]="mensaje" [retryable]="true" (retry)="reintentar()" />
+    } @else if (ficheros().length === 0) {
+      <app-empty-state
+        icon="pi pi-inbox"
+        title="Sin ficheros"
+        message="Este registro no tiene ficheros adjuntos."
+      />
+    } @else {
+      <div class="ficheros-tabla-caja">
+        <table class="ficheros-tabla">
+          <thead>
+            <tr>
+              <th class="ficheros-tabla__fecha">Fecha</th>
+              <th>Nombre</th>
+              <th class="ficheros-tabla__tamano">Tamaño</th>
+              <th class="ficheros-tabla__acciones" aria-label="Acciones"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (fichero of ficheros(); track fichero.codigo_fichero_pk) {
+              @let nombre = nombreCompleto(fichero);
+              <tr>
+                <td class="ficheros-tabla__fecha">
+                  {{ fichero.fecha | date: 'dd/MM/yyyy HH:mm' }}
+                </td>
+                <td class="ficheros-tabla__nombre" [title]="nombre">
+                  <span class="ficheros-tabla__texto">{{ nombre }}</span>
+                  <span class="ficheros-tabla__detalle">
+                    {{ fichero.fecha | date: 'dd/MM/yyyy HH:mm' }} ·
+                    {{ formatoTamano(fichero.tamano) }}
+                  </span>
+                </td>
+                <td class="ficheros-tabla__tamano">{{ formatoTamano(fichero.tamano) }}</td>
+                <td class="ficheros-tabla__acciones">
+                  <p-button
+                    icon="pi pi-download"
+                    severity="secondary"
+                    [text]="true"
+                    [rounded]="true"
+                    [ariaLabel]="'Descargar ' + nombre"
+                    [loading]="descargandoId() === fichero.codigo_fichero_pk"
+                    [disabled]="descargandoId() !== null"
+                    (onClick)="descargar(fichero)"
+                  />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <ng-template #footer>
+    <p-button
+      label="Cerrar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="visible.set(false)"
+    />
+  </ng-template>
+</p-dialog>

@@ -9,7 +9,19 @@
       [outlined]="true"
       [routerLink]="listaRoute"
     />
+    @if (guia()) {
+      <p-button
+        label="Opciones"
+        icon="pi pi-chevron-down"
+        iconPos="right"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="opcionesMenu.toggle($event)"
+      />
+    }
   </div>
+
+  <p-menu #opcionesMenu [popup]="true" [model]="opcionesItems" appendTo="body" />
 
   @if (loading()) {
     <app-loading-spinner message="Cargando guía..." />
@@ -152,5 +164,14 @@
         </div>
       </app-detail-section>
     </div>
+  }
+
+  @if (guia(); as guia) {
+    <app-ficheros-lista-dialog
+      [(visible)]="ficherosVisible"
+      codigoModelo="TteGuia"
+      [codigo]="guia.codigo_guia_pk"
+      [subtitulo]="titulo()"
+    />
   }
 </div>
