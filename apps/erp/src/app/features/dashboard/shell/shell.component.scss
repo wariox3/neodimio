@@ -42,6 +42,48 @@
   gap: 0.75rem;
 }
 
+.navbar-modules {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 0;
+  margin: 0 1.25rem;
+}
+
+.navbar-module {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  color: var(--p-text-muted-color);
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  i {
+    font-size: 0.875rem;
+  }
+
+  &:hover {
+    background: var(--p-surface-100);
+    color: var(--p-text-color);
+  }
+
+  &.active {
+    background: var(--p-primary-50, color-mix(in srgb, var(--p-primary-color) 10%, transparent));
+    color: var(--p-primary-color);
+    font-weight: 600;
+  }
+}
+
 .hamburger-btn {
   display: flex;
   align-items: center;
@@ -89,6 +131,11 @@
 @media (max-width: 768px) {
   // Ocultamos el sidebar fijo
   .shell-sidebar {
+    display: none;
+  }
+
+  // Los módulos pasan al drawer
+  .navbar-modules {
     display: none;
   }
 }
@@ -189,4 +236,43 @@
       color: var(--p-primary-color);
     }
   }
+
+  // Alineado con el texto de las opciones que llevan icono.
+  &--leaf {
+    padding: 0.5rem 0.875rem 0.5rem 2.875rem;
+  }
+}
+
+// ─── Acordeón ─────────────────────────────────────────────────────────────────
+
+.nav-accordion__header {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.nav-item .nav-accordion__chevron {
+  width: auto;
+  margin-left: auto;
+  font-size: 0.75rem;
+}
+
+.nav-accordion__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin-top: 0.125rem;
+}
+
+// ─── Módulos en el drawer ─────────────────────────────────────────────────────
+
+.drawer-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--p-surface-200);
 }

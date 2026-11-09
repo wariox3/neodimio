@@ -12,6 +12,20 @@
       </a>
     </div>
 
+    <nav class="navbar-modules" aria-label="Módulos">
+      @for (module of modules; track module.area) {
+        <a
+          class="navbar-module"
+          [routerLink]="module.route"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+        >
+          <i [class]="module.icon" aria-hidden="true"></i>
+          <span>{{ module.label }}</span>
+        </a>
+      }
+    </nav>
+
     <div class="navbar-end">
       <app-user-menu />
     </div>
@@ -39,6 +53,22 @@
   position="left"
   [header]="areaConfig().title ?? 'Menú'"
 >
+  <!-- La barra superior no cabe en móvil: los módulos se cambian desde aquí -->
+  <nav class="drawer-modules" aria-label="Módulos">
+    @for (module of modules; track module.area) {
+      <a
+        class="nav-item"
+        [routerLink]="module.route"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        (click)="drawerVisible.set(false)"
+      >
+        <i [class]="module.icon" aria-hidden="true"></i>
+        <span>{{ module.label }}</span>
+      </a>
+    }
+  </nav>
+
   <ng-container *ngTemplateOutlet="navTpl" />
 </p-drawer>
 
@@ -59,16 +89,52 @@
   }
 
   <nav class="sidebar-nav">
-    @for (item of navItems(); track item.route) {
-      <a
-        class="nav-item"
-        [routerLink]="item.route"
-        routerLinkActive="active"
-        (click)="drawerVisible.set(false)"
-      >
-        <i [class]="item.icon"></i>
-        <span>{{ item.label }}</span>
-      </a>
+    @for (entry of navEntries(); track entry.label) {
+      @if (isAccordion(entry)) {
+        <div class="nav-accordion">
+          <button
+            type="button"
+            class="nav-item nav-accordion__header"
+            [attr.aria-expanded]="isExpanded(entry.id)"
+            (click)="toggleAccordion(entry.id)"
+          >
+            <i [class]="entry.icon" aria-hidden="true"></i>
+            <span>{{ entry.label }}</span>
+            <i
+              class="pi nav-accordion__chevron"
+              [class.pi-chevron-down]="isExpanded(entry.id)"
+              [class.pi-chevron-right]="!isExpanded(entry.id)"
+              aria-hidden="true"
+            ></i>
+          </button>
+
+          @if (isExpanded(entry.id)) {
+            <div class="nav-accordion__body">
+              @for (leaf of entry.children; track leaf.route) {
+                <a
+                  class="nav-item nav-item--leaf"
+                  [routerLink]="leaf.route"
+                  routerLinkActive="active"
+                  ariaCurrentWhenActive="page"
+                  (click)="drawerVisible.set(false)"
+                >
+                  <span>{{ leaf.label }}</span>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <a
+          class="nav-item"
+          [routerLink]="entry.route"
+          routerLinkActive="active"
+          (click)="drawerVisible.set(false)"
+        >
+          <i [class]="entry.icon"></i>
+          <span>{{ entry.label }}</span>
+        </a>
+      }
     }
   </nav>
 </ng-template>

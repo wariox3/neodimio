@@ -58,6 +58,12 @@ export const DASHBOARD_ROUTES: Routes = [
           },
         ],
       },
+      {
+        path: 'transporte',
+        data: { area: 'transporte' satisfies DashboardArea },
+        loadChildren: () =>
+          import('../transporte/transporte.routes').then((m) => m.TRANSPORTE_ROUTES),
+      },
       { path: '', redirectTo: 'inicio', pathMatch: 'full' },
     ],
   },
