@@ -1,0 +1,398 @@
+<div class="page-container">
+  <app-page-header
+    title="Guías"
+    subtitle="Consulta y gestiona tus guías de transporte"
+    icon="pi pi-box"
+  >
+    <p-button label="Nueva" icon="pi pi-plus" [routerLink]="rutas.guiaNueva" />
+  </app-page-header>
+
+  <!-- Filtros -->
+  <div class="card filtros-card">
+    <button
+      type="button"
+      class="filtros-card__header"
+      [attr.aria-expanded]="filtrosVisibles()"
+      aria-controls="guia-filtros"
+      (click)="toggleFiltros()"
+    >
+      <span class="filtros-card__title">
+        <i class="pi pi-filter" aria-hidden="true"></i>
+        Filtros
+      </span>
+      <i
+        class="pi pi-chevron-down filtros-card__chevron"
+        [class.filtros-card__chevron--open]="filtrosVisibles()"
+        aria-hidden="true"
+      ></i>
+    </button>
+
+    @if (filtrosVisibles()) {
+      <form id="guia-filtros" [formGroup]="form" (ngSubmit)="buscar()" novalidate>
+        <div class="filtros-grid">
+          <div class="field">
+            <label for="fecha_desde" class="field__label">Fecha desde</label>
+            <p-datepicker
+              inputId="fecha_desde"
+              formControlName="fecha_desde"
+              [showIcon]="true"
+              [fluid]="true"
+              dateFormat="dd/mm/yy"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="fecha_hasta" class="field__label">Fecha hasta</label>
+            <p-datepicker
+              inputId="fecha_hasta"
+              formControlName="fecha_hasta"
+              [showIcon]="true"
+              [fluid]="true"
+              dateFormat="dd/mm/yy"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="estado" class="field__label">Estado</label>
+            <p-select
+              inputId="estado"
+              formControlName="estado"
+              [options]="estadoOpciones"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Todos"
+              [showClear]="true"
+              [fluid]="true"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="codigo_guia_pk" class="field__label">Guía</label>
+            <p-inputnumber
+              inputId="codigo_guia_pk"
+              formControlName="codigo_guia_pk"
+              [useGrouping]="false"
+              [fluid]="true"
+              placeholder="Número de guía"
+            />
+          </div>
+
+          <div class="field">
+            <label for="documento_cliente" class="field__label">Documento</label>
+            <input
+              pInputText
+              id="documento_cliente"
+              formControlName="documento_cliente"
+              fluid
+              placeholder="Documento del cliente"
+            />
+          </div>
+
+          <div class="field">
+            <label for="codigo_guia_tipo_fk" class="field__label">Tipo</label>
+            <p-select
+              inputId="codigo_guia_tipo_fk"
+              formControlName="codigo_guia_tipo_fk"
+              [options]="tipos()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Todos"
+              [showClear]="true"
+              [fluid]="true"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="codigo_servicio_fk" class="field__label">Servicio</label>
+            <p-select
+              inputId="codigo_servicio_fk"
+              formControlName="codigo_servicio_fk"
+              [options]="servicios()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Todos"
+              [showClear]="true"
+              [fluid]="true"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="codigo_ciudad_origen_fk" class="field__label">Ciudad origen</label>
+            <p-select
+              inputId="codigo_ciudad_origen_fk"
+              formControlName="codigo_ciudad_origen_fk"
+              [options]="ciudades()"
+              optionLabel="nombre"
+              optionValue="codigo_ciudad_pk"
+              placeholder="Todas"
+              [filter]="true"
+              filterBy="nombre,departamento_nombre"
+              [virtualScroll]="true"
+              [virtualScrollItemSize]="38"
+              [showClear]="true"
+              [fluid]="true"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="codigo_ciudad_destino_fk" class="field__label">Ciudad destino</label>
+            <p-select
+              inputId="codigo_ciudad_destino_fk"
+              formControlName="codigo_ciudad_destino_fk"
+              [options]="ciudades()"
+              optionLabel="nombre"
+              optionValue="codigo_ciudad_pk"
+              placeholder="Todas"
+              [filter]="true"
+              filterBy="nombre,departamento_nombre"
+              [virtualScroll]="true"
+              [virtualScrollItemSize]="38"
+              [showClear]="true"
+              [fluid]="true"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="codigo_despacho_fk" class="field__label">Despacho</label>
+            <p-inputnumber
+              inputId="codigo_despacho_fk"
+              formControlName="codigo_despacho_fk"
+              [useGrouping]="false"
+              [fluid]="true"
+              placeholder="Número de despacho"
+            />
+          </div>
+
+          <div class="field">
+            <label for="codigo_tercero_operacion_fk" class="field__label">Operación</label>
+            <p-select
+              inputId="codigo_tercero_operacion_fk"
+              formControlName="codigo_tercero_operacion_fk"
+              [options]="operaciones()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Todas"
+              [showClear]="true"
+              [fluid]="true"
+              appendTo="body"
+            />
+          </div>
+        </div>
+
+        <div class="filtros-actions">
+          <p-button
+            type="button"
+            label="Limpiar"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            [text]="true"
+            (onClick)="limpiar()"
+          />
+          <p-button type="submit" label="Filtrar" icon="pi pi-search" [loading]="loading()" />
+        </div>
+      </form>
+    }
+  </div>
+
+  <!-- Resultados -->
+  @if (loading() && guias().length === 0) {
+    <app-loading-spinner message="Cargando guías..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="buscar()" />
+  } @else if (!loading() && guias().length === 0) {
+    <app-empty-state
+      title="Sin guías"
+      message="No se encontraron guías con los filtros seleccionados."
+      icon="pi pi-box"
+    />
+  } @else {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-toolbar__count">
+          {{ totalRecords() }} {{ totalRecords() === 1 ? 'guía' : 'guías' }}
+        </span>
+
+        <div class="table-toolbar__actions">
+          <p-button
+            label="Exportar"
+            icon="pi pi-download"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            [loading]="exportando()"
+            (onClick)="exportarMenu.toggle($event)"
+          />
+          <p-menu #exportarMenu [model]="exportarItems" [popup]="true" appendTo="body" />
+        </div>
+      </div>
+
+      <p-table
+        [value]="guias()"
+        [lazy]="true"
+        [lazyLoadOnInit]="false"
+        [totalRecords]="totalRecords()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [first]="first()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onLazyLoad)="onLazyLoad($event)"
+        [rowHover]="true"
+        [scrollable]="true"
+        scrollHeight="600px"
+        dataKey="codigo_guia_pk"
+        [expandedRowKeys]="expandedRows()"
+      >
+        <ng-template #header>
+          <tr>
+            <th style="width: 3rem"></th>
+            <th>Guía</th>
+            <th>Fecha</th>
+            <th>Documento</th>
+            <th>Origen</th>
+            <th>Destino</th>
+            <th>Destinatario</th>
+            <th class="text-right" pTooltip="Unidades" tooltipPosition="top">Und</th>
+            <th class="text-right" pTooltip="Peso facturado (kg)" tooltipPosition="top">Peso</th>
+            <th class="text-right">Declarado</th>
+            <th class="text-right">Flete</th>
+            <th class="text-right">Manejo</th>
+            <th class="text-right">Total</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-guia let-expanded="expanded">
+          <tr>
+            <td>
+              <p-button
+                type="button"
+                [pRowToggler]="guia"
+                [text]="true"
+                [rounded]="true"
+                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                pTooltip="Ver estados"
+                tooltipPosition="top"
+                [ariaLabel]="'Ver estados de la guía ' + guia.codigo_guia_pk"
+              />
+            </td>
+            <td>
+              <div class="guia-cell">
+                <span class="guia-cell__numero">{{ guia.codigo_guia_pk }}</span>
+                @if (guia.codigo_guia_tipo_fk) {
+                  <span class="guia-cell__tipo">{{ guia.codigo_guia_tipo_fk }}</span>
+                }
+              </div>
+            </td>
+            <td class="nowrap">
+              {{ guia.fecha_ingreso ? (guia.fecha_ingreso | date: 'dd/MM/yyyy HH:mm') : '—' }}
+            </td>
+            <td>{{ guia.documento_cliente ?? '—' }}</td>
+            <td class="nowrap">{{ nombreCiudad(guia.codigo_ciudad_origen_fk) }}</td>
+            <td class="nowrap">{{ nombreCiudad(guia.codigo_ciudad_destino_fk) }}</td>
+            <td class="destinatario-cell text-truncate">{{ guia.nombre_destinatario ?? '—' }}</td>
+            <td class="text-right">{{ guia.unidades ?? 0 | number: '1.0-2' }}</td>
+            <td class="text-right">{{ guia.peso_facturado ?? 0 | number: '1.0-2' }}</td>
+            <td class="text-right">{{ guia.vr_declara ?? 0 | number: '1.0-0' }}</td>
+            <td class="text-right">{{ guia.vr_flete ?? 0 | number: '1.0-0' }}</td>
+            <td class="text-right">{{ guia.vr_manejo ?? 0 | number: '1.0-0' }}</td>
+            <td class="text-right total-cell">
+              {{ (guia.vr_flete ?? 0) + (guia.vr_manejo ?? 0) | number: '1.0-0' }}
+            </td>
+            <td>
+              <div class="estado-cell">
+                <p-tag [value]="getEstado(guia).label" [severity]="getEstado(guia).severity" />
+                @if (tieneNovedad(guia)) {
+                  <i
+                    class="pi pi-exclamation-triangle novedad-icon"
+                    pTooltip="Tiene novedad sin solucionar"
+                    tooltipPosition="top"
+                    aria-label="Tiene novedad sin solucionar"
+                  ></i>
+                }
+              </div>
+            </td>
+            <td>
+              <div class="acciones-cell">
+                <p-button
+                  icon="pi pi-eye"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  pTooltip="Ver detalle"
+                  tooltipPosition="top"
+                  [ariaLabel]="'Ver detalle de la guía ' + guia.codigo_guia_pk"
+                  [routerLink]="rutas.guiaDetalle(guia.codigo_guia_pk)"
+                />
+                <app-guia-imprimir [guiaId]="guia.codigo_guia_pk" />
+                <p-button
+                  icon="pi pi-paperclip"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  pTooltip="Ver archivos"
+                  tooltipPosition="top"
+                  [ariaLabel]="'Ver archivos de la guía ' + guia.codigo_guia_pk"
+                  (onClick)="guiaArchivos.set(guia)"
+                />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template #expandedrow let-guia>
+          <tr>
+            <td colspan="15" class="expansion-cell">
+              <div class="indicadores">
+                @for (indicador of getIndicadores(guia); track indicador.label) {
+                  <span
+                    class="indicador"
+                    [class.indicador--activo]="indicador.activo"
+                    [class.indicador--alerta]="indicador.alerta"
+                  >
+                    <i
+                      [class]="indicador.activo ? 'pi pi-check-circle' : 'pi pi-circle'"
+                      aria-hidden="true"
+                    ></i>
+                    {{ indicador.label }}
+                    @if (indicador.activo && indicador.fecha) {
+                      <span class="indicador__fecha">{{
+                        indicador.fecha | date: 'dd/MM/yyyy'
+                      }}</span>
+                    }
+                  </span>
+                }
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <p-dialog
+    [visible]="guiaArchivos() !== null"
+    (visibleChange)="guiaArchivos.set(null)"
+    [header]="'Archivos de la guía ' + guiaArchivos()?.codigo_guia_pk"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: 'min(640px, 95vw)' }"
+  >
+    @if (guiaArchivos(); as guia) {
+      <app-archivos
+        modelo="TteGuia"
+        [codigo]="guia.codigo_guia_pk"
+        mensajeVacio="Esta guía no tiene archivos."
+      />
+    }
+  </p-dialog>
+</div>

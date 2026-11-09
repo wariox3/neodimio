@@ -78,6 +78,10 @@
           <th>Usuario</th>
           <th>Usuario semantica</th>
           <th>Control</th>
+          <th>Empleado</th>
+          <th>Id empleado</th>
+          <th>Cliente</th>
+          <th>Id cliente</th>
           <th>Estado</th>
           <th class="col-actions">Acciones</th>
         </tr>
@@ -114,6 +118,34 @@
             </span>
           </td>
 
+          <!-- Empleado -->
+          <td>
+            <span class="control-pill" [class.control-pill--yes]="usuario.empleado">
+              {{ usuario.empleado ? 'Sí' : 'No' }}
+            </span>
+          </td>
+          <td>
+            @if (usuario.empleado_id !== null) {
+              <span class="code">{{ usuario.empleado_id }}</span>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </td>
+
+          <!-- Cliente -->
+          <td>
+            <span class="control-pill" [class.control-pill--yes]="usuario.cliente">
+              {{ usuario.cliente ? 'Sí' : 'No' }}
+            </span>
+          </td>
+          <td>
+            @if (usuario.cliente_id !== null) {
+              <span class="code">{{ usuario.cliente_id }}</span>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </td>
+
           <!-- Estado de la membresía -->
           <td>
             @if (usuario.activo) {
@@ -135,6 +167,16 @@
               [ariaLabel]="'Editar ' + displayName(usuario)"
               (onClick)="openEditDialog(usuario)"
             />
+            <p-button
+              icon="pi pi-cog"
+              severity="secondary"
+              [text]="true"
+              [rounded]="true"
+              pTooltip="Configuración"
+              tooltipPosition="top"
+              [ariaLabel]="'Configuración de ' + displayName(usuario)"
+              (onClick)="openConfiguracionDialog(usuario)"
+            />
             @if (canDelete(usuario)) {
               <p-button
                 icon="pi pi-trash"
@@ -154,14 +196,14 @@
 
       <ng-template #emptymessage>
         <tr>
-          <td colspan="5" class="empty-row">No se encontraron usuarios con esos filtros.</td>
+          <td colspan="9" class="empty-row">No se encontraron usuarios con esos filtros.</td>
         </tr>
       </ng-template>
     </p-table>
   </div>
 </div>
 
-<!-- Diálogo: editar usuario (solo el código del usuario en Semantica) -->
+<!-- Diálogo: editar usuario (código en Semantica y cliente) -->
 <p-dialog
   [visible]="editingUsuario() !== null"
   (visibleChange)="!$event && closeEditDialog()"
@@ -206,6 +248,24 @@
           <span class="field-hint">Déjalo vacío para quitar el código.</span>
         }
       </div>
+
+      <!-- Cliente -->
+      <div class="switch-field">
+        <label for="user-cliente" class="form-label">Cliente</label>
+        <p-toggleswitch inputId="user-cliente" formControlName="cliente" />
+      </div>
+      <div class="form-field">
+        <label for="user-cliente-id" class="form-label">Id cliente</label>
+        <p-inputnumber
+          inputId="user-cliente-id"
+          formControlName="clienteId"
+          [useGrouping]="false"
+          [min]="1"
+          [fluid]="true"
+          placeholder="Código del cliente"
+        />
+        <span class="field-hint">Déjalo vacío para quitar el cliente.</span>
+      </div>
     </form>
   }
 
@@ -216,6 +276,148 @@
       icon="pi pi-check"
       [loading]="savingEdit()"
       (onClick)="submitEdit()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Diálogo: configuración del usuario en la empresa -->
+<p-dialog
+  [visible]="configurandoUsuario() !== null"
+  (visibleChange)="!$event && closeConfiguracionDialog()"
+  header="Configuración del usuario"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '480px' }"
+  [breakpoints]="{ '575px': '95vw' }"
+>
+  @if (configurandoUsuario(); as usuario) {
+    <div class="user-cell dialog-usuario">
+      <div class="user-cell__avatar">{{ initial(usuario) }}</div>
+      <div class="user-cell__info">
+        <span class="user-cell__name">{{ displayName(usuario) }}</span>
+        @if (hasName(usuario)) {
+          <span class="user-cell__email">{{ usuario.email }}</span>
+        }
+      </div>
+    </div>
+
+    @if (cargandoConfiguracion()) {
+      <p class="dialog-estado">Cargando configuración...</p>
+    } @else if (errorConfiguracion()) {
+      <div class="dialog-estado">
+        <p>No se pudo cargar la configuración.</p>
+        <p-button
+          label="Reintentar"
+          icon="pi pi-refresh"
+          severity="secondary"
+          [outlined]="true"
+          size="small"
+          (onClick)="cargarConfiguracion()"
+        />
+      </div>
+    } @else {
+      <form
+        [formGroup]="configuracionForm"
+        (ngSubmit)="submitConfiguracion()"
+        class="dialog-form"
+        autocomplete="off"
+      >
+        <div class="form-field">
+          <label for="user-operacion" class="form-label">Operación</label>
+          <input
+            id="user-operacion"
+            pInputText
+            type="text"
+            formControlName="codigoOperacion"
+            placeholder="Código de la operación"
+            class="w-full"
+            [attr.maxlength]="operacionMaxLength"
+            [class.ng-invalid]="
+              configuracionForm.controls.codigoOperacion.invalid &&
+              configuracionForm.controls.codigoOperacion.touched
+            "
+          />
+          @if (
+            configuracionForm.controls.codigoOperacion.invalid &&
+            configuracionForm.controls.codigoOperacion.touched
+          ) {
+            <span class="field-error">Máximo {{ operacionMaxLength }} caracteres.</span>
+          } @else {
+            <span class="field-hint">Operación de ingreso de sus guías.</span>
+          }
+        </div>
+        <div class="form-field">
+          <label for="user-tercero-operacion" class="form-label">Operación del cliente</label>
+          <p-inputnumber
+            inputId="user-tercero-operacion"
+            formControlName="codigoTerceroOperacion"
+            [useGrouping]="false"
+            [min]="1"
+            [fluid]="true"
+            placeholder="Código de la operación del cliente"
+          />
+          <span class="field-hint">Se selecciona por defecto al crear una guía.</span>
+        </div>
+        <div class="form-field">
+          <label for="user-ciudad-origen" class="form-label">Ciudad de origen</label>
+          <input
+            id="user-ciudad-origen"
+            pInputText
+            type="text"
+            formControlName="codigoCiudadOrigen"
+            placeholder="Código de la ciudad"
+            class="w-full"
+            [attr.maxlength]="ciudadOrigenMaxLength"
+            [class.ng-invalid]="
+              configuracionForm.controls.codigoCiudadOrigen.invalid &&
+              configuracionForm.controls.codigoCiudadOrigen.touched
+            "
+          />
+          @if (
+            configuracionForm.controls.codigoCiudadOrigen.invalid &&
+            configuracionForm.controls.codigoCiudadOrigen.touched
+          ) {
+            <span class="field-error">Máximo {{ ciudadOrigenMaxLength }} caracteres.</span>
+          } @else {
+            <span class="field-hint">Déjalo vacío para usar la ciudad de su operación.</span>
+          }
+        </div>
+
+        <fieldset class="permisos" formGroupName="permisos">
+          <legend class="permisos__titulo">Permisos en guías</legend>
+          @for (permiso of permisosGuia; track permiso.campo) {
+            <div class="switch-field permisos__item">
+              <div class="permisos__texto">
+                <label [for]="'user-' + permiso.campo" class="form-label">
+                  {{ permiso.label }}
+                </label>
+                <span class="field-hint">{{ permiso.hint }}</span>
+              </div>
+              <p-toggleswitch
+                [inputId]="'user-' + permiso.campo"
+                [formControlName]="permiso.campo"
+              />
+            </div>
+          }
+        </fieldset>
+      </form>
+    }
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      [text]="true"
+      severity="secondary"
+      (onClick)="closeConfiguracionDialog()"
+    />
+    <p-button
+      label="Guardar"
+      icon="pi pi-check"
+      [loading]="guardandoConfiguracion()"
+      [disabled]="cargandoConfiguracion() || errorConfiguracion()"
+      (onClick)="submitConfiguracion()"
     />
   </ng-template>
 </p-dialog>

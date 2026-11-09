@@ -1,0 +1,109 @@
+{
+  "name": "cliente",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/cliente/src",
+  "tags": ["scope:cliente", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputPath": "dist/apps/cliente",
+      "options": {
+        "browser": "apps/cliente/src/main.ts",
+        "polyfills": ["zone.js"],
+        "tsConfig": "apps/cliente/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/cliente/public"
+          },
+          {
+            "glob": "*.woff2",
+            "input": "node_modules/geist/dist/fonts/geist-sans",
+            "output": "fonts/geist"
+          }
+        ],
+        "styles": ["apps/cliente/src/styles.scss"],
+        "stylePreprocessorOptions": {
+          "includePaths": ["libs/styles/src"]
+        }
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kB",
+              "maximumError": "1MB"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "8kB",
+              "maximumError": "16kB"
+            }
+          ],
+          "outputHashing": "all",
+          "fileReplacements": [
+            {
+              "replace": "apps/cliente/src/environments/environment.ts",
+              "with": "apps/cliente/src/environments/environment.prod.ts"
+            }
+          ]
+        },
+        "staging": {
+          "outputHashing": "all",
+          "fileReplacements": [
+            {
+              "replace": "apps/cliente/src/environments/environment.ts",
+              "with": "apps/cliente/src/environments/environment.staging.ts"
+            }
+          ]
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular/build:dev-server",
+      "configurations": {
+        "production": {
+          "buildTarget": "cliente:build:production"
+        },
+        "development": {
+          "buildTarget": "cliente:build:development",
+          "proxyConfig": "apps/cliente/proxy.conf.json"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "test": {
+      "executor": "@angular/build:karma",
+      "options": {
+        "polyfills": ["zone.js", "zone.js/testing"],
+        "tsConfig": "apps/cliente/tsconfig.spec.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/cliente/public"
+          },
+          {
+            "glob": "*.woff2",
+            "input": "node_modules/geist/dist/fonts/geist-sans",
+            "output": "fonts/geist"
+          }
+        ],
+        "styles": ["apps/cliente/src/styles.scss"],
+        "stylePreprocessorOptions": {
+          "includePaths": ["libs/styles/src"]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,212 @@
+<div class="page-container">
+  <app-page-header
+    title="Novedades"
+    subtitle="Consulta las novedades de tus guías"
+    icon="pi pi-exclamation-triangle"
+  />
+
+  <div class="card filtros-card">
+    <button
+      type="button"
+      class="filtros-card__header"
+      [attr.aria-expanded]="filtrosVisibles()"
+      aria-controls="novedad-filtros"
+      (click)="toggleFiltros()"
+    >
+      <span class="filtros-card__title">
+        <i class="pi pi-filter" aria-hidden="true"></i>
+        Filtros
+      </span>
+      <i
+        class="pi pi-chevron-down filtros-card__chevron"
+        [class.filtros-card__chevron--open]="filtrosVisibles()"
+        aria-hidden="true"
+      ></i>
+    </button>
+
+    @if (filtrosVisibles()) {
+      <form id="novedad-filtros" [formGroup]="form" (ngSubmit)="buscar()" novalidate>
+        <div class="filtros-grid">
+          <div class="field">
+            <label for="codigo_guia_fk" class="field__label">Guía</label>
+            <p-inputnumber
+              inputId="codigo_guia_fk"
+              formControlName="codigo_guia_fk"
+              [useGrouping]="false"
+              [fluid]="true"
+              placeholder="Número de guía"
+            />
+          </div>
+
+          <div class="field">
+            <label for="estado_atendido" class="field__label">Atendido</label>
+            <p-select
+              inputId="estado_atendido"
+              formControlName="estado_atendido"
+              [options]="opcionesSiNo"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Todos"
+              [showClear]="true"
+              [fluid]="true"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="estado_solucion" class="field__label">Solucionado</label>
+            <p-select
+              inputId="estado_solucion"
+              formControlName="estado_solucion"
+              [options]="opcionesSiNo"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Todos"
+              [showClear]="true"
+              [fluid]="true"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="fecha_desde" class="field__label">Fecha desde</label>
+            <p-datepicker
+              inputId="fecha_desde"
+              formControlName="fecha_desde"
+              [showIcon]="true"
+              [fluid]="true"
+              dateFormat="dd/mm/yy"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label for="fecha_hasta" class="field__label">Fecha hasta</label>
+            <p-datepicker
+              inputId="fecha_hasta"
+              formControlName="fecha_hasta"
+              [showIcon]="true"
+              [fluid]="true"
+              dateFormat="dd/mm/yy"
+              appendTo="body"
+            />
+          </div>
+        </div>
+
+        <div class="filtros-actions">
+          <p-button
+            type="button"
+            label="Limpiar"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            [text]="true"
+            (onClick)="limpiar()"
+          />
+          <p-button type="submit" label="Filtrar" icon="pi pi-search" [loading]="loading()" />
+        </div>
+      </form>
+    }
+  </div>
+
+  @if (loading() && novedades().length === 0) {
+    <app-loading-spinner message="Cargando novedades..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="buscar()" />
+  } @else if (!loading() && novedades().length === 0) {
+    <app-empty-state
+      title="Sin novedades"
+      message="No se encontraron novedades con los filtros seleccionados."
+      icon="pi pi-exclamation-triangle"
+    />
+  } @else {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-toolbar__count">
+          {{ totalRecords() }} {{ totalRecords() === 1 ? 'novedad' : 'novedades' }}
+        </span>
+        <div class="table-toolbar__actions">
+          <p-button
+            label="Excel"
+            icon="pi pi-file-excel"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            [loading]="exportando()"
+            (onClick)="exportar()"
+          />
+        </div>
+      </div>
+
+      <p-table
+        [value]="novedades()"
+        [lazy]="true"
+        [lazyLoadOnInit]="false"
+        [totalRecords]="totalRecords()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [first]="first()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onLazyLoad)="onLazyLoad($event)"
+        [rowHover]="true"
+        [scrollable]="true"
+        scrollHeight="600px"
+        dataKey="codigo_novedad_pk"
+      >
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Guía</th>
+            <th>Tipo</th>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th>Atendido</th>
+            <th>Solucionado</th>
+            <th>Solución</th>
+            <th>Fecha solución</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-novedad>
+          <tr>
+            <td>{{ novedad.codigo_novedad_pk }}</td>
+            <td>
+              @if (novedad.codigo_guia_fk) {
+                <a [routerLink]="rutas.guiaDetalle(novedad.codigo_guia_fk)">
+                  {{ novedad.codigo_guia_fk }}
+                </a>
+              } @else {
+                —
+              }
+            </td>
+            <td class="nowrap">{{ novedad.codigo_novedad_tipo_fk ?? '—' }}</td>
+            <td class="nowrap">
+              {{ novedad.fecha ? (novedad.fecha | date: 'dd/MM/yyyy') : '—' }}
+            </td>
+            <td>{{ novedad.descripcion ?? '—' }}</td>
+            <td>
+              <p-tag
+                [value]="novedad.estado_atendido ? 'Sí' : 'No'"
+                [severity]="novedad.estado_atendido ? 'success' : 'secondary'"
+              />
+            </td>
+            <td>
+              <p-tag
+                [value]="novedad.estado_solucion ? 'Sí' : 'No'"
+                [severity]="novedad.estado_solucion ? 'success' : 'warn'"
+              />
+            </td>
+            <td>{{ novedad.solucion ?? '—' }}</td>
+            <td class="nowrap">
+              {{
+                novedad.estado_solucion && novedad.fecha_solucion
+                  ? (novedad.fecha_solucion | date: 'dd/MM/yyyy')
+                  : '—'
+              }}
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

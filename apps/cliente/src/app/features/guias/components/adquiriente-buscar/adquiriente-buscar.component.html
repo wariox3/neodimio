@@ -1,0 +1,85 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  header="Buscar adquiriente"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(800px, 95vw)' }"
+>
+  <form [formGroup]="form" (ngSubmit)="buscar()" novalidate class="buscar-form">
+    <input pInputText formControlName="nombre_corto" placeholder="Nombre" aria-label="Nombre" />
+    <input
+      pInputText
+      formControlName="numero_identificacion"
+      placeholder="Identificación"
+      aria-label="Identificación"
+    />
+    <p-inputnumber
+      formControlName="codigo_tercero_pk"
+      placeholder="Código"
+      ariaLabel="Código"
+      [useGrouping]="false"
+      [min]="1"
+      [fluid]="true"
+    />
+    <p-button type="submit" label="Filtrar" icon="pi pi-search" [loading]="loading()" />
+  </form>
+
+  @if (error()) {
+    <small class="form-error">{{ error() }}</small>
+  }
+
+  <p-table
+    [value]="terceros()"
+    [lazy]="true"
+    [lazyLoadOnInit]="false"
+    [totalRecords]="totalRecords()"
+    [loading]="loading()"
+    [paginator]="true"
+    [rows]="filas"
+    [first]="first()"
+    (onLazyLoad)="onLazyLoad($event)"
+    [rowHover]="true"
+    [scrollable]="true"
+    dataKey="codigo_tercero_pk"
+  >
+    <ng-template #header>
+      <tr>
+        <th>Id</th>
+        <th>Identificación</th>
+        <th>Nombre</th>
+        <th></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-tercero>
+      <tr>
+        <td class="nowrap">{{ tercero.codigo_tercero_pk }}</td>
+        <td class="nowrap">{{ tercero.numero_identificacion ?? '—' }}</td>
+        <td>
+          {{ tercero.nombre_corto ?? '—' }}
+          @if (tercero.estado_inactivo) {
+            <p-tag value="Inactivo" severity="secondary" class="estado-inactivo" />
+          }
+        </td>
+        <td>
+          <!-- Un tercero inactivo no se puede facturar. -->
+          <p-button
+            icon="pi pi-check"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            [disabled]="!!tercero.estado_inactivo"
+            [ariaLabel]="'Seleccionar ' + (tercero.nombre_corto ?? 'tercero')"
+            (onClick)="seleccionar(tercero)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="4">No se encontraron terceros.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>

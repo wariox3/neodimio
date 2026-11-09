@@ -1,0 +1,163 @@
+<div class="page-container">
+  <app-page-header
+    title="Destinatarios"
+    subtitle="Administra los destinatarios de tus guías"
+    icon="pi pi-users"
+  >
+    <p-button label="Nuevo" icon="pi pi-plus" [routerLink]="rutas.destinatarioNuevo" />
+  </app-page-header>
+
+  <div class="card filtros-card">
+    <button
+      type="button"
+      class="filtros-card__header"
+      [attr.aria-expanded]="filtrosVisibles()"
+      aria-controls="destinatario-filtros"
+      (click)="toggleFiltros()"
+    >
+      <span class="filtros-card__title">
+        <i class="pi pi-filter" aria-hidden="true"></i>
+        Filtros
+      </span>
+      <i
+        class="pi pi-chevron-down filtros-card__chevron"
+        [class.filtros-card__chevron--open]="filtrosVisibles()"
+        aria-hidden="true"
+      ></i>
+    </button>
+
+    @if (filtrosVisibles()) {
+      <form id="destinatario-filtros" [formGroup]="form" (ngSubmit)="buscar()" novalidate>
+        <div class="filtros-grid">
+          <div class="field">
+            <label for="nombre_corto" class="field__label">Nombre</label>
+            <input pInputText id="nombre_corto" formControlName="nombre_corto" fluid />
+          </div>
+
+          <div class="field">
+            <label for="numero_identificacion" class="field__label">Identificación</label>
+            <input
+              pInputText
+              id="numero_identificacion"
+              formControlName="numero_identificacion"
+              fluid
+            />
+          </div>
+        </div>
+
+        <div class="filtros-actions">
+          <p-button
+            type="button"
+            label="Limpiar"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            [text]="true"
+            (onClick)="limpiar()"
+          />
+          <p-button type="submit" label="Filtrar" icon="pi pi-search" [loading]="loading()" />
+        </div>
+      </form>
+    }
+  </div>
+
+  @if (loading() && destinatarios().length === 0) {
+    <app-loading-spinner message="Cargando destinatarios..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="buscar()" />
+  } @else if (!loading() && destinatarios().length === 0) {
+    <app-empty-state
+      title="Sin destinatarios"
+      message="No se encontraron destinatarios con los filtros seleccionados."
+      icon="pi pi-users"
+    />
+  } @else {
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-toolbar__count">
+          {{ totalRecords() }} {{ totalRecords() === 1 ? 'destinatario' : 'destinatarios' }}
+        </span>
+        <div class="table-toolbar__actions">
+          <p-button
+            label="Excel"
+            icon="pi pi-file-excel"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            [loading]="exportando()"
+            (onClick)="exportar()"
+          />
+          <p-button
+            label="Importar"
+            icon="pi pi-upload"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            (onClick)="importar()"
+          />
+        </div>
+      </div>
+
+      <p-table
+        [value]="destinatarios()"
+        [lazy]="true"
+        [lazyLoadOnInit]="false"
+        [totalRecords]="totalRecords()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [first]="first()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onLazyLoad)="onLazyLoad($event)"
+        [rowHover]="true"
+        [scrollable]="true"
+        scrollHeight="600px"
+        dataKey="codigo_destinatario_pk"
+      >
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Identificación</th>
+            <th>Nombre</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Cod</th>
+            <th>Ciudad</th>
+            <th></th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-destinatario>
+          <tr>
+            <td>{{ destinatario.codigo_destinatario_pk }}</td>
+            <td class="nowrap">
+              {{ destinatario.codigo_identificacion_fk }}
+              {{ destinatario.numero_identificacion ?? '—' }}
+            </td>
+            <td>
+              {{ destinatario.nombre_corto ?? '—' }}
+              @if (destinatario.estado_inactivo) {
+                <p-tag value="Inactivo" severity="secondary" />
+              }
+            </td>
+            <td>{{ destinatario.direccion ?? '—' }}</td>
+            <td class="nowrap">{{ destinatario.telefono ?? '—' }}</td>
+            <td class="nowrap">{{ destinatario.codigo_ciudad_fk ?? '—' }}</td>
+            <td class="nowrap">{{ destinatario.ciudad_nombre ?? '—' }}</td>
+            <td>
+              <p-button
+                icon="pi pi-pencil"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                [ariaLabel]="'Editar destinatario ' + destinatario.codigo_destinatario_pk"
+                [routerLink]="rutas.destinatarioEditar(destinatario.codigo_destinatario_pk)"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

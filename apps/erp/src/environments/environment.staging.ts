@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://api.semanticaapi.uk',
-  turnstileSiteKey: '0x4AAAAAACtY79EBiNipMUhQ',
+  apiUrl: 'https://api.semanticaerp.uk',
+  turnstileSiteKey: '0x4AAAAAAF21LoUu1TUHAcCN',
 };

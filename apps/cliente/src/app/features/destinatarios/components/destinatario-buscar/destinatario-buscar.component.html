@@ -1,0 +1,86 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  header="Buscar destinatario"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(1000px, 95vw)' }"
+>
+  <form [formGroup]="form" (ngSubmit)="buscar()" novalidate class="buscar-form">
+    <input pInputText formControlName="nombre_corto" placeholder="Nombre" aria-label="Nombre" />
+    <input
+      pInputText
+      formControlName="numero_identificacion"
+      placeholder="Identificación"
+      aria-label="Identificación"
+    />
+    <p-inputnumber
+      formControlName="codigo_destinatario_pk"
+      placeholder="Código"
+      ariaLabel="Código"
+      [useGrouping]="false"
+      [min]="1"
+      [fluid]="true"
+    />
+    <p-button type="submit" label="Filtrar" icon="pi pi-search" [loading]="loading()" />
+  </form>
+
+  @if (error()) {
+    <small class="form-error">{{ error() }}</small>
+  }
+
+  <p-table
+    [value]="destinatarios()"
+    [lazy]="true"
+    [lazyLoadOnInit]="false"
+    [totalRecords]="totalRecords()"
+    [loading]="loading()"
+    [paginator]="true"
+    [rows]="filas"
+    [first]="first()"
+    (onLazyLoad)="onLazyLoad($event)"
+    [rowHover]="true"
+    [scrollable]="true"
+    dataKey="codigo_destinatario_pk"
+  >
+    <ng-template #header>
+      <tr>
+        <th>Id</th>
+        <th>Identificación</th>
+        <th>Nombre</th>
+        <th>Dirección</th>
+        <th>Teléfono</th>
+        <th>Ciudad</th>
+        <th></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-destinatario>
+      <tr>
+        <td class="nowrap">{{ destinatario.codigo_destinatario_pk }}</td>
+        <td class="nowrap">
+          {{ destinatario.codigo_identificacion_fk }} {{ destinatario.numero_identificacion }}
+        </td>
+        <td>{{ destinatario.nombre_corto ?? '—' }}</td>
+        <td>{{ destinatario.direccion ?? '—' }}</td>
+        <td class="nowrap">{{ destinatario.telefono ?? '—' }}</td>
+        <td class="nowrap">{{ destinatario.ciudad_nombre ?? '—' }}</td>
+        <td>
+          <p-button
+            icon="pi pi-check"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'Seleccionar ' + (destinatario.nombre_corto ?? 'destinatario')"
+            (onClick)="seleccionar(destinatario)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="7">No se encontraron destinatarios.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>

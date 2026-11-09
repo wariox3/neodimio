@@ -1,0 +1,35 @@
+// Columnas de los días: angostas y centradas, con el fin de semana resaltado.
+.dia {
+  min-width: 2.5rem;
+  padding-left: 0.35rem !important;
+  padding-right: 0.35rem !important;
+  text-align: center !important;
+  font-size: 0.8125rem;
+
+  &--fin {
+    background: var(--p-surface-50);
+  }
+
+  &__inicial {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--p-text-muted-color);
+  }
+}
+
+// Encabezado de cada puesto, como el `COD.PUESTO` de terbio.
+.puesto {
+  background: var(--p-surface-100);
+  font-size: 0.875rem;
+  color: var(--p-text-color);
+
+  i {
+    margin-right: 0.35rem;
+    color: var(--p-primary-color);
+  }
+
+  &__modalidad {
+    color: var(--p-text-muted-color);
+  }
+}

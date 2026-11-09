@@ -1,0 +1,106 @@
+<div class="shell-layout">
+  <!-- Navbar -->
+  <header class="shell-navbar">
+    <div class="navbar-start">
+      <button class="hamburger-btn" (click)="toggleDrawer()" aria-label="Abrir menú">
+        <i class="pi pi-bars"></i>
+      </button>
+      <a class="navbar-brand" [routerLink]="inicioRoute" aria-label="Ir al inicio">
+        <img src="fondo_transparente.png" alt="Semantica Clientes" class="navbar-logo-img" />
+      </a>
+    </div>
+
+    <!-- Contenedor activo, alineado con el inicio del contenido -->
+    @if (activeTenant(); as tenant) {
+      <a
+        class="navbar-tenant"
+        [routerLink]="contenedoresRoute"
+        [attr.title]="tenant.nombre + ' · Cambiar de contenedor'"
+        [attr.aria-label]="'Contenedor ' + tenant.nombre + '. Cambiar de contenedor'"
+      >
+        <span class="navbar-tenant__icono" aria-hidden="true">
+          <i class="pi pi-building"></i>
+        </span>
+        <span class="navbar-tenant__texto">
+          <span class="navbar-tenant__label">Contenedor</span>
+          <span class="navbar-tenant__nombre">{{ tenant.nombre }}</span>
+        </span>
+        <i class="pi pi-arrow-right-arrow-left navbar-tenant__cambiar" aria-hidden="true"></i>
+      </a>
+    }
+
+    <div class="navbar-end">
+      <app-user-menu />
+    </div>
+  </header>
+
+  <div class="shell-body">
+    <!-- Sidebar desktop -->
+    <aside class="shell-sidebar">
+      <ng-container *ngTemplateOutlet="navTpl" />
+    </aside>
+
+    <!-- Main content -->
+    <main class="shell-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<!-- Drawer móvil -->
+<p-drawer
+  [visible]="drawerVisible()"
+  (visibleChange)="drawerVisible.set($event)"
+  position="left"
+  header="Menú"
+>
+  <ng-container *ngTemplateOutlet="navTpl" />
+</p-drawer>
+
+<!-- Template compartido para la navegación -->
+<ng-template #navTpl>
+  <nav class="sidebar-nav" aria-label="Menú principal">
+    <a
+      class="nav-item"
+      [routerLink]="inicioRoute"
+      routerLinkActive="active"
+      (click)="drawerVisible.set(false)"
+    >
+      <i class="pi pi-home" aria-hidden="true"></i>
+      <span>Inicio</span>
+    </a>
+
+    @for (group of groups; track group.label; let i = $index) {
+      @let abierto = expanded().has(group.label);
+      <div class="nav-group" [class.nav-group--open]="abierto">
+        <button
+          type="button"
+          class="nav-item nav-group__toggle"
+          [class.nav-group__toggle--active]="isGroupActive(group)"
+          [attr.aria-expanded]="abierto"
+          [attr.aria-controls]="'nav-group-' + i"
+          (click)="toggleGroup(group)"
+        >
+          <i [class]="group.icon" aria-hidden="true"></i>
+          <span>{{ group.label }}</span>
+          <i class="pi pi-chevron-down nav-group__chevron" aria-hidden="true"></i>
+        </button>
+
+        @if (abierto) {
+          <div class="nav-group__children" [id]="'nav-group-' + i">
+            @for (item of group.items; track item.route) {
+              <a
+                class="nav-child"
+                [routerLink]="item.route"
+                routerLinkActive="active"
+                (click)="drawerVisible.set(false)"
+              >
+                {{ item.label }}
+              </a>
+            }
+          </div>
+        }
+      </div>
+    }
+  </nav>
+</ng-template>

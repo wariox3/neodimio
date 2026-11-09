@@ -1,0 +1,321 @@
+.shell-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.shell-navbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.25rem;
+  height: 60px;
+  background: var(--p-surface-0);
+  border-bottom: 1px solid var(--p-surface-200);
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+// Mismo ancho del menú lateral (descontando el padding de la barra), para que el
+// contenedor activo arranque justo donde empieza el contenido.
+$sidebar-width: 240px;
+$navbar-padding: 1.25rem;
+
+.navbar-start {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-shrink: 0;
+}
+
+@media (min-width: 769px) {
+  .navbar-start {
+    width: calc(#{$sidebar-width} - #{$navbar-padding});
+    // El separador continúa el borde derecho del menú lateral.
+    margin-right: -1rem;
+  }
+}
+
+// ─── Contenedor activo ────────────────────────────────────────────────────────
+
+.navbar-tenant {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  max-width: 420px;
+  height: 100%;
+  padding: 0 0.75rem 0 1.25rem;
+  border-left: 1px solid var(--p-surface-200);
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--p-surface-50);
+
+    .navbar-tenant__cambiar {
+      color: var(--p-primary-color);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--p-primary-color) 40%, transparent);
+    outline-offset: -2px;
+  }
+}
+
+.navbar-tenant__icono {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
+  color: var(--p-primary-color);
+
+  i {
+    font-size: 0.875rem;
+  }
+}
+
+.navbar-tenant__texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.navbar-tenant__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--p-text-muted-color);
+}
+
+.navbar-tenant__nombre {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar-tenant__cambiar {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--p-text-muted-color);
+  transition: color 0.15s ease;
+}
+
+// En móvil se ve solo el nombre, sin separador ni etiqueta, para dejar sitio al logo.
+@media (max-width: 768px) {
+  .navbar-tenant {
+    padding: 0 0.5rem;
+    border-left: none;
+  }
+
+  .navbar-tenant__label,
+  .navbar-tenant__cambiar {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .navbar-tenant__icono {
+    display: none;
+  }
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.navbar-logo-img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
+.navbar-end {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.hamburger-btn {
+  display: flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  color: var(--p-text-muted-color);
+  padding: 0.375rem;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  i {
+    font-size: 0.9375rem;
+  }
+
+  &:hover {
+    background: var(--p-surface-100);
+    color: var(--p-text-color);
+  }
+}
+
+.shell-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.shell-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--p-surface-0);
+  border-right: 1px solid var(--p-surface-200);
+  overflow-y: auto;
+  padding: 0.75rem 0.75rem;
+}
+
+.shell-content {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--p-surface-50);
+}
+
+@media (max-width: 768px) {
+  // Ocultamos el sidebar fijo
+  .shell-sidebar {
+    display: none;
+  }
+}
+
+// En desktop ocultamos el botón hamburger
+@media (min-width: 769px) {
+  .hamburger-btn {
+    display: none;
+  }
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+// ─── Ítems de navegación ──────────────────────────────────────────────────────
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 8px;
+  color: var(--p-text-muted-color);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  i {
+    font-size: 1rem;
+    width: 1.25rem;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: var(--p-surface-100);
+    color: var(--p-text-color);
+  }
+
+  &.active {
+    background: var(--p-primary-50, color-mix(in srgb, var(--p-primary-color) 10%, transparent));
+    color: var(--p-primary-color);
+    font-weight: 600;
+
+    i {
+      color: var(--p-primary-color);
+    }
+  }
+}
+
+// ─── Grupos desplegables ──────────────────────────────────────────────────────
+
+.nav-group__toggle {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  span {
+    flex: 1;
+  }
+
+  &--active {
+    color: var(--p-text-color);
+    font-weight: 600;
+
+    i:not(.nav-group__chevron) {
+      color: var(--p-primary-color);
+    }
+  }
+}
+
+.nav-group__chevron {
+  font-size: 0.75rem !important;
+  transition: transform 0.2s ease;
+}
+
+.nav-group--open .nav-group__chevron {
+  transform: rotate(180deg);
+}
+
+.nav-group__children {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin: 0.125rem 0 0.375rem 1.5rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--p-surface-200);
+}
+
+.nav-child {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  color: var(--p-text-muted-color);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background: var(--p-surface-100);
+    color: var(--p-text-color);
+  }
+
+  &.active {
+    background: var(--p-primary-50, color-mix(in srgb, var(--p-primary-color) 10%, transparent));
+    color: var(--p-primary-color);
+    font-weight: 600;
+  }
+}

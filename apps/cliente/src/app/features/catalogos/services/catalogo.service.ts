@@ -1,0 +1,177 @@
+import { Injectable, inject } from '@angular/core';
+import { EMPTY, Observable, map, of, shareReplay, switchMap } from 'rxjs';
+import {
+  ActiveTenantService,
+  API_ENDPOINTS,
+  BaseHttpService,
+  PaginatedResponse,
+} from '../../../core';
+import { MembresiaClienteService } from '../../contenedores/services/membresia-cliente.service';
+import {
+  Ciudad,
+  CiudadGeneral,
+  ConfiguracionGeneral,
+  ConfiguracionUsuario,
+  FormatoImpresion,
+  GuiaTipo,
+  Identificacion,
+  Operacion,
+  Servicio,
+  Tercero,
+  TerceroBuscar,
+  TerceroBuscarParams,
+  TerceroNuevoRequest,
+  TerceroOperacion,
+  TerceroProducto,
+  TipoImpresion,
+} from '../models/catalogo.model';
+
+/** Máximo de `size` que admite `/tte/tercero-operacion/lista`. */
+const MAX_OPERACIONES_TERCERO = 200;
+
+/** Tamaño de página suficiente para traer en una consulta los productos de un tercero. */
+const MAX_PRODUCTOS_TERCERO = 500;
+
+/**
+ * Catálogos de fluor, compartidos por las pantallas de transporte.
+ *
+ * Son datos que casi no cambian (ciudades, tipos…), así que se piden una sola vez
+ * por empresa. El caché va por empresa porque cada una tiene su propia base; ante
+ * un error `shareReplay` no guarda nada y la siguiente suscripción reintenta.
+ * Vive en memoria: recargar la página vuelve a consultar los datos.
+ */
+@Injectable({ providedIn: 'root' })
+export class CatalogoService extends BaseHttpService {
+  private readonly activeTenant = inject(ActiveTenantService);
+  private readonly membresiaCliente = inject(MembresiaClienteService);
+  private readonly cache = new Map<string, Observable<unknown>>();
+
+  /** Tercero de la membresía del usuario; `membresiaClienteGuard` garantiza que exista. */
+  tercero(): Observable<Tercero> {
+    const clienteId = this.membresiaCliente.clienteId();
+    if (clienteId === null) return EMPTY;
+    return this.cachear<Tercero>(API_ENDPOINTS.tercero.detalle(clienteId));
+  }
+
+  ciudades(): Observable<Ciudad[]> {
+    return this.cachear<Ciudad[]>(API_ENDPOINTS.catalogo.ciudades);
+  }
+
+  guiaTipos(): Observable<GuiaTipo[]> {
+    return this.cachear<GuiaTipo[]>(API_ENDPOINTS.catalogo.guiaTipos);
+  }
+
+  /** Configuración del usuario en la empresa activa; el id de membresía es único por empresa. */
+  configuracion(): Observable<ConfiguracionUsuario> {
+    const membresiaId = this.membresiaCliente.membresiaId();
+    if (membresiaId === null) return EMPTY;
+    return this.cachear<ConfiguracionUsuario>(
+      API_ENDPOINTS.userTenantConfiguracion.detalle(membresiaId),
+    );
+  }
+
+  /**
+   * Descarta la configuración guardada para que la próxima consulta vaya a fluor. Los
+   * permisos los cambia un administrador desde el ERP y deben aplicar sin cerrar sesión.
+   */
+  refrescarConfiguracion(): void {
+    const membresiaId = this.membresiaCliente.membresiaId();
+    if (membresiaId === null) return;
+    this.cache.delete(this.claveCache(API_ENDPOINTS.userTenantConfiguracion.detalle(membresiaId)));
+  }
+
+  /**
+   * Ciudad de origen de las guías del usuario, igual que en terbio: la de su configuración
+   * y, si no tiene, la de su operación. `null` si no tiene ninguna de las dos.
+   */
+  ciudadOrigen(): Observable<string | null> {
+    return this.configuracion().pipe(
+      switchMap(({ codigo_ciudad_origen_fk: ciudad, codigo_operacion_fk: operacion }) => {
+        if (ciudad) return of(ciudad);
+        if (!operacion) return of(null);
+        return this.cachear<Operacion>(API_ENDPOINTS.operacion.detalle(operacion)).pipe(
+          map((o) => o.codigo_ciudad_fk),
+        );
+      }),
+    );
+  }
+
+  /** Operaciones del tercero de la membresía, para el filtro de la lista y la guía nueva. */
+  operacionesTercero(): Observable<TerceroOperacion[]> {
+    const clienteId = this.membresiaCliente.clienteId();
+    if (clienteId === null) return EMPTY;
+    return this.cachear<PaginatedResponse<TerceroOperacion>>(API_ENDPOINTS.terceroOperacion.lista, {
+      codigo_tercero_fk: String(clienteId),
+      page: '1',
+      size: String(MAX_OPERACIONES_TERCERO),
+    }).pipe(map((res) => res.items));
+  }
+
+  /** Productos habilitados para el tercero de la membresía del usuario. */
+  productosTercero(): Observable<TerceroProducto[]> {
+    const clienteId = this.membresiaCliente.clienteId();
+    if (clienteId === null) return EMPTY;
+    return this.cachear<PaginatedResponse<TerceroProducto>>(API_ENDPOINTS.terceroProducto.buscar, {
+      codigo_tercero_fk: String(clienteId),
+      page: '1',
+      size: String(MAX_PRODUCTOS_TERCERO),
+    }).pipe(map((res) => res.items));
+  }
+
+  servicios(): Observable<Servicio[]> {
+    return this.cachear<Servicio[]>(API_ENDPOINTS.catalogo.servicios);
+  }
+
+  identificaciones(): Observable<Identificacion[]> {
+    return this.cachear<Identificacion[]>(API_ENDPOINTS.catalogo.identificaciones);
+  }
+
+  ciudadesGenerales(): Observable<CiudadGeneral[]> {
+    return this.cachear<CiudadGeneral[]>(API_ENDPOINTS.catalogo.ciudadesGenerales);
+  }
+
+  configuracionGeneral(): Observable<ConfiguracionGeneral> {
+    return this.cachear<ConfiguracionGeneral>(API_ENDPOINTS.catalogo.configuracionGeneral);
+  }
+
+  formatosImpresion(tipo: TipoImpresion): Observable<FormatoImpresion[]> {
+    return this.cachear<FormatoImpresion[]>(API_ENDPOINTS.guia.formatosImpresion, { tipo });
+  }
+
+  /** Olvida lo consultado; se llama al cerrar sesión porque incluye datos del cliente. */
+  limpiar(): void {
+    this.cache.clear();
+  }
+
+  private claveCache(path: string, params?: Record<string, string>): string {
+    return `${this.activeTenant.tenantId()}|${path}|${JSON.stringify(params ?? {})}`;
+  }
+
+  /**
+   * Busca entre todos los terceros de la empresa, como el buscador de adquiriente de terbio.
+   * No se cachea: cada filtro es una consulta distinta.
+   */
+  buscarTerceros(params: TerceroBuscarParams): Observable<PaginatedResponse<TerceroBuscar>> {
+    return this.get<PaginatedResponse<TerceroBuscar>>(API_ENDPOINTS.tercero.buscar, {
+      page: params.page,
+      nombre_corto: params.nombre_corto || null,
+      numero_identificacion: params.numero_identificacion || null,
+      codigo_tercero_pk: params.codigo_tercero_pk ?? null,
+    });
+  }
+
+  /** Crea un tercero; responde con su detalle, como `GET /gen/tercero/detalle/{id}`. */
+  crearTercero(tercero: TerceroNuevoRequest): Observable<Tercero> {
+    return this.post<Tercero>(API_ENDPOINTS.tercero.nuevo, tercero);
+  }
+
+  private cachear<T>(path: string, params?: Record<string, string>): Observable<T> {
+    const clave = this.claveCache(path, params);
+    let peticion = this.cache.get(clave) as Observable<T> | undefined;
+    if (!peticion) {
+      peticion = this.get<T>(path, params).pipe(shareReplay(1));
+      this.cache.set(clave, peticion);
+    }
+    return peticion;
+  }
+}

@@ -29,6 +29,10 @@ export const API_ENDPOINTS = {
     actualizar: (id: number) => `/mas/user-tenant/${id}/actualizar`,
     eliminar: (id: number) => `/mas/user-tenant/eliminar/${id}`,
   },
+  userTenantConfiguracion: {
+    detalle: (id: number) => `/mas/user-tenant-configuracion/${id}`,
+    actualizar: (id: number) => `/mas/user-tenant-configuracion/${id}/actualizar`,
+  },
   formato: {
     list: '/gen/formato/lista',
     byId: (id: number) => `/gen/formato/${id}`,
