@@ -6,6 +6,8 @@
   --brand-navy: #143049;
   --brand-navy-deep: #0d2035;
   --brand-blue: #77aad7;
+  // Azul exacto del logo de Semántica, para estados activos.
+  --brand-accent: #1875c5;
   --brand-white: #ffffff;
 
   // Semantic
@@ -17,6 +19,10 @@
   --brand-muted-2: #8aafc9;
   --brand-border: rgba(20 48 73 / 0.1);
   --brand-border-hover: rgba(20 48 73 / 0.2);
+
+  // Navegación
+  --nav-hover-background: color-mix(in srgb, var(--p-text-color) 4%, transparent);
+  --nav-active-background: color-mix(in srgb, var(--p-text-color) 8%, transparent);
 
   // Glow / dim variants
   --brand-navy-dim: rgba(20 48 73 / 0.07);
