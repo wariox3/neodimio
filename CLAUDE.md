@@ -76,6 +76,7 @@ libs/
 - `LoadingSpinnerComponent` — PrimeNG progress spinner + message
 - `PageHeaderComponent` — title + subtitle + actions slot
 - `DetailSectionComponent` — tarjeta de detalle con barra de título (ícono + nombre + acciones)
+- `BreadcrumbComponent` — ruta de la página con migajas navegables y botón de copiar enlace
 - `TurnstileComponent` — Cloudflare Turnstile CAPTCHA (uses `ENVIRONMENT` token)
 
 **`@semantica/styles`** (`libs/styles/`):

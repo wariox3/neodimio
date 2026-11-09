@@ -4,6 +4,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import {
+  BreadcrumbComponent,
+  BreadcrumbItem,
   DetailSectionComponent,
   ErrorAlertComponent,
   LoadingSpinnerComponent,
@@ -23,6 +25,7 @@ import { getEstadoGuia, getIndicadoresGuia } from '../../utils/guia-estado';
     NgTemplateOutlet,
     RouterLink,
     ButtonModule,
+    BreadcrumbComponent,
     DetailSectionComponent,
     ErrorAlertComponent,
     LoadingSpinnerComponent,
@@ -43,7 +46,16 @@ export class GuiaDetailComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly guia = signal<GuiaDetalle | null>(null);
 
-  readonly titulo = computed(() => `Guía ${this.guia()?.codigo_guia_pk ?? ''}`);
+  readonly titulo = computed(() => {
+    const guia = this.guia();
+    return guia ? `Guía ${guia.codigo_guia_pk}` : 'Guía';
+  });
+
+  readonly breadcrumbItems = computed<readonly BreadcrumbItem[]>(() => [
+    { label: 'Transporte', routerLink: ROUTE_PATHS.dashboard.transporte.inicio },
+    { label: 'Guías', routerLink: this.listaRoute },
+    { label: this.titulo() },
+  ]);
 
   readonly estado = computed(() => {
     const guia = this.guia();

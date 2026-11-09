@@ -6,3 +6,4 @@ export { TurnstileComponent } from './lib/turnstile/turnstile.component';
 export { FicherosDialogComponent } from './lib/ficheros-dialog/ficheros-dialog.component';
 export { TrimInputDirective } from './lib/directives/trim-input.directive';
 export { DetailSectionComponent } from './lib/detail/detail-section.component';
+export { BreadcrumbComponent, type BreadcrumbItem } from './lib/breadcrumb/breadcrumb.component';

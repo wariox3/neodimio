@@ -1,4 +1,6 @@
 <div class="page-container">
+  <app-breadcrumb [items]="breadcrumbItems" />
+
   <app-page-header title="Guías" subtitle="Consulta las guías de transporte de la empresa" />
 
   <form class="card filtros-card" [formGroup]="form" (ngSubmit)="buscar()" novalidate>

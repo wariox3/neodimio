@@ -13,6 +13,8 @@ import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import {
+  BreadcrumbComponent,
+  BreadcrumbItem,
   EmptyStateComponent,
   ErrorAlertComponent,
   LoadingSpinnerComponent,
@@ -29,6 +31,7 @@ import { getEstadoGuia, tieneNovedadAbierta } from '../../utils/guia-estado';
   selector: 'app-guias-list',
   standalone: true,
   imports: [
+    BreadcrumbComponent,
     DatePipe,
     DecimalPipe,
     ReactiveFormsModule,
@@ -50,6 +53,11 @@ import { getEstadoGuia, tieneNovedadAbierta } from '../../utils/guia-estado';
   styleUrl: './guias-list.component.scss',
 })
 export class GuiasListComponent implements OnInit {
+  readonly breadcrumbItems: readonly BreadcrumbItem[] = [
+    { label: 'Transporte', routerLink: ROUTE_PATHS.dashboard.transporte.inicio },
+    { label: 'Guías' },
+  ];
+
   private readonly fb = inject(FormBuilder);
   private readonly guiaService = inject(GuiaService);
   private readonly destroyRef = inject(DestroyRef);
