@@ -11,6 +11,18 @@ export {
   type AuthServiceContract,
 } from './lib/tokens';
 
+// Locale
+export { APP_LOCALE, provideAppLocale } from './lib/locale/app-locale';
+
+// Transporte
+export { type Guia } from './lib/transporte/guia.model';
+export {
+  getEstadoGuia,
+  tieneNovedadAbierta,
+  type EstadoGuia,
+  type EstadoSeverity,
+} from './lib/transporte/guia-estado';
+
 // Theme
 export { SemanticaPreset, SEMANTICA_THEME } from './lib/theme/semantica-preset';
 

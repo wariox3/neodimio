@@ -295,8 +295,8 @@
             <td class="nowrap">{{ nombreCiudad(guia.codigo_ciudad_origen_fk) }}</td>
             <td class="nowrap">{{ nombreCiudad(guia.codigo_ciudad_destino_fk) }}</td>
             <td class="destinatario-cell text-truncate">{{ guia.nombre_destinatario ?? '—' }}</td>
-            <td class="text-right">{{ guia.unidades ?? 0 | number: '1.0-2' }}</td>
-            <td class="text-right">{{ guia.peso_facturado ?? 0 | number: '1.0-2' }}</td>
+            <td class="text-right">{{ guia.unidades ?? 0 | number: '1.0-0' }}</td>
+            <td class="text-right">{{ guia.peso_facturado ?? 0 | number: '1.0-0' }}</td>
             <td class="text-right">{{ guia.vr_declara ?? 0 | number: '1.0-0' }}</td>
             <td class="text-right">{{ guia.vr_flete ?? 0 | number: '1.0-0' }}</td>
             <td class="text-right">{{ guia.vr_manejo ?? 0 | number: '1.0-0' }}</td>

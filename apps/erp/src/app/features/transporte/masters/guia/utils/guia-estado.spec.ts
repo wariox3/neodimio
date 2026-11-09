@@ -1,32 +1,22 @@
-import { Guia, GuiaDetalle } from '../guia.model';
-import { getEstadoGuia, tieneNovedadAbierta } from './guia-estado';
+import { GuiaDetalle } from '../guia.model';
+import { getIndicadoresGuia } from './guia-estado';
 
-describe('getEstadoGuia', () => {
-  const guia = (campos: Partial<Guia> = {}): Guia => campos as Guia;
+describe('getIndicadoresGuia', () => {
+  const indicador = (guia: Partial<GuiaDetalle>, label: string) =>
+    getIndicadoresGuia(guia as GuiaDetalle).find((i) => i.label === label);
 
-  it('muestra el estado más avanzado aunque los anteriores sigan marcados', () => {
-    expect(getEstadoGuia(guia({ estado_ingreso: true, estado_despachado: true })).label).toBe(
-      'Despachada',
-    );
-    expect(getEstadoGuia(guia({ estado_entregado: true, estado_cumplido: true })).label).toBe(
-      'Cumplida',
-    );
+  it('no activa un dato sin confirmar', () => {
+    expect(indicador({ mercancia_peligrosa: null }, 'Mercancía peligrosa')?.activo).toBeFalse();
+    expect(indicador({ mercancia_peligrosa: true }, 'Mercancía peligrosa')?.activo).toBeTrue();
   });
 
-  it('sin ningún estado queda pendiente', () => {
-    expect(getEstadoGuia(guia()).label).toBe('Pendiente');
+  it('alerta la novedad solo mientras siga abierta', () => {
+    const abierta = { estado_novedad: true, estado_novedad_solucion: false };
+    expect(indicador(abierta, 'Novedad')?.alerta).toBeTrue();
+    expect(indicador({ ...abierta, estado_novedad_solucion: true }, 'Novedad')?.alerta).toBeFalse();
   });
 
-  it('una guía anulada del detalle prevalece sobre su avance', () => {
-    const anulada = { estado_entregado: true, estado_anulado: true } as GuiaDetalle;
-    expect(getEstadoGuia(anulada)).toEqual({ label: 'Anulada', severity: 'danger' });
-  });
-});
-
-describe('tieneNovedadAbierta', () => {
-  it('solo cuenta las novedades sin solucionar', () => {
-    const conNovedad = { estado_novedad: true, estado_novedad_solucion: false } as Guia;
-    expect(tieneNovedadAbierta(conNovedad)).toBeTrue();
-    expect(tieneNovedadAbierta({ ...conNovedad, estado_novedad_solucion: true })).toBeFalse();
+  it('marca la anulación como alerta', () => {
+    expect(indicador({ estado_anulado: true }, 'Anulada')?.alerta).toBeTrue();
   });
 });
