@@ -75,6 +75,7 @@ libs/
 - `ErrorAlertComponent` — PrimeNG error message + retry button
 - `LoadingSpinnerComponent` — PrimeNG progress spinner + message
 - `PageHeaderComponent` — title + subtitle + actions slot
+- `DetailSectionComponent` — tarjeta de detalle con barra de título (ícono + nombre + acciones)
 - `TurnstileComponent` — Cloudflare Turnstile CAPTCHA (uses `ENVIRONMENT` token)
 
 **`@semantica/styles`** (`libs/styles/`):
