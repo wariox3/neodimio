@@ -1,0 +1,26 @@
+// Estado de cada fecha: vencida en rojo, sin fecha en gris
+.fecha {
+  i {
+    margin-right: 0.25rem;
+  }
+
+  &--vencida {
+    color: var(--p-red-500);
+    font-weight: 600;
+  }
+
+  &--sin-fecha {
+    color: var(--p-text-muted-color);
+    font-style: italic;
+  }
+}
+
+// Texto solo para lectores de pantalla
+.sr-texto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

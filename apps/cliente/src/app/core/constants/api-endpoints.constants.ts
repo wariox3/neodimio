@@ -80,6 +80,11 @@ export const API_ENDPOINTS = {
     descargar: (id: number, archivoId: number) =>
       `/crm/visita/${id}/archivo/${archivoId}/descargar`,
   },
+  autorizacionArma: {
+    lista: '/rhu/autorizacion_arma/lista-portal',
+    imprimir: (empleadoId: number) => `/rhu/autorizacion_arma/imprimir-portal/${empleadoId}`,
+    imprimirTodos: '/rhu/autorizacion_arma/imprimir-portal-todos',
+  },
   seguridadSocial: {
     lista: '/rhu/aporte_contrato/lista-portal',
     archivos: (aporteContratoId: number) => `/rhu/aporte_contrato/${aporteContratoId}/archivos`,

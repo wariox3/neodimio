@@ -104,7 +104,13 @@ export const DASHBOARD_ROUTES: Routes = [
       {
         path: 'recurso-humano',
         children: [
-          enConstruccion('autorizacion-arma', 'Autorización arma'),
+          {
+            path: 'autorizacion-arma',
+            loadChildren: () =>
+              import('../autorizacion-arma/autorizacion-arma.routes').then(
+                (m) => m.AUTORIZACION_ARMA_ROUTES,
+              ),
+          },
           {
             path: 'seguridad-social',
             loadComponent: () =>

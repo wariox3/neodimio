@@ -1,0 +1,136 @@
+<div class="page-container">
+  <app-page-header
+    title="Autorización arma"
+    subtitle="Consulta e imprime la autorización para portar armas del personal de tus puestos"
+  >
+    @if (empleados().length > 0) {
+      <!-- Un botón deshabilitado no dispara el tooltip; por eso va en el contenedor -->
+      <span
+        [pTooltip]="
+          vigentes() === 0
+            ? 'Ningún empleado tiene la acreditación, el polígono y el psicofísico vigentes'
+            : ''
+        "
+        tooltipPosition="bottom"
+      >
+        <p-button
+          [label]="'Imprimir vigentes (' + vigentes() + ')'"
+          icon="pi pi-print"
+          [disabled]="vigentes() === 0"
+          [loading]="imprimiendo() === 'vigentes'"
+          (onClick)="imprimirVigentes()"
+        />
+      </span>
+    }
+  </app-page-header>
+
+  @if (loading() && empleados().length === 0) {
+    <app-loading-spinner message="Cargando personal..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="recargar()" />
+  } @else if (empleados().length === 0) {
+    <app-empty-state
+      title="Sin personal"
+      message="No hay personal asignado a tus puestos."
+      icon="pi pi-shield"
+    />
+  } @else {
+    @if (incompleto()) {
+      <p-message severity="warn" styleClass="mb-4">
+        Tienes más de {{ maxConsulta }} empleados; solo se muestran los primeros.
+      </p-message>
+    }
+
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-toolbar__count">
+          {{ empleados().length }} {{ empleados().length === 1 ? 'empleado' : 'empleados' }} ·
+          {{ vigentes() }} {{ vigentes() === 1 ? 'vigente' : 'vigentes' }}
+        </span>
+      </div>
+
+      <p-table
+        [value]="empleados()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [first]="first()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onPage)="onPage($event)"
+        [rowHover]="true"
+        [scrollable]="true"
+        dataKey="codigo_empleado_pk"
+      >
+        <ng-template #header>
+          <tr>
+            <th>Código</th>
+            <th>Identificación</th>
+            <th>Empleado</th>
+            <th>Cargo</th>
+            <th>Acreditación</th>
+            <th>Polígono</th>
+            <th>Psicofísico</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-empleado>
+          <tr>
+            <td>{{ empleado.codigo_empleado_pk }}</td>
+            <td>{{ empleado.numero_identificacion ?? '—' }}</td>
+            <td class="nowrap">{{ empleado.nombre_corto ?? '—' }}</td>
+            <td class="nowrap">{{ empleado.cargo_nombre ?? '—' }}</td>
+            @for (
+              fecha of [
+                empleado.fecha_acreditacion,
+                empleado.fecha_poligono,
+                empleado.fecha_psicofisico,
+              ];
+              track $index
+            ) {
+              <td
+                class="nowrap fecha"
+                [class.fecha--vencida]="estadoFecha(fecha, hoy) === 'vencida'"
+                [class.fecha--sin-fecha]="estadoFecha(fecha, hoy) === 'sin-fecha'"
+              >
+                @switch (estadoFecha(fecha, hoy)) {
+                  @case ('sin-fecha') {
+                    Sin fecha
+                  }
+                  @case ('vencida') {
+                    <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                    {{ fecha | date: 'dd/MM/yyyy' }}
+                    <span class="sr-texto">(vencida)</span>
+                  }
+                  @default {
+                    {{ fecha | date: 'dd/MM/yyyy' }}
+                  }
+                }
+              </td>
+            }
+            <td>
+              <p-tag
+                [value]="empleado.vigente ? 'Vigente' : 'No vigente'"
+                [severity]="empleado.vigente ? 'success' : 'secondary'"
+              />
+            </td>
+            <td>
+              <p-button
+                icon="pi pi-print"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                pTooltip="Imprimir autorización"
+                tooltipPosition="top"
+                [ariaLabel]="'Imprimir autorización de ' + (empleado.nombre_corto ?? 'el empleado')"
+                [loading]="imprimiendo() === empleado.codigo_empleado_pk"
+                (onClick)="imprimir(empleado)"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>
