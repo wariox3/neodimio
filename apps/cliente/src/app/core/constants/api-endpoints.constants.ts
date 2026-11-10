@@ -57,11 +57,28 @@ export const API_ENDPOINTS = {
     pendientes: '/car/cuenta-cobrar/pendiente',
     movimientos: '/car/movimiento/lista',
   },
+  consigna: {
+    lista: '/tur/consigna/lista-cliente',
+  },
   factura: {
     lista: '/tur/factura/lista',
   },
   programacion: {
     lista: '/tur/programacion/lista',
+  },
+  cotizacion: {
+    lista: '/crm/cotizacion/lista-portal',
+  },
+  pqrs: {
+    lista: '/crm/solicitud/lista-portal',
+  },
+  visita: {
+    lista: '/crm/visita/lista-portal',
+    detalle: (id: number) => `/crm/visita/detalle-portal/${id}`,
+    imprimir: (id: number) => `/crm/visita/imprimir-portal/${id}`,
+    archivos: (id: number) => `/crm/visita/${id}/archivos`,
+    descargar: (id: number, archivoId: number) =>
+      `/crm/visita/${id}/archivo/${archivoId}/descargar`,
   },
   seguridadSocial: {
     lista: '/rhu/aporte_contrato/lista-portal',

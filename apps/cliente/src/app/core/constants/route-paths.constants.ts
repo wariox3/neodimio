@@ -15,6 +15,7 @@ export const ROUTE_PATHS = {
     },
     crm: {
       visitas: `${DASHBOARD}/crm/visitas`,
+      visitaDetalle: (id: number) => `${DASHBOARD}/crm/visitas/${id}`,
       cotizaciones: `${DASHBOARD}/crm/cotizaciones`,
       pqrs: `${DASHBOARD}/crm/pqrs`,
     },

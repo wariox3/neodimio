@@ -1,0 +1,83 @@
+<div class="page-container">
+  <app-page-header
+    title="Consignas"
+    subtitle="Consulta las instrucciones que debe cumplir el personal en tus puestos"
+  />
+
+  @if (loading() && consignas().length === 0) {
+    <app-loading-spinner message="Cargando consignas..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="recargar()" />
+  } @else if (consignas().length === 0) {
+    <app-empty-state
+      title="Sin consignas"
+      message="Tus puestos aún no tienen consignas registradas."
+      icon="pi pi-list-check"
+    />
+  } @else {
+    @if (incompleto()) {
+      <p-message severity="warn" styleClass="mb-4">
+        Tus puestos tienen más de {{ maxConsulta }} consignas; solo se muestran las primeras.
+      </p-message>
+    }
+
+    <div class="table-card">
+      <div class="table-toolbar consignas-toolbar">
+        <span class="table-toolbar__count">
+          {{ visibles().length }} {{ visibles().length === 1 ? 'consigna' : 'consignas' }}
+        </span>
+
+        @if (puestos().length > 1) {
+          <p-select
+            inputId="puesto"
+            [ngModel]="puesto()"
+            (ngModelChange)="filtrarPuesto($event)"
+            [options]="puestos()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los puestos"
+            [showClear]="true"
+            appendTo="body"
+            styleClass="consignas-toolbar__puesto"
+            ariaLabel="Filtrar por puesto"
+          />
+        }
+      </div>
+
+      <p-table
+        [value]="visibles()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [first]="first()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onPage)="onPage($event)"
+        [rowHover]="true"
+        [scrollable]="true"
+        dataKey="codigo_consigna_pk"
+      >
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Puesto</th>
+            <th>Consigna</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-consigna>
+          <tr>
+            <td>{{ consigna.codigo_consigna_pk }}</td>
+            <td class="nowrap">
+              {{
+                consigna.codigo_puesto_fk === null
+                  ? generales
+                  : (consigna.puesto_nombre ?? consigna.codigo_puesto_fk)
+              }}
+            </td>
+            <td class="consigna">{{ consigna.consigna ?? '—' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

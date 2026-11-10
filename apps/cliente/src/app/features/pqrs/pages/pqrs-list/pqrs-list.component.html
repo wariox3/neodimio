@@ -1,0 +1,87 @@
+<div class="page-container">
+  <app-page-header
+    title="PQRS"
+    subtitle="Consulta tus peticiones, quejas, reclamos y sugerencias"
+  />
+
+  @if (loading() && registros().length === 0) {
+    <app-loading-spinner message="Cargando PQRS..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="recargar()" />
+  } @else if (registros().length === 0) {
+    <app-empty-state
+      title="Sin PQRS"
+      message="Aún no tienes peticiones, quejas, reclamos ni sugerencias registradas."
+      icon="pi pi-comments"
+    />
+  } @else {
+    @if (incompleto()) {
+      <p-message severity="warn" styleClass="mb-4">
+        Tienes más de {{ maxConsulta }} PQRS; solo se muestran las más recientes.
+      </p-message>
+    }
+
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-toolbar__count">
+          {{ registros().length }} {{ registros().length === 1 ? 'solicitud' : 'solicitudes' }}
+        </span>
+      </div>
+
+      <p-table
+        [value]="registros()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [first]="first()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onPage)="onPage($event)"
+        [rowHover]="true"
+        [scrollable]="true"
+        dataKey="codigo_solicitud_pk"
+      >
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Tipo</th>
+            <th>Fecha</th>
+            <th>Vence</th>
+            <th>Respuesta</th>
+            <th>Cierre</th>
+            <th>Descripción</th>
+            <th>Estado</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-registro>
+          <tr>
+            <td>{{ registro.codigo_solicitud_pk }}</td>
+            <td class="nowrap">{{ registro.solicitud_tipo_nombre ?? '—' }}</td>
+            <td class="nowrap">
+              {{ registro.fecha ? (registro.fecha | date: 'dd/MM/yyyy') : '—' }}
+            </td>
+            <td class="nowrap">
+              {{
+                registro.fecha_vencimiento ? (registro.fecha_vencimiento | date: 'dd/MM/yyyy') : '—'
+              }}
+            </td>
+            <td class="nowrap">
+              {{ registro.fecha_respuesta ? (registro.fecha_respuesta | date: 'dd/MM/yyyy') : '—' }}
+            </td>
+            <td class="nowrap">
+              {{ registro.fecha_cierre ? (registro.fecha_cierre | date: 'dd/MM/yyyy') : '—' }}
+            </td>
+            <td>
+              <span class="descripcion" [pTooltip]="registro.descripcion" tooltipPosition="top">
+                {{ registro.descripcion ?? '—' }}
+              </span>
+            </td>
+            <td>
+              <p-tag [value]="estado(registro).label" [severity]="estado(registro).severity" />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

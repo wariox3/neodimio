@@ -1,0 +1,88 @@
+<div class="page-container">
+  <app-page-header
+    title="Cotizaciones"
+    subtitle="Consulta las cotizaciones que te ha realizado la empresa"
+  />
+
+  @if (loading() && cotizaciones().length === 0) {
+    <app-loading-spinner message="Cargando cotizaciones..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="recargar()" />
+  } @else if (cotizaciones().length === 0) {
+    <app-empty-state
+      title="Sin cotizaciones"
+      message="Aún no tienes cotizaciones registradas."
+      icon="pi pi-file-edit"
+    />
+  } @else {
+    @if (incompleto()) {
+      <p-message severity="warn" styleClass="mb-4">
+        Tienes más de {{ maxConsulta }} cotizaciones; solo se muestran las más recientes.
+      </p-message>
+    }
+
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-toolbar__count">
+          {{ cotizaciones().length }}
+          {{ cotizaciones().length === 1 ? 'cotización' : 'cotizaciones' }}
+        </span>
+      </div>
+
+      <p-table
+        [value]="cotizaciones()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [first]="first()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onPage)="onPage($event)"
+        [rowHover]="true"
+        [scrollable]="true"
+        dataKey="codigo_cotizacion_pk"
+      >
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Tipo</th>
+            <th>Número</th>
+            <th>Fecha</th>
+            <th>Vence</th>
+            <th>Asesor</th>
+            <th>Forma de pago</th>
+            <th>Negocio</th>
+            <th class="text-right">Subtotal</th>
+            <th class="text-right">IVA</th>
+            <th class="text-right">Neto</th>
+            <th class="text-right">Total</th>
+            <th>Estado</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-cotizacion>
+          <tr>
+            <td>{{ cotizacion.codigo_cotizacion_pk }}</td>
+            <td class="nowrap">{{ cotizacion.cotizacion_tipo_nombre ?? '—' }}</td>
+            <td>{{ cotizacion.numero ?? '—' }}</td>
+            <td class="nowrap">
+              {{ cotizacion.fecha ? (cotizacion.fecha | date: 'dd/MM/yyyy') : '—' }}
+            </td>
+            <td class="nowrap">
+              {{ cotizacion.vencimiento ? (cotizacion.vencimiento | date: 'dd/MM/yyyy') : '—' }}
+            </td>
+            <td class="nowrap">{{ cotizacion.asesor_nombre ?? '—' }}</td>
+            <td class="nowrap">{{ cotizacion.forma_pago_nombre ?? '—' }}</td>
+            <td class="nowrap">{{ negocio(cotizacion) }}</td>
+            <td class="text-right nowrap">$ {{ cotizacion.vr_subtotal | number: '1.0-0' }}</td>
+            <td class="text-right nowrap">$ {{ cotizacion.vr_iva | number: '1.0-0' }}</td>
+            <td class="text-right nowrap">$ {{ cotizacion.vr_neto | number: '1.0-0' }}</td>
+            <td class="text-right nowrap">$ {{ cotizacion.vr_total | number: '1.0-0' }}</td>
+            <td>
+              <p-tag [value]="estado(cotizacion).label" [severity]="estado(cotizacion).severity" />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>

@@ -1,0 +1,11 @@
+// La descripción puede ser larga: se recorta a dos líneas y el texto completo va en el tooltip
+.descripcion {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-width: 16rem;
+  max-width: 28rem;
+  word-break: break-word;
+}

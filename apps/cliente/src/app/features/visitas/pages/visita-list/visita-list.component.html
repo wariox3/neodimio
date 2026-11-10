@@ -1,0 +1,80 @@
+<div class="page-container">
+  <app-page-header title="Visitas" subtitle="Consulta las visitas que te ha realizado la empresa" />
+
+  @if (loading() && visitas().length === 0) {
+    <app-loading-spinner message="Cargando visitas..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="recargar()" />
+  } @else if (visitas().length === 0) {
+    <app-empty-state
+      title="Sin visitas"
+      message="Aún no tienes visitas registradas."
+      icon="pi pi-calendar"
+    />
+  } @else {
+    @if (incompleto()) {
+      <p-message severity="warn" styleClass="mb-4">
+        Tienes más de {{ maxConsulta }} visitas; solo se muestran las más recientes.
+      </p-message>
+    }
+
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="table-toolbar__count">
+          {{ visitas().length }} {{ visitas().length === 1 ? 'visita' : 'visitas' }}
+        </span>
+      </div>
+
+      <p-table
+        [value]="visitas()"
+        [loading]="loading()"
+        [paginator]="true"
+        [rows]="pageSize()"
+        [first]="first()"
+        [rowsPerPageOptions]="[25, 50, 100]"
+        (onPage)="onPage($event)"
+        [rowHover]="true"
+        [scrollable]="true"
+        dataKey="codigo_visita_pk"
+      >
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Motivo</th>
+            <th>Asesor</th>
+            <th></th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-visita>
+          <tr>
+            <td>{{ visita.codigo_visita_pk }}</td>
+            <td class="nowrap">
+              {{ visita.fecha ? (visita.fecha | date: 'dd/MM/yyyy HH:mm') : '—' }}
+            </td>
+            <td class="nowrap">{{ visita.visita_tipo_nombre ?? '—' }}</td>
+            <td>{{ visita.visita_motivo_nombre ?? '—' }}</td>
+            <td class="nowrap">{{ visita.asesor_nombre ?? '—' }}</td>
+            <td>
+              <div class="acciones">
+                <p-button
+                  icon="pi pi-eye"
+                  severity="secondary"
+                  [text]="true"
+                  [rounded]="true"
+                  pTooltip="Ver detalle"
+                  tooltipPosition="top"
+                  [ariaLabel]="'Ver detalle de la visita ' + visita.codigo_visita_pk"
+                  [routerLink]="rutas.visitaDetalle(visita.codigo_visita_pk)"
+                />
+                <app-visita-imprimir [visitaId]="visita.codigo_visita_pk" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>
