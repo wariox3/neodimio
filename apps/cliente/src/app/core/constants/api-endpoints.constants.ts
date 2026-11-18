@@ -57,11 +57,45 @@ export const API_ENDPOINTS = {
     pendientes: '/car/cuenta-cobrar/pendiente',
     movimientos: '/car/movimiento/lista',
   },
+  consigna: {
+    lista: '/tur/consigna/lista-cliente',
+  },
   factura: {
     lista: '/tur/factura/lista',
   },
   programacion: {
     lista: '/tur/programacion/lista',
+  },
+  cotizacion: {
+    lista: '/crm/cotizacion/lista-portal',
+    tipos: '/crm/cotizacion/tipo-portal',
+    nuevo: '/crm/cotizacion/nuevo-portal',
+    detalle: (id: number) => `/crm/cotizacion/detalle-portal/${id}`,
+    servicios: (id: number) => `/crm/cotizacion/${id}/detalles-portal`,
+    servicioNuevo: (id: number) => `/crm/cotizacion/${id}/detalle-nuevo-portal`,
+    serviciosEliminar: (id: number) => `/crm/cotizacion/${id}/detalle-eliminar-portal`,
+  },
+  pqrs: {
+    lista: '/crm/solicitud/lista-portal',
+  },
+  visita: {
+    lista: '/crm/visita/lista-portal',
+    detalle: (id: number) => `/crm/visita/detalle-portal/${id}`,
+    imprimir: (id: number) => `/crm/visita/imprimir-portal/${id}`,
+    archivos: (id: number) => `/crm/visita/${id}/archivos`,
+    descargar: (id: number, archivoId: number) =>
+      `/crm/visita/${id}/archivo/${archivoId}/descargar`,
+  },
+  autorizacionArma: {
+    lista: '/rhu/autorizacion_arma/lista-portal',
+    imprimir: (empleadoId: number) => `/rhu/autorizacion_arma/imprimir-portal/${empleadoId}`,
+    imprimirTodos: '/rhu/autorizacion_arma/imprimir-portal-todos',
+  },
+  seguridadSocial: {
+    lista: '/rhu/aporte_contrato/lista-portal',
+    archivos: (aporteContratoId: number) => `/rhu/aporte_contrato/${aporteContratoId}/archivos`,
+    descargar: (aporteContratoId: number, archivoId: number) =>
+      `/rhu/aporte_contrato/${aporteContratoId}/archivo/${archivoId}/descargar`,
   },
   catalogo: {
     ciudades: '/tte/ciudad/descargar',

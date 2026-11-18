@@ -130,6 +130,8 @@ export interface UsuarioTenantConfiguracion extends Record<PermisoGuia, boolean>
   codigo_tercero_operacion_fk: number | null;
   /** Ciudad de origen de sus guías; sin ella se usa la de su operación. */
   codigo_ciudad_origen_fk: string | null;
+  /** Ítem de `gen_item` con el que cotiza servicios desde el portal cliente. */
+  codigo_item_cotizacion_fk: number | null;
 }
 
 /**

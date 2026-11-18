@@ -1,0 +1,83 @@
+// Botón y menús estándar de las apps.
+//
+// Va deliberadamente fuera de `@layer`: PrimeNG emite en `@layer primeng` (ver `SEMANTICA_THEME`)
+// y las reglas sin capa le ganan sin pelear especificidad.
+.p-button {
+  min-height: 32px;
+  padding: 0 0.75rem;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+
+  .p-button-label {
+    font-weight: 600;
+  }
+
+  .p-button-icon {
+    font-size: 0.78rem;
+  }
+
+  &:not(:disabled):active {
+    transform: scale(0.97);
+  }
+
+  // Los redondos (acciones de fila, cierre de modales) conservan su forma.
+  &:not(.p-button-rounded) {
+    border-radius: 7px;
+  }
+
+  // Solo los botones con relleno se elevan al pasar el cursor.
+  &:not(:disabled, .p-button-text, .p-button-link, .p-button-outlined):hover {
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--p-text-color) 22%, transparent);
+  }
+}
+
+.p-button-icon-only {
+  width: 32px;
+  padding: 0;
+}
+
+// En pantallas táctiles 32px es poco para acertar con el dedo.
+@media (pointer: coarse) {
+  .p-button {
+    min-height: 40px;
+  }
+
+  .p-button-icon-only {
+    width: 40px;
+  }
+}
+
+// El botón de ancho completo es el llamado principal de las páginas de auth, bajo inputs altos;
+// compacto se leería como secundario.
+.p-button-fluid {
+  min-height: 43px;
+  font-size: 0.9rem;
+  font-weight: 700;
+
+  .p-button-label {
+    font-weight: 700;
+  }
+}
+
+// Los menús se montan en `<body>`, fuera del SCSS encapsulado de quien los declara, y sin esto
+// toman la letra de Aura (1rem), que se lee grande al lado de un botón compacto.
+.p-menu,
+.p-tieredmenu,
+.p-contextmenu {
+  :is(.p-menu-item-link, .p-tieredmenu-item-link, .p-contextmenu-item-link) {
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  :is(.p-menu-item-icon, .p-tieredmenu-item-icon, .p-contextmenu-item-icon) {
+    font-size: 0.8rem;
+  }
+}

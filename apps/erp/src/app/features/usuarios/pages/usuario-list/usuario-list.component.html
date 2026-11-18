@@ -1,9 +1,5 @@
 <div class="page-container">
-  <app-page-header
-    title="Usuarios"
-    subtitle="Gestiona las personas con acceso a la empresa"
-    icon="pi pi-users"
-  />
+  <app-page-header title="Usuarios" subtitle="Gestiona las personas con acceso a la empresa" />
 
   <div class="table-card">
     <!-- Filtros: correo, usuario semantica, acceso al ERP y control -->
@@ -382,6 +378,20 @@
           } @else {
             <span class="field-hint">Déjalo vacío para usar la ciudad de su operación.</span>
           }
+        </div>
+        <div class="form-field">
+          <label for="user-item-cotizacion" class="form-label">Ítem para cotizar</label>
+          <p-inputnumber
+            inputId="user-item-cotizacion"
+            formControlName="codigoItemCotizacion"
+            [useGrouping]="false"
+            [min]="1"
+            [fluid]="true"
+            placeholder="Código del ítem"
+          />
+          <span class="field-hint">
+            Ítem con el que cotiza servicios de vigilancia desde el portal cliente.
+          </span>
         </div>
 
         <fieldset class="permisos" formGroupName="permisos">

@@ -1,4 +1,4 @@
-import { Component, effect, signal, inject } from '@angular/core';
+import { Component, effect, signal, inject, untracked } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { NavigationEnd, Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -49,13 +49,17 @@ export class ShellComponent {
   );
 
   constructor() {
-    // Al navegar, despliega el grupo que contiene la opción activa.
+    // Al navegar, despliega el grupo que contiene la opción activa. Solo depende de la URL:
+    // `expanded` se lee sin rastrear para que el usuario pueda colapsar ese grupo después.
     effect(() => {
       const url = this.currentUrl();
       const group = this.groups.find((g) => this.containsUrl(g, url));
-      if (group && !this.expanded().has(group.label)) {
-        this.expanded.update((set) => new Set(set).add(group.label));
-      }
+      if (!group) return;
+      untracked(() => {
+        if (!this.expanded().has(group.label)) {
+          this.expanded.update((set) => new Set(set).add(group.label));
+        }
+      });
     });
   }
 

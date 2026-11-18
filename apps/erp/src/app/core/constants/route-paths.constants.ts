@@ -25,5 +25,11 @@ export const ROUTE_PATHS = {
       formatos: '/dashboard/configuracion/formato/lista',
       formatoEditar: (id: number) => `/dashboard/configuracion/formato/editar/${id}`,
     },
+    transporte: {
+      root: '/dashboard/transporte',
+      inicio: '/dashboard/transporte/inicio',
+      guias: '/dashboard/transporte/guias',
+      guiaDetalle: (id: number) => `/dashboard/transporte/guias/detalle/${id}`,
+    },
   },
 } as const;

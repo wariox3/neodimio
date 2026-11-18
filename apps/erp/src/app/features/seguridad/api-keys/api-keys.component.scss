@@ -38,7 +38,7 @@
 }
 
 .key-preview {
-  font-family: 'Geist Mono', monospace;
+  font-family: var(--p-font-family-mono);
   font-size: 0.8125rem;
   color: var(--p-text-color);
   background: var(--p-surface-100);
@@ -132,7 +132,7 @@
 
 .key-reveal-code {
   flex: 1;
-  font-family: 'Geist Mono', monospace;
+  font-family: var(--p-font-family-mono);
   font-size: 0.8125rem;
   color: var(--p-text-color);
   word-break: break-all;

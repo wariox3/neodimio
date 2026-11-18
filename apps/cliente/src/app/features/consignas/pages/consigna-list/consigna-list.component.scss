@@ -1,0 +1,30 @@
+.consignas-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+:host ::ng-deep .consignas-toolbar__puesto {
+  min-width: 16rem;
+}
+
+// Las consignas se escriben en holmio con saltos de línea y tabulaciones
+.consigna {
+  min-width: 20rem;
+  white-space: pre-line;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  :host ::ng-deep .consignas-toolbar__puesto {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .consigna {
+    min-width: 14rem;
+  }
+}

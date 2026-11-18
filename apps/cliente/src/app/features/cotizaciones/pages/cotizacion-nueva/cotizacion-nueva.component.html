@@ -1,0 +1,132 @@
+<div class="page-container">
+  <app-page-header title="Nueva cotización" subtitle="Cuéntanos qué servicio necesitas cotizar">
+    <p-button
+      label="Volver"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      [routerLink]="listaRoute"
+    />
+  </app-page-header>
+
+  @if (cargandoTipos()) {
+    <app-loading-spinner message="Cargando formulario..." />
+  } @else if (errorTipos()) {
+    <app-error-alert [message]="errorTipos()!" [retryable]="true" (retry)="cargarTipos()" />
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="guardar()" novalidate class="cotizacion-form card">
+      <h3 class="section-title">
+        <i class="pi pi-file-edit" aria-hidden="true"></i>
+        Datos de la cotización
+      </h3>
+
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+      }
+      @if (tipos().length === 0) {
+        <p-message
+          severity="warn"
+          text="La empresa no tiene tipos de cotización habilitados para el portal."
+          styleClass="w-full"
+        />
+      }
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="codigo_cotizacion_tipo_fk" class="field__label">
+            Tipo <span class="form-required">*</span>
+          </label>
+          <p-select
+            inputId="codigo_cotizacion_tipo_fk"
+            formControlName="codigo_cotizacion_tipo_fk"
+            [options]="tipos()"
+            optionLabel="nombre"
+            optionValue="codigo_cotizacion_tipo_pk"
+            placeholder="Seleccione un tipo"
+            [fluid]="true"
+            appendTo="body"
+            [invalid]="!!errorDe('codigo_cotizacion_tipo_fk')"
+          />
+          @if (errorDe('codigo_cotizacion_tipo_fk'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="codigo_sector_fk" class="field__label">
+            Sector <span class="form-required">*</span>
+          </label>
+          <p-select
+            inputId="codigo_sector_fk"
+            formControlName="codigo_sector_fk"
+            [options]="sectores"
+            optionLabel="label"
+            optionValue="value"
+            [fluid]="true"
+            appendTo="body"
+            [invalid]="!!errorDe('codigo_sector_fk')"
+          />
+          @if (errorDe('codigo_sector_fk'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="estrato" class="field__label">Estrato</label>
+          <p-inputnumber
+            inputId="estrato"
+            formControlName="estrato"
+            [min]="1"
+            [max]="6"
+            [showButtons]="true"
+            [useGrouping]="false"
+            [fluid]="true"
+            [invalid]="!!errorDe('estrato')"
+          />
+          @if (errorDe('estrato'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field field--full">
+          <label for="comentarios" class="field__label">Comentarios</label>
+          <textarea
+            pTextarea
+            id="comentarios"
+            formControlName="comentarios"
+            rows="5"
+            [autoResize]="true"
+            [maxlength]="comentariosMax"
+            fluid
+            placeholder="Describe el lugar y lo que necesitas proteger"
+            [invalid]="!!errorDe('comentarios')"
+          ></textarea>
+          @if (errorDe('comentarios'); as error) {
+            <small class="form-error">{{ error }}</small>
+          } @else {
+            <small class="field__hint">
+              {{ form.controls.comentarios.value.length }} / {{ comentariosMax }}
+            </small>
+          }
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [text]="true"
+          [routerLink]="listaRoute"
+        />
+        <p-button
+          type="submit"
+          label="Guardar"
+          icon="pi pi-check"
+          [loading]="guardando()"
+          [disabled]="tipos().length === 0"
+        />
+      </div>
+    </form>
+  }
+</div>

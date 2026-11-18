@@ -1,0 +1,246 @@
+<div class="page-container">
+  <app-page-header
+    [title]="visita() ? 'Visita ' + visita()!.codigo_visita_pk : 'Visita'"
+    [subtitle]="visita()?.visita_tipo_nombre ?? ''"
+  >
+    @if (visita(); as visita) {
+      <app-visita-imprimir [visitaId]="visita.codigo_visita_pk" etiqueta="Imprimir" />
+      <!-- Un botón deshabilitado no dispara el tooltip; por eso va en el contenedor -->
+      <span
+        [pTooltip]="visita.cantidad_archivos === 0 ? 'Esta visita no tiene archivos' : ''"
+        tooltipPosition="bottom"
+      >
+        <p-button
+          [label]="
+            visita.cantidad_archivos > 0
+              ? 'Archivos (' + visita.cantidad_archivos + ')'
+              : 'Archivos'
+          "
+          icon="pi pi-paperclip"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="visita.cantidad_archivos === 0"
+          (onClick)="archivosVisibles.set(true)"
+        />
+      </span>
+    }
+    <p-button
+      label="Volver"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      [routerLink]="listaRoute"
+    />
+  </app-page-header>
+
+  @if (loading()) {
+    <app-loading-spinner message="Cargando visita..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="cargar()" />
+  } @else if (visita(); as visita) {
+    <div class="detalle-layout">
+      <!-- Resumen: a la derecha en escritorio, arriba en celular -->
+      <aside class="resumen">
+        <section class="card detalle-card">
+          <h3 class="section-title">
+            <i class="pi pi-info-circle" aria-hidden="true"></i>
+            Resumen
+          </h3>
+
+          <div class="resumen__fecha">
+            <i class="pi pi-calendar" aria-hidden="true"></i>
+            @if (visita.fecha) {
+              <div>
+                <strong>{{ visita.fecha | date: 'dd/MM/yyyy' }}</strong>
+                <span>{{ visita.fecha | date: 'HH:mm' }}</span>
+              </div>
+            } @else {
+              <strong>Sin fecha</strong>
+            }
+          </div>
+
+          <dl class="resumen__datos">
+            <div>
+              <dt>Tipo</dt>
+              <dd>{{ visita.visita_tipo_nombre ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Motivo</dt>
+              <dd>{{ visita.visita_motivo_nombre ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Asesor</dt>
+              <dd>{{ visita.asesor_nombre ?? '—' }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="card detalle-card">
+          <h3 class="section-title">
+            <i class="pi pi-chart-bar" aria-hidden="true"></i>
+            Avance de compromisos
+          </h3>
+
+          @if (totalCompromisos() === 0) {
+            <p class="resumen__vacio">Esta visita no tiene compromisos.</p>
+          } @else {
+            <div class="avance">
+              <p-progressbar
+                [value]="avance()"
+                [showValue]="false"
+                styleClass="avance__barra"
+                [attr.aria-label]="avance() + '% de compromisos atendidos'"
+              />
+              <span class="avance__texto">
+                <strong>{{ atendidos() }} de {{ totalCompromisos() }}</strong> atendidos
+              </span>
+            </div>
+
+            <ul class="avance__conteos">
+              <li>
+                <i [class]="estados.atendido.icono + ' estado--atendido'" aria-hidden="true"></i>
+                Atendidos <strong>{{ atendidos() }}</strong>
+              </li>
+              <li>
+                <i [class]="estados.pendiente.icono + ' estado--pendiente'" aria-hidden="true"></i>
+                Pendientes <strong>{{ pendientes() }}</strong>
+              </li>
+              <li>
+                <i [class]="estados.vencido.icono + ' estado--vencido'" aria-hidden="true"></i>
+                Vencidos <strong>{{ vencidos() }}</strong>
+              </li>
+            </ul>
+          }
+        </section>
+      </aside>
+
+      <div class="detalle-main">
+        <!-- Reportes -->
+        <section class="card detalle-card">
+          <h3 class="section-title">
+            <i class="pi pi-comment" aria-hidden="true"></i>
+            Reportes
+            <span class="section-title__count">{{ visita.reportes.length }}</span>
+          </h3>
+
+          @if (visita.reportes.length === 0) {
+            <app-empty-state
+              title="Sin reportes"
+              message="En esta visita no se registraron reportes."
+              icon="pi pi-comment"
+            />
+          } @else {
+            <ul class="reportes">
+              @for (reporte of visita.reportes; track reporte.codigo_visita_reporte_pk) {
+                <li class="reporte">
+                  <p-avatar
+                    [label]="iniciales(reporte.nombre_contacto)"
+                    shape="circle"
+                    styleClass="reporte__avatar"
+                    aria-hidden="true"
+                  />
+                  <div class="reporte__cuerpo">
+                    <div class="reporte__autor">
+                      <strong>{{ reporte.nombre_contacto ?? 'Contacto' }}</strong>
+                      @if (reporte.cargo) {
+                        <span>{{ reporte.cargo }}</span>
+                      }
+                    </div>
+                    <span class="meta">
+                      <i class="pi pi-clock" aria-hidden="true"></i>
+                      {{ reporte.fecha ? (reporte.fecha | date: 'dd/MM/yyyy HH:mm') : 'Sin fecha' }}
+                    </span>
+                    @if (reporte.reporte) {
+                      <blockquote class="reporte__texto">{{ reporte.reporte }}</blockquote>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <!-- Compromisos, separados por responsable -->
+        <section class="card detalle-card">
+          <h3 class="section-title">
+            <i class="pi pi-check-square" aria-hidden="true"></i>
+            Compromisos
+            <span class="section-title__count">{{ totalCompromisos() }}</span>
+          </h3>
+
+          @if (grupos().length === 0) {
+            <app-empty-state
+              title="Sin compromisos"
+              message="En esta visita no se registraron compromisos."
+              icon="pi pi-check-square"
+            />
+          } @else {
+            @for (grupo of grupos(); track grupo.titulo) {
+              <div class="grupo">
+                <h4 class="grupo__titulo">
+                  <i [class]="grupo.icono" aria-hidden="true"></i>
+                  {{ grupo.titulo }}
+                  <span class="section-title__count">{{ grupo.items.length }}</span>
+                </h4>
+
+                <ul class="compromisos">
+                  @for (compromiso of grupo.items; track compromiso.codigo_visita_compromiso_pk) {
+                    <li
+                      class="compromiso"
+                      [class.compromiso--vencido]="compromiso.estado === 'vencido'"
+                    >
+                      <i
+                        [class]="
+                          estados[compromiso.estado].icono +
+                          ' compromiso__icono estado--' +
+                          compromiso.estado
+                        "
+                        aria-hidden="true"
+                      ></i>
+                      <div class="compromiso__cuerpo">
+                        <div class="compromiso__header">
+                          <strong class="compromiso__nombre">
+                            {{ compromiso.nombre ?? 'Compromiso' }}
+                          </strong>
+                          <p-tag
+                            [value]="estados[compromiso.estado].label"
+                            [severity]="estados[compromiso.estado].severity"
+                          />
+                        </div>
+                        <span class="meta">
+                          <i class="pi pi-calendar" aria-hidden="true"></i>
+                          {{
+                            compromiso.fecha ? (compromiso.fecha | date: 'dd/MM/yyyy') : 'Sin fecha'
+                          }}
+                        </span>
+                        @if (compromiso.detalle) {
+                          <p class="compromiso__detalle">{{ compromiso.detalle }}</p>
+                        }
+                      </div>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          }
+        </section>
+      </div>
+    </div>
+  }
+
+  @if (visita(); as visita) {
+    <p-dialog
+      [visible]="archivosVisibles()"
+      (visibleChange)="archivosVisibles.set($event)"
+      [header]="'Archivos de la visita ' + visita.codigo_visita_pk"
+      [modal]="true"
+      [draggable]="false"
+      [resizable]="false"
+      [style]="{ width: 'min(640px, 95vw)' }"
+    >
+      @if (archivosVisibles()) {
+        <app-visita-archivos [visitaId]="visita.codigo_visita_pk" />
+      }
+    </p-dialog>
+  }
+</div>

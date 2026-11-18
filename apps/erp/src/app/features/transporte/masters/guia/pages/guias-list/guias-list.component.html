@@ -1,0 +1,130 @@
+<div class="page-container">
+  <app-breadcrumb [items]="breadcrumbItems" />
+
+  <app-page-header title="Guías" subtitle="Consulta las guías de transporte de la empresa" />
+
+  <form class="card filtros-card" [formGroup]="form" (ngSubmit)="buscar()" novalidate>
+    <div class="filtros-grid">
+      <div class="field">
+        <label for="fecha_desde" class="field__label">Fecha desde</label>
+        <p-datepicker
+          inputId="fecha_desde"
+          formControlName="fecha_desde"
+          [showIcon]="true"
+          [fluid]="true"
+          dateFormat="dd/mm/yy"
+          appendTo="body"
+        />
+      </div>
+
+      <div class="field">
+        <label for="fecha_hasta" class="field__label">Fecha hasta</label>
+        <p-datepicker
+          inputId="fecha_hasta"
+          formControlName="fecha_hasta"
+          [showIcon]="true"
+          [fluid]="true"
+          dateFormat="dd/mm/yy"
+          appendTo="body"
+        />
+      </div>
+
+      <div class="field">
+        <label for="estado" class="field__label">Estado</label>
+        <p-select
+          inputId="estado"
+          formControlName="estado"
+          [options]="estadoOpciones"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todos"
+          [showClear]="true"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </div>
+
+      <div class="field">
+        <label for="codigo_guia_pk" class="field__label">Guía</label>
+        <p-inputnumber
+          inputId="codigo_guia_pk"
+          formControlName="codigo_guia_pk"
+          [useGrouping]="false"
+          [min]="1"
+          [max]="numeroMaximo"
+          [fluid]="true"
+          placeholder="Número de guía"
+        />
+      </div>
+
+      <div class="field">
+        <label for="documento_cliente" class="field__label">Documento</label>
+        <input
+          pInputText
+          id="documento_cliente"
+          formControlName="documento_cliente"
+          [fluid]="true"
+          placeholder="Documento del cliente"
+        />
+      </div>
+    </div>
+
+    <div class="filtros-actions">
+      <p-button
+        type="button"
+        label="Limpiar"
+        icon="pi pi-filter-slash"
+        severity="secondary"
+        [text]="true"
+        (onClick)="limpiar()"
+      />
+      <p-button type="submit" label="Filtrar" icon="pi pi-search" [loading]="loading()" />
+    </div>
+  </form>
+
+  @if (error(); as mensaje) {
+    <app-error-alert [message]="mensaje" [retryable]="true" (retry)="buscar()" />
+  } @else {
+    <div class="table-card">
+      <app-data-table
+        [columns]="columnas"
+        [items]="filas()"
+        [totalRecords]="totalRecords()"
+        [loading]="loading()"
+        [currentPage]="pagina()"
+        [rowActions]="acciones"
+        dataKey="codigo_guia_pk"
+        tableMinWidth="76rem"
+        recordsLabel="guías"
+        emptyTitle="Sin guías"
+        emptyMessage="No se encontraron guías con los filtros seleccionados."
+        emptyIcon="pi pi-box"
+        (pageChange)="irAPagina($event)"
+        (rowAction)="onAccion($event)"
+      >
+        <ng-template appDataTableCell="codigo_guia_pk" let-guia>
+          <div class="guia-cell">
+            <span class="guia-cell__numero">{{ guia.codigo_guia_pk }}</span>
+            @if (guia.codigo_guia_tipo_fk) {
+              <span class="guia-cell__tipo">{{ guia.codigo_guia_tipo_fk }}</span>
+            }
+          </div>
+        </ng-template>
+
+        <ng-template appDataTableCell="estado" let-guia>
+          <div class="estado-cell">
+            <p-tag [value]="getEstado(guia).label" [severity]="getEstado(guia).severity" />
+            @if (tieneNovedad(guia)) {
+              <i
+                class="pi pi-exclamation-triangle novedad-icon"
+                pTooltip="Tiene novedad sin solucionar"
+                tooltipPosition="top"
+                aria-label="Tiene novedad sin solucionar"
+              ></i>
+            }
+          </div>
+        </ng-template>
+      </app-data-table>
+    </div>
+  }
+</div>

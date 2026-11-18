@@ -1,7 +1,7 @@
 import { Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { forkJoin, switchMap } from 'rxjs';
+import { forkJoin, switchMap, catchError, of } from 'rxjs';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
@@ -176,7 +176,8 @@ export class PerfilPageComponent implements OnInit {
         switchMap(() =>
           forkJoin({
             detalle: this.perfilService.getDetalle(),
-            user: this.authService.me(),
+            // El perfil ya se guardó: si falla refrescar el usuario, no es un error de guardado.
+            user: this.authService.me().pipe(catchError(() => of(null))),
           }),
         ),
         takeUntilDestroyed(this.destroyRef),

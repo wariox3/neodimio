@@ -9,11 +9,7 @@ import { EmptyStateComponent, PageHeaderComponent } from '../../shared';
   imports: [PageHeaderComponent, EmptyStateComponent],
   template: `
     <div class="page-container">
-      <app-page-header
-        title="Mi empresa"
-        icon="pi pi-building"
-        [subtitle]="activeTenant()?.nombre ?? ''"
-      />
+      <app-page-header title="Mi empresa" [subtitle]="activeTenant()?.nombre ?? ''" />
       <app-empty-state
         icon="pi pi-building"
         title="Próximamente"

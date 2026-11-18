@@ -1,3 +1,4 @@
+import type { Guia } from '@semantica/core';
 import {
   Ciudad,
   GuiaTipo,
@@ -11,39 +12,7 @@ import { Destinatario } from '../../destinatarios/models/destinatario.model';
  * Guía tal como llega en `GET /tte/guia/lista` (`GuiaResponse` de fluor).
  * Las ciudades solo traen el código; el nombre viene en el detalle.
  */
-export interface Guia {
-  codigo_guia_pk: number;
-  codigo_guia_tipo_fk: string | null;
-  codigo_tercero_fk: number | null;
-  codigo_adquiriente_fk: number | null;
-  codigo_ciudad_origen_fk: string | null;
-  codigo_ciudad_destino_fk: string | null;
-  codigo_ruta_fk: string | null;
-  documento_cliente: string | null;
-  remitente: string | null;
-  nombre_destinatario: string | null;
-  direccion_destinatario: string | null;
-  telefono_destinatario: string | null;
-  unidades: number | null;
-  peso_real: number | null;
-  peso_volumen: number | null;
-  peso_facturado: number | null;
-  vr_flete: number | null;
-  vr_manejo: number | null;
-  vr_declara: number | null;
-  estado_recogido: boolean;
-  fecha_recogido: string | null;
-  estado_ingreso: boolean;
-  fecha_ingreso: string | null;
-  estado_despachado: boolean;
-  fecha_despacho: string | null;
-  estado_entregado: boolean;
-  fecha_entrega: string | null;
-  estado_cumplido: boolean;
-  fecha_cumplido: string | null;
-  estado_novedad: boolean;
-  estado_novedad_solucion: boolean;
-}
+export type { Guia };
 
 /** Guía completa de `GET /tte/guia/detalle/{id}` (`GuiaDetalleResponse` de fluor). */
 export interface GuiaDetalle extends Guia {

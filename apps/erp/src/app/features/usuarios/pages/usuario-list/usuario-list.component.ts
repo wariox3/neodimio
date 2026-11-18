@@ -122,6 +122,7 @@ export class UsuarioListComponent implements OnInit {
     codigoOperacion: ['', Validators.maxLength(CODIGO_OPERACION_MAX_LENGTH)],
     codigoTerceroOperacion: [null as number | null],
     codigoCiudadOrigen: ['', Validators.maxLength(CODIGO_CIUDAD_ORIGEN_MAX_LENGTH)],
+    codigoItemCotizacion: [null as number | null],
     // Con los mismos nombres del API para enviarlos tal cual.
     permisos: this.fb.nonNullable.group({ ...PERMISOS_GUIA_POR_DEFECTO }),
   });
@@ -284,6 +285,7 @@ export class UsuarioListComponent implements OnInit {
           codigoOperacion: configuracion.codigo_operacion_fk ?? '',
           codigoTerceroOperacion: configuracion.codigo_tercero_operacion_fk,
           codigoCiudadOrigen: configuracion.codigo_ciudad_origen_fk ?? '',
+          codigoItemCotizacion: configuracion.codigo_item_cotizacion_fk ?? null,
           permisos: this.permisosDe(configuracion),
         });
         this.cargandoConfiguracion.set(false);
@@ -313,8 +315,13 @@ export class UsuarioListComponent implements OnInit {
       return;
     }
 
-    const { codigoOperacion, codigoTerceroOperacion, codigoCiudadOrigen, permisos } =
-      this.configuracionForm.getRawValue();
+    const {
+      codigoOperacion,
+      codigoTerceroOperacion,
+      codigoCiudadOrigen,
+      codigoItemCotizacion,
+      permisos,
+    } = this.configuracionForm.getRawValue();
 
     this.guardandoConfiguracion.set(true);
     this.usuarioService
@@ -323,6 +330,7 @@ export class UsuarioListComponent implements OnInit {
         codigo_operacion_fk: codigoOperacion.trim() || null,
         codigo_tercero_operacion_fk: codigoTerceroOperacion,
         codigo_ciudad_origen_fk: codigoCiudadOrigen.trim() || null,
+        codigo_item_cotizacion_fk: codigoItemCotizacion,
         ...permisos,
       })
       .subscribe({

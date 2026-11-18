@@ -5,9 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Serve an app (dev server at http://localhost:4200 with proxy)
-npx nx serve empleado
-npx nx serve erp
+# Serve an app (dev server with proxy; each app has its own port and they can run together)
+npx nx serve empleado   # http://localhost:4200
+npx nx serve erp        # http://localhost:4201
+npx nx serve cliente    # http://localhost:4202
 
 # Serve against the local backend (http://localhost:8000) instead of staging
 npx nx serve empleado --proxy-config=apps/empleado/proxy.conf.local.json
@@ -49,7 +50,7 @@ Prettier is configured in `.prettierrc.json` (printWidth 100, singleQuote, angul
 ```
 apps/
   empleado/     — Employee HR portal (pagos, reclamos, turnos, etc.)
-  erp/          — API keys & security admin (api-keys, formatos)
+  erp/          — API keys, seguridad, formatos y transporte (guías)
 libs/
   core/         — @semantica/core (guards, interceptors, services, utils, BaseAuthService)
   ui/           — @semantica/ui (shared UI components)
@@ -73,14 +74,17 @@ libs/
 - `EmptyStateComponent` — icon-wrap + title + message + ng-content
 - `ErrorAlertComponent` — PrimeNG error message + retry button
 - `LoadingSpinnerComponent` — PrimeNG progress spinner + message
-- `PageHeaderComponent` — title + optional icon + subtitle + actions slot
+- `PageHeaderComponent` — title + subtitle + actions slot
+- `DetailSectionComponent` — tarjeta de detalle con barra de título (ícono + nombre + acciones)
+- `DataTableComponent` — tabla paginada por columnas declaradas, con celdas propias, acciones y filas expandibles
+- `BreadcrumbComponent` — ruta de la página con migajas navegables y botón de copiar enlace
 - `TurnstileComponent` — Cloudflare Turnstile CAPTCHA (uses `ENVIRONMENT` token)
 
 **`@semantica/styles`** (`libs/styles/`):
 
-- `_fonts.scss` — Geist font-face declarations
 - `_variables.scss` — CSS custom properties (brand palette)
 - `_base.scss` — box-sizing reset, body styles
+- `primeng/` — estándares globales de PrimeNG (botones, menús, confirmaciones, campos, tablas), fuera de `@layer`
 - `_components.scss` — `.page-container`, `.card`, `.table-card`, `.form-error`
 - `_utilities.scss` — `.w-full`, `.mb-4`, `.mt-2`, `.text-truncate`
 

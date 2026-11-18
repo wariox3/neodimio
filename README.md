@@ -4,10 +4,11 @@ Monorepo para las aplicaciones frontend de Semantica, construido con **Angular 2
 
 ## Aplicaciones
 
-| App | Descripcion | Puerto |
-| --- | --- | --- |
+| App          | Descripcion                                                       | Puerto |
+| ------------ | ----------------------------------------------------------------- | ------ |
 | **Empleado** | Portal de empleados (pagos, turnos, reclamos, certificados, etc.) | `4200` |
-| **ERP** | Administracion de API keys y seguridad | `4200` |
+| **ERP**      | Administracion de API keys y seguridad                            | `4201` |
+| **Cliente**  | Portal de clientes                                                | `4202` |
 
 ## Estructura del proyecto
 
@@ -39,9 +40,10 @@ npm install
 ### Desarrollo
 
 ```bash
-# Servir una app (dev server con proxy en http://localhost:4200)
-npx nx serve empleado
-npx nx serve erp
+# Servir una app (dev server con proxy; cada app tiene su puerto y pueden correr a la vez)
+npx nx serve empleado   # http://localhost:4200
+npx nx serve erp        # http://localhost:4201
+npx nx serve cliente    # http://localhost:4202
 
 # Servir contra el backend local (http://localhost:8000) en vez de staging
 npx nx serve empleado --proxy-config=apps/empleado/proxy.conf.local.json
@@ -140,10 +142,10 @@ ui        → @semantica/core
 
 ## Entornos
 
-| Entorno | API URL | Branch |
-| --- | --- | --- |
-| Desarrollo | `/api` (proxy a staging API) | `dev` |
-| Staging | `https://api.semanticaapi.uk` | `dev` |
+| Entorno    | API URL                           | Branch |
+| ---------- | --------------------------------- | ------ |
+| Desarrollo | `/api` (proxy a staging API)      | `dev`  |
+| Staging    | `https://api.semanticaapi.uk`     | `dev`  |
 | Produccion | `https://api.semanticaapi.com.co` | `main` |
 
 ## Convenciones
@@ -177,10 +179,10 @@ El pipeline de GitHub Actions ejecuta:
 ## Stack tecnologico
 
 | Tecnologia | Version |
-| --- | --- |
-| Angular | 20 |
-| PrimeNG | 20.4.0 |
-| Nx | 21.6.10 |
-| TypeScript | 5.9 |
-| RxJS | 7.8 |
-| Node.js | >= 20 |
+| ---------- | ------- |
+| Angular    | 20      |
+| PrimeNG    | 20.4.0  |
+| Nx         | 21.6.10 |
+| TypeScript | 5.9     |
+| RxJS       | 7.8     |
+| Node.js    | >= 20   |

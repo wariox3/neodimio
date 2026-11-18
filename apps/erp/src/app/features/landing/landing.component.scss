@@ -1,7 +1,7 @@
 // ─── Base ────────────────────────────────────────────────────────────────────
 :host {
   display: block;
-  font-family: 'Geist', system-ui, sans-serif;
+  font-family: var(--p-font-family);
 }
 
 .landing {

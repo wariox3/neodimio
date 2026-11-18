@@ -14,7 +14,15 @@ import { DrawerModule } from 'primeng/drawer';
 import { ROUTE_PATHS } from '../../../core';
 import { AuthService } from '../../auth/services/auth.service';
 import { UserMenuComponent } from '../../../shared/user-menu/user-menu.component';
-import { DASHBOARD_AREAS, DashboardArea } from './dashboard-areas';
+import {
+  DASHBOARD_AREAS,
+  DASHBOARD_MODULES,
+  DashboardArea,
+  NavAccordion,
+  NavEntry,
+  NavLeaf,
+  isNavAccordion,
+} from './dashboard-areas';
 
 @Component({
   selector: 'app-shell',
@@ -36,6 +44,10 @@ export class ShellComponent {
 
   readonly drawerVisible = signal(false);
   readonly inicioRoute = ROUTE_PATHS.dashboard.inicio;
+  readonly modules = DASHBOARD_MODULES;
+
+  /** Acordeones que la persona cerró; todos arrancan abiertos. */
+  private readonly closedAccordions = signal<ReadonlySet<string>>(new Set());
 
   /** Área de la ruta activa: la última `data.area` declarada en el árbol de rutas. */
   readonly area = toSignal(
@@ -49,15 +61,39 @@ export class ShellComponent {
   readonly areaConfig = computed(() => DASHBOARD_AREAS[this.area()]);
 
   /** Opciones del área filtradas por el rol global del usuario. */
-  readonly navItems = computed(() => {
+  readonly navEntries = computed<NavEntry[]>(() => {
     const role = this.authService.currentUser()?.role ?? '';
-    return this.areaConfig().items.filter((item) => !item.roles || item.roles.includes(role));
+    const allowed = (leaf: NavLeaf) => !leaf.roles || leaf.roles.includes(role);
+
+    return this.areaConfig().items.flatMap((entry): NavEntry[] => {
+      if (!isNavAccordion(entry)) return allowed(entry) ? [entry] : [];
+      const children = entry.children.filter(allowed);
+      return children.length > 0 ? [{ ...entry, children }] : [];
+    });
   });
 
-  readonly hasSidebar = computed(() => this.navItems().length > 0);
+  readonly hasSidebar = computed(() => this.navEntries().length > 0);
 
-  /** Fuera de Inicio, el menú lateral ofrece volver. */
-  readonly showBack = computed(() => this.area() !== 'inicio');
+  /** Fuera de Inicio y de los módulos, que ya tienen la barra superior, se ofrece volver. */
+  readonly showBack = computed(
+    () => this.area() !== 'inicio' && !this.modules.some((m) => m.area === this.area()),
+  );
+
+  isAccordion(entry: NavEntry): entry is NavAccordion {
+    return isNavAccordion(entry);
+  }
+
+  isExpanded(id: string): boolean {
+    return !this.closedAccordions().has(id);
+  }
+
+  toggleAccordion(id: string): void {
+    this.closedAccordions.update((closed) => {
+      const next = new Set(closed);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  }
 
   toggleDrawer(): void {
     this.drawerVisible.update((v) => !v);

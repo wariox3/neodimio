@@ -33,14 +33,30 @@ export const DASHBOARD_ROUTES: Routes = [
       {
         path: 'crm',
         children: [
-          enConstruccion('visitas', 'Visita'),
-          enConstruccion('cotizaciones', 'Cotización'),
-          enConstruccion('pqrs', 'PQRS'),
+          {
+            path: 'visitas',
+            loadChildren: () => import('../visitas/visitas.routes').then((m) => m.VISITAS_ROUTES),
+          },
+          {
+            path: 'cotizaciones',
+            loadChildren: () =>
+              import('../cotizaciones/cotizaciones.routes').then((m) => m.COTIZACIONES_ROUTES),
+          },
+          {
+            path: 'pqrs',
+            loadChildren: () => import('../pqrs/pqrs.routes').then((m) => m.PQRS_ROUTES),
+          },
         ],
       },
       {
         path: 'operacion',
-        children: [enConstruccion('consignas', 'Consigna')],
+        children: [
+          {
+            path: 'consignas',
+            loadChildren: () =>
+              import('../consignas/consignas.routes').then((m) => m.CONSIGNAS_ROUTES),
+          },
+        ],
       },
       {
         path: 'programacion',
@@ -88,8 +104,20 @@ export const DASHBOARD_ROUTES: Routes = [
       {
         path: 'recurso-humano',
         children: [
-          enConstruccion('autorizacion-arma', 'Autorización arma'),
-          enConstruccion('seguridad-social', 'Seguridad social'),
+          {
+            path: 'autorizacion-arma',
+            loadChildren: () =>
+              import('../autorizacion-arma/autorizacion-arma.routes').then(
+                (m) => m.AUTORIZACION_ARMA_ROUTES,
+              ),
+          },
+          {
+            path: 'seguridad-social',
+            loadComponent: () =>
+              import('../seguridad-social/pages/seguridad-social-list/seguridad-social-list.component').then(
+                (m) => m.SeguridadSocialListComponent,
+              ),
+          },
         ],
       },
       {

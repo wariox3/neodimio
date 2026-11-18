@@ -18,6 +18,7 @@
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "paths": {
+      "@erp/*": ["apps/erp/src/app/*"],
       "@semantica/core": ["libs/core/src/index.ts"],
       "@semantica/ui": ["libs/ui/src/index.ts"]
     }

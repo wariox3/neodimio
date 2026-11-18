@@ -1,9 +1,5 @@
 <div class="page-container">
-  <app-page-header
-    title="Formatos"
-    subtitle="Gestiona los formatos del sistema"
-    icon="pi pi-file"
-  />
+  <app-page-header title="Formatos" subtitle="Gestiona los formatos del sistema" />
 
   @if (loading() && formatos().length === 0) {
     <app-loading-spinner message="Cargando formatos..." />
