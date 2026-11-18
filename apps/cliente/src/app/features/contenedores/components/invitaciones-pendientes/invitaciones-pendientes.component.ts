@@ -17,9 +17,9 @@ const ERRORES_VALIDACION = [400, 404, 422];
  * selección de empresa al iniciar sesión; no se pinta nada mientras carga ni cuando no hay
  * invitaciones.
  *
- * Al aceptar, fluor crea la membresía del usuario en la empresa. Para entrar al portal el
- * administrador debe habilitarlo después como cliente (`cliente` y `cliente_id`); mientras
- * tanto la empresa no aparece en la lista.
+ * Al aceptar, fluor crea la membresía del usuario como cliente de la empresa (también con
+ * acceso al ERP). Para entrar al portal el administrador debe asignarle después su cliente
+ * (`cliente_id`); mientras tanto la empresa aparece en la lista como "Sin cliente asignado".
  */
 @Component({
   selector: 'app-invitaciones-pendientes',
@@ -72,7 +72,7 @@ export class InvitacionesPendientesComponent {
           this.terminar(invitacion);
           this.toastService.success(
             'Invitación aceptada',
-            `Ya formas parte de ${this.empresa(invitacion)}. Podrás ingresar cuando la empresa te habilite como cliente.`,
+            `Ya formas parte de ${this.empresa(invitacion)}. Podrás ingresar cuando la empresa te asigne tu cliente.`,
           );
           this.aceptada.emit();
         },
@@ -112,7 +112,8 @@ export class InvitacionesPendientesComponent {
       });
   }
 
-  private cargar(): void {
+  /** Consulta las invitaciones pendientes; la pantalla la vuelve a llamar al actualizar. */
+  cargar(): void {
     this.invitacionService
       .getPendientes()
       .pipe(takeUntilDestroyed(this.destroyRef))

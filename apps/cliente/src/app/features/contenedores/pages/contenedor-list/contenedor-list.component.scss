@@ -41,6 +41,22 @@
     gap: 1.25rem;
   }
 
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__heading {
+    min-width: 0;
+  }
+
+  // El botón conserva su ancho junto al título, también en celular
+  &__header > p-button {
+    flex-shrink: 0;
+  }
+
   &__title {
     margin: 0;
     font-size: 1.5rem;

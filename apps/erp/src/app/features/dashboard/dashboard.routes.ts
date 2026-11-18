@@ -28,6 +28,8 @@ export const DASHBOARD_ROUTES: Routes = [
         canActivate: [propietarioGuard],
         data: { area: 'seguridad' satisfies DashboardArea },
         children: [
+          // Al entrar al menú de seguridad se abre la primera opción: Usuarios
+          { path: '', redirectTo: 'usuarios', pathMatch: 'full' },
           {
             path: 'usuarios',
             canActivate: [authGuard],

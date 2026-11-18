@@ -44,13 +44,14 @@ describe('InvitacionService', () => {
     http.verify();
   });
 
-  it('acepta y rechaza por id de invitación', () => {
+  it('acepta como cliente y rechaza por id de invitación', () => {
     const { service, http } = configurar();
 
     service.aceptar(7).subscribe();
     service.rechazar(8).subscribe();
 
-    expect(http.expectOne('/api/mas/invitacion/7/aceptar').request.method).toBe('POST');
+    const aceptar = http.expectOne('/api/mas/invitacion/7/aceptar?cliente=true');
+    expect(aceptar.request.method).toBe('POST');
     expect(http.expectOne('/api/mas/invitacion/8/rechazar').request.method).toBe('POST');
     http.verify();
   });

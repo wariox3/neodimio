@@ -8,7 +8,8 @@ const MAX_INVITACIONES = 50;
 
 /**
  * Invitaciones a empresas que recibe el usuario. Las envía un usuario control desde el ERP;
- * al aceptarla el usuario queda en la empresa y el administrador lo habilita como cliente.
+ * al aceptarla el usuario queda como cliente de la empresa y el administrador le asigna su
+ * cliente (`cliente_id`) para que pueda ingresar.
  */
 @Injectable({ providedIn: 'root' })
 export class InvitacionService extends BaseHttpService {
@@ -20,8 +21,13 @@ export class InvitacionService extends BaseHttpService {
     }).pipe(map((res) => res?.items ?? []));
   }
 
+  /**
+   * Acepta la invitación desde el portal de clientes: con `cliente=true` fluor crea la
+   * membresía como cliente (además del acceso al ERP). El `cliente_id` lo asigna el
+   * administrador.
+   */
   aceptar(invitacionId: number): Observable<unknown> {
-    return this.post<unknown>(API_ENDPOINTS.invitacion.aceptar(invitacionId), {});
+    return this.post<unknown>(`${API_ENDPOINTS.invitacion.aceptar(invitacionId)}?cliente=true`, {});
   }
 
   /** Rechaza la invitación; no se puede deshacer. */

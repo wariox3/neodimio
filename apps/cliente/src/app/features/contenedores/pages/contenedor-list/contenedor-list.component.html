@@ -8,14 +8,30 @@
   <main class="contenedores">
     <section class="contenedores__panel">
       <div class="contenedores__header">
-        <h1 class="contenedores__title">Tus empresas</h1>
-        <p class="contenedores__subtitle">
-          @if (!loading() && !errorMessage() && contenedores().length > 0) {
-            {{ summary() }}
-          } @else {
-            Selecciona una empresa para continuar
-          }
-        </p>
+        <div class="contenedores__heading">
+          <h1 class="contenedores__title">Tus empresas</h1>
+          <p class="contenedores__subtitle">
+            @if (!loading() && !errorMessage() && contenedores().length > 0) {
+              {{ summary() }}
+            } @else {
+              Selecciona una empresa para continuar
+            }
+          </p>
+        </div>
+
+        <!-- Para ver sin recargar la página el cliente que asignó la empresa o nuevas invitaciones -->
+        <p-button
+          label="Actualizar"
+          icon="pi pi-refresh"
+          severity="secondary"
+          [outlined]="true"
+          size="small"
+          styleClass="contenedores__actualizar"
+          pTooltip="Consultar de nuevo tus empresas e invitaciones"
+          tooltipPosition="bottom"
+          [loading]="loading()"
+          (onClick)="actualizar()"
+        />
       </div>
 
       <app-invitaciones-pendientes (aceptada)="loadContenedores()" />
@@ -57,7 +73,7 @@
           <app-empty-state
             icon="pi pi-building"
             title="Sin empresas"
-            message="Tu usuario no está habilitado como cliente en ninguna empresa. Si aceptaste una invitación, la empresa aparecerá cuando te habilite; si no, comunícate con tu proveedor para que te dé acceso al portal."
+            message="Tu usuario no está asociado como cliente a ninguna empresa. Si recibes una invitación, aparecerá aquí; si no, comunícate con tu proveedor para que te dé acceso al portal."
           />
         } @else if (filteredContenedores().length === 0) {
           <app-empty-state
