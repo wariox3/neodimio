@@ -68,6 +68,46 @@ describe('PQRS', () => {
     expect(error).toBeInstanceOf(Error);
     http.verify();
   });
+
+  it('al crear no envía el tercero: fluor lo toma de la membresía', () => {
+    const { service, http } = configurar(20);
+
+    service
+      .crear({
+        codigo_solicitud_tipo_fk: 'QUE',
+        descripcion: 'El vigilante no hizo la ronda',
+        nombre_contacto: null,
+        numero_identificacion_contacto: null,
+        telefono_contacto: null,
+        correo_contacto: null,
+        cargo_contacto: null,
+      })
+      .subscribe();
+
+    const req = http.expectOne('/api/crm/solicitud/nuevo-portal');
+    expect(req.request.method).toBe('POST');
+    expect('tercero_id' in req.request.body).toBe(false);
+    http.verify();
+  });
+
+  it('consulta el detalle, los archivos y la descarga validando el cliente', () => {
+    const { service, http } = configurar(20);
+
+    service.detalle(23).subscribe();
+    service.archivos(23).subscribe();
+    service.descargar(23, 9).subscribe();
+
+    for (const url of [
+      '/api/crm/solicitud/detalle-portal/23',
+      '/api/crm/solicitud/23/archivos',
+      '/api/crm/solicitud/23/archivo/9/descargar',
+    ]) {
+      const req = http.expectOne((r) => r.url === url);
+      expect(req.request.params.get('tercero_id')).toBe('20');
+      req.flush(url.endsWith('descargar') ? new Blob() : url.endsWith('archivos') ? [] : {});
+    }
+    http.verify();
+  });
 });
 
 describe('estadoPqrs', () => {

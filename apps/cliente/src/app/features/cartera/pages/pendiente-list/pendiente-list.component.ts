@@ -1,5 +1,6 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -7,9 +8,11 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
-import { extractErrorMessage, trimFormValues } from '@semantica/core';
+import { TooltipModule } from 'primeng/tooltip';
+import { extractErrorMessage, ToastService, trimFormValues } from '@semantica/core';
 import { TrimInputDirective } from '@semantica/ui';
 import {
+  abrirPdf,
   EmptyStateComponent,
   ErrorAlertComponent,
   LoadingSpinnerComponent,
@@ -21,7 +24,7 @@ import { CarteraService } from '../../services/cartera.service';
 
 /**
  * Cartera pendiente del cliente (`cliente_cartera_lista` de terbio): sus cuentas por
- * cobrar con saldo. El formato "Estado de cuenta formal" aún no existe en fluor.
+ * cobrar con saldo. Desde la cabecera se imprime la carta de estado de cuenta formal.
  */
 @Component({
   selector: 'app-pendiente-list',
@@ -35,6 +38,7 @@ import { CarteraService } from '../../services/cartera.service';
     InputTextModule,
     SelectModule,
     TableModule,
+    TooltipModule,
     TrimInputDirective,
     PageHeaderComponent,
     LoadingSpinnerComponent,
@@ -48,6 +52,7 @@ export class PendienteListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly carteraService = inject(CarteraService);
   private readonly estadoLista = inject(EstadoListaService);
+  private readonly toastService = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly loading = signal(true);
@@ -57,6 +62,7 @@ export class PendienteListComponent implements OnInit {
   readonly pageSize = signal(50);
   readonly first = signal(0);
   readonly filtrosVisibles = signal(true);
+  readonly imprimiendo = signal(false);
 
   readonly opcionesVencidas = [{ value: true, label: 'Solo vencidas' }];
 
@@ -66,6 +72,23 @@ export class PendienteListComponent implements OnInit {
     fecha_desde: [null as Date | null],
     fecha_hasta: [null as Date | null],
   });
+
+  /** Estado de cuenta formal: incluye todas las cuentas con saldo, sin los filtros de la lista. */
+  imprimirEstadoCuenta(): void {
+    this.imprimiendo.set(true);
+    abrirPdf(this.carteraService.estadoCuenta(), 'estado_cuenta.pdf')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.imprimiendo.set(false),
+        error: (err: HttpErrorResponse) => {
+          this.imprimiendo.set(false);
+          // El resto de estados ya los avisa el interceptor.
+          if (err.status === 404) {
+            this.toastService.error('No se pudo imprimir', 'No se encontró el cliente.');
+          }
+        },
+      });
+  }
 
   ngOnInit(): void {
     this.restaurarOBuscar();

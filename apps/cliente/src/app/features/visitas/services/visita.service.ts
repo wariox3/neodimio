@@ -5,7 +5,8 @@ import {
   MembresiaClienteService,
   sinCliente,
 } from '../../contenedores/services/membresia-cliente.service';
-import { ArchivoVisita, Visita, VisitaDetalle } from '../models/visita.model';
+import { ArchivoDocumental } from '../../../shared';
+import { Visita, VisitaDetalle } from '../models/visita.model';
 
 /**
  * Visitas que se consultan, el máximo que acepta fluor por página. Un cliente rara vez
@@ -53,10 +54,12 @@ export class VisitaService extends BaseHttpService {
   }
 
   /** Archivos que la empresa cargó a la visita. */
-  archivos(id: number): Observable<ArchivoVisita[]> {
+  archivos(id: number): Observable<ArchivoDocumental[]> {
     const clienteId = this.membresiaCliente.clienteId();
     if (clienteId === null) return sinCliente();
-    return this.get<ArchivoVisita[]>(API_ENDPOINTS.visita.archivos(id), { tercero_id: clienteId });
+    return this.get<ArchivoDocumental[]>(API_ENDPOINTS.visita.archivos(id), {
+      tercero_id: clienteId,
+    });
   }
 
   descargar(id: number, archivoId: number): Observable<Blob> {

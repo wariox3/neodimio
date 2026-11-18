@@ -1,0 +1,281 @@
+<div class="page-container">
+  <app-page-header
+    [title]="pqrs() ? 'PQRS ' + pqrs()!.codigo_solicitud_pk : 'PQRS'"
+    [subtitle]="pqrs()?.solicitud_tipo_nombre ?? ''"
+  >
+    @if (pqrs(); as pqrs) {
+      <!-- Un botón deshabilitado no dispara el tooltip; por eso va en el contenedor -->
+      <span
+        [pTooltip]="pqrs.cantidad_archivos === 0 ? 'Esta PQRS no tiene archivos' : ''"
+        tooltipPosition="bottom"
+      >
+        <p-button
+          [label]="
+            pqrs.cantidad_archivos > 0 ? 'Archivos (' + pqrs.cantidad_archivos + ')' : 'Archivos'
+          "
+          icon="pi pi-paperclip"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="pqrs.cantidad_archivos === 0"
+          (onClick)="archivosVisibles.set(true)"
+        />
+      </span>
+    }
+    <p-button
+      label="Volver"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      [routerLink]="listaRoute"
+    />
+  </app-page-header>
+
+  @if (loading()) {
+    <app-loading-spinner message="Cargando PQRS..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="cargar()" />
+  } @else if (pqrs(); as pqrs) {
+    <div class="detalle-layout">
+      <!-- Resumen: a la derecha en escritorio, arriba en celular -->
+      <aside class="resumen">
+        <section class="card detalle-card">
+          <div class="resumen__header">
+            <h3 class="section-title">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              Resumen
+            </h3>
+            @if (estado(); as estado) {
+              <p-tag [value]="estado.label" [severity]="estado.severity" />
+            }
+          </div>
+
+          <dl class="datos">
+            <div>
+              <dt>Tipo</dt>
+              <dd>{{ pqrs.solicitud_tipo_nombre ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Tema</dt>
+              <dd>{{ pqrs.tema_nombre ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Canal</dt>
+              <dd>{{ pqrs.canal_nombre ?? '—' }}</dd>
+            </div>
+          </dl>
+
+          <ul class="fechas">
+            <li>
+              <span>Registro</span>
+              <strong>{{
+                pqrs.fecha_registro ? (pqrs.fecha_registro | date: 'dd/MM/yyyy') : '—'
+              }}</strong>
+            </li>
+            <li>
+              <span>Fecha</span>
+              <strong>{{ pqrs.fecha ? (pqrs.fecha | date: 'dd/MM/yyyy') : '—' }}</strong>
+            </li>
+            <li>
+              <span>Vence</span>
+              <strong>{{
+                pqrs.fecha_vencimiento ? (pqrs.fecha_vencimiento | date: 'dd/MM/yyyy') : '—'
+              }}</strong>
+            </li>
+            <li>
+              <span>Respuesta</span>
+              <strong>{{
+                pqrs.fecha_respuesta ? (pqrs.fecha_respuesta | date: 'dd/MM/yyyy') : '—'
+              }}</strong>
+            </li>
+            <li>
+              <span>Cierre</span>
+              <strong>{{
+                pqrs.fecha_cierre ? (pqrs.fecha_cierre | date: 'dd/MM/yyyy') : '—'
+              }}</strong>
+            </li>
+          </ul>
+        </section>
+
+        @if (tieneContacto()) {
+          <section class="card detalle-card">
+            <h3 class="section-title">
+              <i class="pi pi-user" aria-hidden="true"></i>
+              Contacto
+            </h3>
+
+            <dl class="datos">
+              @if (pqrs.nombre_contacto) {
+                <div>
+                  <dt>Nombre</dt>
+                  <dd>{{ pqrs.nombre_contacto }}</dd>
+                </div>
+              }
+              @if (pqrs.numero_identificacion_contacto) {
+                <div>
+                  <dt>Identificación</dt>
+                  <dd>{{ pqrs.numero_identificacion_contacto }}</dd>
+                </div>
+              }
+              @if (pqrs.cargo_contacto) {
+                <div>
+                  <dt>Cargo</dt>
+                  <dd>{{ pqrs.cargo_contacto }}</dd>
+                </div>
+              }
+              @if (pqrs.telefono_contacto) {
+                <div>
+                  <dt>Teléfono</dt>
+                  <dd>{{ pqrs.telefono_contacto }}</dd>
+                </div>
+              }
+              @if (pqrs.correo_contacto) {
+                <div>
+                  <dt>Correo</dt>
+                  <dd>{{ pqrs.correo_contacto }}</dd>
+                </div>
+              }
+            </dl>
+          </section>
+        }
+      </aside>
+
+      <div class="detalle-main">
+        <section class="card detalle-card">
+          <h3 class="section-title">
+            <i class="pi pi-comments" aria-hidden="true"></i>
+            Descripción
+          </h3>
+          @if (pqrs.descripcion) {
+            <p class="texto">{{ pqrs.descripcion }}</p>
+          } @else {
+            <p class="vacio">Sin descripción.</p>
+          }
+        </section>
+
+        <section class="card detalle-card detalle-card--tabs">
+          <h3 class="section-title">
+            <i class="pi pi-list-check" aria-hidden="true"></i>
+            Gestión
+          </h3>
+
+          <p-tabs [value]="pestana()" (valueChange)="cambiarPestana($event)" [scrollable]="true">
+            <p-tablist>
+              <p-tab value="analisis">
+                Análisis <span class="contador">{{ pqrs.analisis.length }}</span>
+              </p-tab>
+              <p-tab value="seguimiento">
+                Seguimiento <span class="contador">{{ pqrs.seguimientos.length }}</span>
+              </p-tab>
+              <p-tab value="respuesta">
+                Respuesta <span class="contador">{{ pqrs.respuestas.length }}</span>
+              </p-tab>
+            </p-tablist>
+
+            <p-tabpanels>
+              <p-tabpanel value="analisis">
+                @if (pqrs.analisis.length === 0) {
+                  <app-empty-state
+                    title="Sin análisis"
+                    message="La empresa aún no ha registrado el análisis de esta PQRS."
+                    icon="pi pi-search"
+                  />
+                } @else {
+                  <ul class="registros">
+                    @for (item of pqrs.analisis; track item.codigo_solicitud_analisis_pk) {
+                      <li class="registro">
+                        <span class="meta">
+                          <i class="pi pi-calendar" aria-hidden="true"></i>
+                          {{ item.fecha ? (item.fecha | date: 'dd/MM/yyyy') : 'Sin fecha' }}
+                        </span>
+                        <div class="registro__campo">
+                          <span class="registro__etiqueta">Razón</span>
+                          <p class="texto">{{ item.razon ?? '—' }}</p>
+                        </div>
+                        <div class="registro__campo">
+                          <span class="registro__etiqueta">Causa raíz</span>
+                          <p class="texto">{{ item.causa_raiz ?? '—' }}</p>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
+              </p-tabpanel>
+
+              <p-tabpanel value="seguimiento">
+                @if (pqrs.seguimientos.length === 0) {
+                  <app-empty-state
+                    title="Sin seguimiento"
+                    message="La empresa aún no ha registrado seguimientos a esta PQRS."
+                    icon="pi pi-directions"
+                  />
+                } @else {
+                  <ul class="registros">
+                    @for (item of pqrs.seguimientos; track item.codigo_solicitud_seguimiento_pk) {
+                      <li class="registro">
+                        <span class="meta">
+                          <i class="pi pi-calendar" aria-hidden="true"></i>
+                          {{ item.fecha ? (item.fecha | date: 'dd/MM/yyyy') : 'Sin fecha' }}
+                        </span>
+                        <div class="registro__campo">
+                          <span class="registro__etiqueta">Plan de acción</span>
+                          <p class="texto">{{ item.plan_accion ?? '—' }}</p>
+                        </div>
+                        <div class="registro__campo">
+                          <span class="registro__etiqueta">Descripción</span>
+                          <p class="texto">{{ item.descripcion ?? '—' }}</p>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                }
+              </p-tabpanel>
+
+              <p-tabpanel value="respuesta">
+                @if (pqrs.respuestas.length === 0) {
+                  <app-empty-state
+                    title="Sin respuesta"
+                    message="La empresa aún no ha respondido esta PQRS."
+                    icon="pi pi-reply"
+                  />
+                } @else {
+                  <ul class="registros">
+                    @for (item of pqrs.respuestas; track item.codigo_solicitud_respuesta_pk) {
+                      <li class="registro registro--respuesta">
+                        <span class="meta">
+                          <i class="pi pi-clock" aria-hidden="true"></i>
+                          {{ item.fecha ? (item.fecha | date: 'dd/MM/yyyy HH:mm') : 'Sin fecha' }}
+                        </span>
+                        <p class="texto">{{ item.respuesta ?? '—' }}</p>
+                      </li>
+                    }
+                  </ul>
+                }
+              </p-tabpanel>
+            </p-tabpanels>
+          </p-tabs>
+        </section>
+      </div>
+    </div>
+  }
+
+  @if (pqrs(); as pqrs) {
+    <p-dialog
+      [visible]="archivosVisibles()"
+      (visibleChange)="archivosVisibles.set($event)"
+      [header]="'Archivos de la PQRS ' + pqrs.codigo_solicitud_pk"
+      [modal]="true"
+      [draggable]="false"
+      [resizable]="false"
+      [style]="{ width: 'min(640px, 95vw)' }"
+    >
+      @if (archivosVisibles()) {
+        <app-archivos-documentales
+          [registroId]="pqrs.codigo_solicitud_pk"
+          [consultar]="consultarArchivos"
+          [descargarArchivo]="descargarArchivo"
+          mensajeVacio="Esta PQRS no tiene archivos."
+        />
+      }
+    </p-dialog>
+  }
+</div>

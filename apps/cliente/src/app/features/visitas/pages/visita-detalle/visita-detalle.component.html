@@ -239,7 +239,12 @@
       [style]="{ width: 'min(640px, 95vw)' }"
     >
       @if (archivosVisibles()) {
-        <app-visita-archivos [visitaId]="visita.codigo_visita_pk" />
+        <app-archivos-documentales
+          [registroId]="visita.codigo_visita_pk"
+          [consultar]="consultarArchivos"
+          [descargarArchivo]="descargarArchivo"
+          mensajeVacio="Esta visita no tiene archivos."
+        />
       }
     </p-dialog>
   }

@@ -10,6 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { extractErrorMessage } from '@semantica/core';
 import {
+  ArchivosDocumentalesComponent,
   EmptyStateComponent,
   ErrorAlertComponent,
   LoadingSpinnerComponent,
@@ -21,7 +22,6 @@ import {
   MAX_SEGURIDAD_SOCIAL,
   SeguridadSocialService,
 } from '../../services/seguridad-social.service';
-import { SeguridadSocialArchivosComponent } from '../../components/seguridad-social-archivos/seguridad-social-archivos.component';
 
 /** Primer día del mes en curso: la planilla de un mes futuro aún no existe. */
 function mesActual(): Date {
@@ -50,7 +50,7 @@ function mesActual(): Date {
     LoadingSpinnerComponent,
     EmptyStateComponent,
     ErrorAlertComponent,
-    SeguridadSocialArchivosComponent,
+    ArchivosDocumentalesComponent,
   ],
   templateUrl: './seguridad-social-list.component.html',
   styleUrl: '../../../../shared/styles/listado.scss',
@@ -73,6 +73,10 @@ export class SeguridadSocialListComponent implements OnInit {
   readonly filtrosVisibles = signal(true);
   /** Empleado cuyos soportes se muestran en el diálogo. */
   readonly registroArchivos = signal<SeguridadSocial | null>(null);
+  /** Archivos del registro para el diálogo, con el id que le entrega la plantilla. */
+  readonly consultarArchivos = (id: number) => this.seguridadSocialService.archivos(id);
+  readonly descargarArchivo = (id: number, archivoId: number) =>
+    this.seguridadSocialService.descargar(id, archivoId);
 
   readonly form = this.fb.group({ mes: [mesActual() as Date | null] });
 

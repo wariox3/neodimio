@@ -1,0 +1,52 @@
+@if (total() > 0) {
+  <section class="pendientes" aria-labelledby="pendientes-title">
+    <header class="pendientes__header">
+      <i class="pi pi-envelope" aria-hidden="true"></i>
+      <h2 id="pendientes-title" class="pendientes__title">
+        Invitaciones pendientes
+        <span class="pendientes__count">{{ total() }}</span>
+      </h2>
+    </header>
+
+    <ul class="pendientes__list">
+      @for (invitacion of invitaciones(); track invitacion.id) {
+        <li class="pendiente">
+          <span class="pendiente__avatar" aria-hidden="true">{{ inicial(invitacion) }}</span>
+
+          <div class="pendiente__texto">
+            <span class="pendiente__empresa">{{ empresa(invitacion) }}</span>
+            <span class="pendiente__meta">
+              @if (invitadoPor(invitacion); as autor) {
+                Invitado por {{ autor }} ·
+              }
+              {{ invitacion.fecha | date: 'dd/MM/yyyy' }}
+            </span>
+          </div>
+
+          <div class="pendiente__acciones">
+            <p-button
+              label="Rechazar"
+              icon="pi pi-times"
+              severity="secondary"
+              [text]="true"
+              size="small"
+              [loading]="procesandoId() === invitacion.id && accionEnCurso() === 'rechazar'"
+              [disabled]="procesandoId() !== null"
+              (onClick)="confirmarRechazo(invitacion)"
+            />
+            <p-button
+              label="Aceptar"
+              icon="pi pi-check"
+              size="small"
+              [loading]="procesandoId() === invitacion.id && accionEnCurso() === 'aceptar'"
+              [disabled]="procesandoId() !== null"
+              (onClick)="aceptar(invitacion)"
+            />
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+<p-confirmdialog [style]="{ width: '420px' }" [breakpoints]="{ '575px': '95vw' }" />

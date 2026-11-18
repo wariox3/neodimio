@@ -1,0 +1,230 @@
+// ─── Estructura ───────────────────────────────────────────────────────────────
+.detalle-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-areas: 'main resumen';
+  gap: 1rem;
+  align-items: start;
+}
+
+.detalle-main {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.resumen {
+  grid-area: resumen;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.detalle-card {
+  margin-bottom: 0;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  // Las pestañas traen su propio espaciado interno
+  &--tabs {
+    gap: 0.5rem;
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--p-text-color);
+  margin: 0;
+
+  i {
+    color: var(--p-primary-color);
+  }
+}
+
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--p-text-muted-color);
+}
+
+// Textos escritos en holmio, con sus saltos de línea
+.texto {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--p-text-color);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.vacio {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}
+
+// ─── Resumen ──────────────────────────────────────────────────────────────────
+.resumen__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.datos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin: 0;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  dt {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--p-text-color);
+    overflow-wrap: anywhere;
+  }
+}
+
+.fechas {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0.25rem 1rem;
+  list-style: none;
+  border-radius: var(--p-border-radius-md, 8px);
+  background: var(--p-primary-50);
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+
+    & + li {
+      border-top: 1px solid var(--p-primary-100);
+    }
+  }
+
+  span {
+    color: var(--p-text-muted-color);
+  }
+
+  strong {
+    color: var(--p-text-color);
+  }
+}
+
+// ─── Gestión ──────────────────────────────────────────────────────────────────
+.contador {
+  min-width: 1.5rem;
+  margin-left: 0.375rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--p-surface-100);
+  color: var(--p-text-muted-color);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+:host ::ng-deep .detalle-card--tabs .p-tabpanels {
+  padding: 1rem 0 0;
+}
+
+.registros {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.registro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 1rem;
+  border: 1px solid var(--p-surface-200);
+  border-radius: var(--p-border-radius-md, 8px);
+
+  &--respuesta {
+    border-left: 3px solid var(--p-primary-color);
+    background: var(--p-surface-50);
+  }
+
+  &__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__etiqueta {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 1100px) {
+  // En una columna el resumen va primero
+  .detalle-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'resumen'
+      'main';
+  }
+
+  .resumen {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .resumen {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .detalle-card {
+    padding: 1.25rem;
+  }
+
+  .registro {
+    padding: 0.875rem;
+  }
+}

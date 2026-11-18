@@ -1,14 +1,17 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TooltipModule } from 'primeng/tooltip';
 import { ActiveTenantService, ROUTE_PATHS, extractErrorMessage } from '../../../../core';
 import { EmptyStateComponent, ErrorAlertComponent } from '../../../../shared';
 import { UserMenuComponent } from '../../../../shared/user-menu/user-menu.component';
 import { Contenedor, puedeIngresar } from '../../models/contenedor.model';
 import { ContenedorService } from '../../services/contenedor.service';
+import { InvitacionesPendientesComponent } from '../../components/invitaciones-pendientes/invitaciones-pendientes.component';
 
 /**
  * Selección de empresa: lista las empresas del usuario y, al elegir una,
@@ -18,13 +21,16 @@ import { ContenedorService } from '../../services/contenedor.service';
   selector: 'app-contenedor-list',
   standalone: true,
   imports: [
+    ButtonModule,
     IconFieldModule,
     InputIconModule,
     InputTextModule,
     SkeletonModule,
+    TooltipModule,
     EmptyStateComponent,
     ErrorAlertComponent,
     UserMenuComponent,
+    InvitacionesPendientesComponent,
   ],
   templateUrl: './contenedor-list.component.html',
   styleUrl: './contenedor-list.component.scss',
@@ -33,6 +39,7 @@ export class ContenedorListComponent {
   private readonly contenedorService = inject(ContenedorService);
   private readonly activeTenant = inject(ActiveTenantService);
   private readonly router = inject(Router);
+  private readonly invitaciones = viewChild(InvitacionesPendientesComponent);
 
   readonly contenedores = signal<Contenedor[]>([]);
   readonly loading = signal(true);
@@ -57,6 +64,16 @@ export class ContenedorListComponent {
 
   constructor() {
     this.loadContenedores();
+  }
+
+  /**
+   * Vuelve a consultar las empresas y las invitaciones, por ejemplo cuando la empresa ya le
+   * asignó el cliente al usuario y la fila sigue como "Sin cliente asignado".
+   */
+  actualizar(): void {
+    if (this.loading()) return;
+    this.loadContenedores();
+    this.invitaciones()?.cargar();
   }
 
   loadContenedores(): void {

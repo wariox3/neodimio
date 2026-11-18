@@ -3,6 +3,9 @@ const DASHBOARD = '/dashboard';
 export const ROUTE_PATHS = {
   auth: {
     login: '/auth/login',
+    register: '/auth/register',
+    forgotPassword: '/auth/forgot-password',
+    resendVerification: '/auth/resend-verification',
   },
   contenedores: {
     root: '/contenedores',
@@ -20,6 +23,8 @@ export const ROUTE_PATHS = {
       cotizacionNueva: `${DASHBOARD}/crm/cotizaciones/nueva`,
       cotizacionDetalle: (id: number) => `${DASHBOARD}/crm/cotizaciones/${id}`,
       pqrs: `${DASHBOARD}/crm/pqrs`,
+      pqrsNueva: `${DASHBOARD}/crm/pqrs/nueva`,
+      pqrsDetalle: (id: number) => `${DASHBOARD}/crm/pqrs/${id}`,
     },
     operacion: {
       consignas: `${DASHBOARD}/operacion/consignas`,

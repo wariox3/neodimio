@@ -1,25 +1,28 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { MessageModule } from 'primeng/message';
 import { TableModule, TablePageEvent } from 'primeng/table';
-import { extractErrorMessage } from '@semantica/core';
+import { TooltipModule } from 'primeng/tooltip';
+import { extractErrorMessage, ToastService } from '@semantica/core';
 import {
+  abrirPdf,
   EmptyStateComponent,
   ErrorAlertComponent,
   LoadingSpinnerComponent,
   PageHeaderComponent,
 } from '../../../../shared';
 import { EstadoListaService } from '../../../../core';
-import { MovimientoCartera } from '../../models/cartera.model';
+import { MovimientoCartera, reciboImprimible } from '../../models/cartera.model';
 import { CarteraService, MAX_MOVIMIENTOS } from '../../services/cartera.service';
 
 /**
  * Recibos del cliente (`cliente_cartera_recibos_lista` de terbio): sus movimientos de
- * cartera aprobados y no anulados. La impresión del recibo aún no existe en fluor.
+ * cartera aprobados y no anulados, con la impresión de los recibos de caja y anticipos.
  */
 @Component({
   selector: 'app-recibo-list',
@@ -32,6 +35,7 @@ import { CarteraService, MAX_MOVIMIENTOS } from '../../services/cartera.service'
     DatePickerModule,
     MessageModule,
     TableModule,
+    TooltipModule,
     PageHeaderComponent,
     LoadingSpinnerComponent,
     EmptyStateComponent,
@@ -44,6 +48,7 @@ export class ReciboListComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly carteraService = inject(CarteraService);
   private readonly estadoLista = inject(EstadoListaService);
+  private readonly toastService = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly maxConsulta = MAX_MOVIMIENTOS;
@@ -55,11 +60,35 @@ export class ReciboListComponent implements OnInit {
   readonly pageSize = signal(25);
   readonly first = signal(0);
   readonly filtrosVisibles = signal(true);
+  /** Recibo que se está imprimiendo, para mostrar su botón cargando. */
+  readonly imprimiendo = signal<number | null>(null);
+  readonly imprimible = reciboImprimible;
 
   readonly form = this.fb.group({
     fecha_desde: [null as Date | null],
     fecha_hasta: [null as Date | null],
   });
+
+  imprimir(recibo: MovimientoCartera): void {
+    const id = recibo.codigo_movimiento_pk;
+    this.imprimiendo.set(id);
+    abrirPdf(this.carteraService.imprimirRecibo(id), `recibo_${id}.pdf`)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.imprimiendo.set(null),
+        error: (err: HttpErrorResponse) => {
+          this.imprimiendo.set(null);
+          // El resto de estados ya los avisa el interceptor.
+          const mensaje =
+            err.status === 404
+              ? 'No se encontró el recibo.'
+              : err.status === 409
+                ? 'Este movimiento no tiene formato de impresión.'
+                : null;
+          if (mensaje) this.toastService.error('No se pudo imprimir', mensaje);
+        },
+      });
+  }
 
   ngOnInit(): void {
     const estado = this.estadoLista.leer<ReturnType<typeof this.form.getRawValue>>('recibos');

@@ -22,3 +22,18 @@ export interface Contenedor {
 export function puedeIngresar(contenedor: Contenedor): boolean {
   return contenedor.activo && contenedor.cliente && contenedor.cliente_id !== null;
 }
+
+/**
+ * Invitación pendiente que un usuario control de una empresa le envió al usuario desde el
+ * ERP (`/mas/invitacion/pendientes`).
+ */
+export interface InvitacionRecibida {
+  id: number;
+  tenant_id: number;
+  tenant_nombre: string | null;
+  /** Quien invitó; `null` si su usuario fue eliminado. */
+  usuario_id: number | null;
+  usuario_nombre: string | null;
+  usuario_email: string | null;
+  fecha: string;
+}

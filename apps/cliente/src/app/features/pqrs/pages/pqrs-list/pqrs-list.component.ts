@@ -1,6 +1,8 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { TableModule, TablePageEvent } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -12,7 +14,7 @@ import {
   LoadingSpinnerComponent,
   PageHeaderComponent,
 } from '../../../../shared';
-import { EstadoListaService } from '../../../../core';
+import { EstadoListaService, ROUTE_PATHS } from '../../../../core';
 import { Pqrs, estadoPqrs } from '../../models/pqrs.model';
 import { MAX_PQRS, PqrsService } from '../../services/pqrs.service';
 
@@ -21,13 +23,15 @@ const ESTADO_LISTA = 'pqrs';
 
 /**
  * PQRS del cliente (`cliente_crm_solicitud_lista` de terbio): sus peticiones, quejas,
- * reclamos y sugerencias, de la más reciente a la más antigua.
+ * reclamos y sugerencias, de la más reciente a la más antigua. Desde aquí se registra una nueva y se abre su detalle.
  */
 @Component({
   selector: 'app-pqrs-list',
   standalone: true,
   imports: [
     DatePipe,
+    RouterLink,
+    ButtonModule,
     MessageModule,
     TableModule,
     TagModule,
@@ -45,6 +49,7 @@ export class PqrsListComponent implements OnInit {
   private readonly estadoLista = inject(EstadoListaService);
   private readonly destroyRef = inject(DestroyRef);
 
+  readonly rutas = ROUTE_PATHS.dashboard.crm;
   readonly maxConsulta = MAX_PQRS;
   readonly estado = estadoPqrs;
   readonly loading = signal(true);

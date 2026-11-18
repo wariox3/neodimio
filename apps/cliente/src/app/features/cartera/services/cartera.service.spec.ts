@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ENVIRONMENT } from '@semantica/core';
 import { MembresiaClienteService } from '../../contenedores/services/membresia-cliente.service';
-import { MovimientoCartera, recibosVigentes } from '../models/cartera.model';
+import { MovimientoCartera, reciboImprimible, recibosVigentes } from '../models/cartera.model';
 import { CarteraService, MAX_MOVIMIENTOS } from './cartera.service';
 
 function configurar(clienteId: number | null) {
@@ -145,6 +145,32 @@ describe('Recibos', () => {
     http.expectNone(() => true);
     expect(error).toBeInstanceOf(Error);
     http.verify();
+  });
+
+  it('imprime el estado de cuenta y el recibo del cliente como PDF', () => {
+    const { service, http } = configurar(25);
+
+    service.estadoCuenta().subscribe();
+    service.imprimirRecibo(77).subscribe();
+
+    for (const url of [
+      '/api/car/cuenta-cobrar/estado-cuenta-portal',
+      '/api/car/movimiento/imprimir-portal/77',
+    ]) {
+      const req = http.expectOne((r) => r.url === url);
+      expect(req.request.params.get('tercero_id')).toBe('25');
+      expect(req.request.responseType).toBe('blob');
+      req.flush(new Blob());
+    }
+    http.verify();
+  });
+});
+
+describe('reciboImprimible', () => {
+  it('solo los recibos de caja y los anticipos tienen formato', () => {
+    expect(reciboImprimible({ codigo_movimiento_clase_fk: 'RC' })).toBeTrue();
+    expect(reciboImprimible({ codigo_movimiento_clase_fk: 'AN' })).toBeTrue();
+    expect(reciboImprimible({ codigo_movimiento_clase_fk: 'NC' })).toBeFalse();
   });
 });
 

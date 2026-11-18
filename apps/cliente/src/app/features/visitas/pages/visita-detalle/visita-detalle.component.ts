@@ -10,6 +10,7 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { extractErrorMessage } from '@semantica/core';
 import {
+  ArchivosDocumentalesComponent,
   EmptyStateComponent,
   ErrorAlertComponent,
   LoadingSpinnerComponent,
@@ -24,7 +25,6 @@ import {
   iniciales,
 } from '../../models/visita.model';
 import { VisitaService } from '../../services/visita.service';
-import { VisitaArchivosComponent } from '../../components/visita-archivos/visita-archivos.component';
 import { VisitaImprimirComponent } from '../../components/visita-imprimir/visita-imprimir.component';
 
 /** Cómo se muestra cada estado de un compromiso. */
@@ -72,7 +72,7 @@ interface GrupoCompromisos {
     ErrorAlertComponent,
     EmptyStateComponent,
     VisitaImprimirComponent,
-    VisitaArchivosComponent,
+    ArchivosDocumentalesComponent,
   ],
   templateUrl: './visita-detalle.component.html',
   styleUrl: './visita-detalle.component.scss',
@@ -131,6 +131,11 @@ export class VisitaDetalleComponent implements OnInit {
   readonly avance = computed(() =>
     this.totalCompromisos() ? Math.round((this.atendidos() / this.totalCompromisos()) * 100) : 0,
   );
+
+  /** Archivos del registro para el diálogo, con el id que le entrega la plantilla. */
+  readonly consultarArchivos = (id: number) => this.visitaService.archivos(id);
+  readonly descargarArchivo = (id: number, archivoId: number) =>
+    this.visitaService.descargar(id, archivoId);
 
   ngOnInit(): void {
     this.cargar();

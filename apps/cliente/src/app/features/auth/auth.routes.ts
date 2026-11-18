@@ -7,5 +7,38 @@ export const AUTH_ROUTES: Routes = [
     canActivate: [publicGuard],
     loadComponent: () => import('./login/login.component').then((m) => m.LoginComponent),
   },
+  {
+    path: 'forgot-password',
+    canActivate: [publicGuard],
+    loadComponent: () =>
+      import('./forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
+  },
+  {
+    // Ruta del enlace de recuperación que fluor envía por correo (`?token=...`)
+    path: 'restablecer-clave',
+    canActivate: [publicGuard],
+    loadComponent: () =>
+      import('./reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
+  },
+  {
+    path: 'register',
+    canActivate: [publicGuard],
+    loadComponent: () => import('./register/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    // Ruta del enlace que fluor envía por correo (`/auth/verify-email?token=...`)
+    path: 'verify-email',
+    canActivate: [publicGuard],
+    loadComponent: () =>
+      import('./verify-email/verify-email.component').then((m) => m.VerifyEmailComponent),
+  },
+  {
+    path: 'resend-verification',
+    canActivate: [publicGuard],
+    loadComponent: () =>
+      import('./resend-verification/resend-verification.component').then(
+        (m) => m.ResendVerificationComponent,
+      ),
+  },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 ];

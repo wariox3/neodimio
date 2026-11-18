@@ -40,19 +40,6 @@ export interface VisitaDetalle extends Visita {
   cantidad_archivos: number;
 }
 
-/** Archivo que la empresa cargó a la visita (`ArchivoResponse` de fluor, `doc_archivo`). */
-export interface ArchivoVisita {
-  codigo_archivo_pk: number;
-  /** Nombre original con extensión, tal como se cargó en holmio. */
-  nombre: string | null;
-  descripcion: string | null;
-  fecha: string | null;
-  extension_original: string | null;
-  tipo: string | null;
-  /** Tamaño en bytes. */
-  tamano: number | null;
-}
-
 /** Situación de un compromiso para el cliente. */
 export type EstadoCompromiso = 'atendido' | 'pendiente' | 'vencido';
 
