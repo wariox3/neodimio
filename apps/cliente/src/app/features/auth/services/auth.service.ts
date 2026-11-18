@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { ActiveTenantService, BaseAuthService, AuthApiEndpoints } from '@semantica/core';
-import { Usuario } from '../models/auth.model';
+import { RegisterRequest, RegisterResponse, Usuario } from '../models/auth.model';
 import { API_ENDPOINTS, EstadoListaService, ROUTE_PATHS } from '../../../core';
 import { CatalogoService } from '../../catalogos/services/catalogo.service';
 
@@ -29,5 +30,13 @@ export class AuthService extends BaseAuthService<Usuario> {
     this.catalogo.limpiar();
     this.activeTenant.clear();
     super.clearSession();
+  }
+
+  /** Crea la cuenta sin verificar; fluor envía el correo con el enlace de verificación. */
+  register(data: RegisterRequest): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(
+      `${this.environment.apiUrl}${API_ENDPOINTS.auth.register}`,
+      data,
+    );
   }
 }

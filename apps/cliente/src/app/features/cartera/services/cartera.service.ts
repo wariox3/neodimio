@@ -70,4 +70,24 @@ export class CarteraService extends BaseHttpService {
       })),
     );
   }
+
+  /** Carta de estado de cuenta con todas las cuentas del cliente con saldo (PDF). */
+  estadoCuenta(): Observable<Blob> {
+    const clienteId = this.membresiaCliente.clienteId();
+    if (clienteId === null) return sinCliente();
+    return this.http.get(`${this.baseUrl}${API_ENDPOINTS.cartera.estadoCuenta}`, {
+      params: { tercero_id: clienteId },
+      responseType: 'blob',
+    });
+  }
+
+  /** Formato del recibo o anticipo (PDF). fluor responde 404 si el cliente no lo ve. */
+  imprimirRecibo(id: number): Observable<Blob> {
+    const clienteId = this.membresiaCliente.clienteId();
+    if (clienteId === null) return sinCliente();
+    return this.http.get(`${this.baseUrl}${API_ENDPOINTS.cartera.imprimirRecibo(id)}`, {
+      params: { tercero_id: clienteId },
+      responseType: 'blob',
+    });
+  }
 }

@@ -148,7 +148,14 @@
     [style]="{ width: 'min(640px, 95vw)' }"
   >
     @if (registroArchivos(); as registro) {
-      <app-seguridad-social-archivos [registro]="registro" />
+      <app-archivos-documentales
+        [registroId]="registro.codigo_aporte_contrato_pk"
+        [consultar]="consultarArchivos"
+        [descargarArchivo]="descargarArchivo"
+        mensajeVacio="Aún no se ha cargado el soporte de este empleado."
+        nombrePorDefecto="Soporte"
+        mensajeNoEncontrado="No se encuentra el archivo de la seguridad social de este empleado."
+      />
     }
   </p-dialog>
 </div>

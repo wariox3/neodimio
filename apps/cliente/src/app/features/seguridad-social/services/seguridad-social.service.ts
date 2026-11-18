@@ -5,7 +5,8 @@ import {
   MembresiaClienteService,
   sinCliente,
 } from '../../contenedores/services/membresia-cliente.service';
-import { ArchivoSeguridadSocial, SeguridadSocial } from '../models/seguridad-social.model';
+import { ArchivoDocumental } from '../../../shared';
+import { SeguridadSocial } from '../models/seguridad-social.model';
 
 /**
  * Empleados que se consultan de un mes, el máximo que acepta fluor por página.
@@ -40,13 +41,12 @@ export class SeguridadSocialService extends BaseHttpService {
     }).pipe(map((res) => ({ items: res.items, incompleto: res.total > res.items.length })));
   }
 
-  archivos(aporteContratoId: number): Observable<ArchivoSeguridadSocial[]> {
+  archivos(aporteContratoId: number): Observable<ArchivoDocumental[]> {
     const clienteId = this.membresiaCliente.clienteId();
     if (clienteId === null) return sinCliente();
-    return this.get<ArchivoSeguridadSocial[]>(
-      API_ENDPOINTS.seguridadSocial.archivos(aporteContratoId),
-      { tercero_id: clienteId },
-    );
+    return this.get<ArchivoDocumental[]>(API_ENDPOINTS.seguridadSocial.archivos(aporteContratoId), {
+      tercero_id: clienteId,
+    });
   }
 
   descargar(aporteContratoId: number, archivoId: number): Observable<Blob> {

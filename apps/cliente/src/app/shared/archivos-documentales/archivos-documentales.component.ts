@@ -2,19 +2,21 @@ import { Component, DestroyRef, OnInit, inject, input, signal } from '@angular/c
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
-import { ToastService, extractErrorMessage } from '../../../../core';
-import { ErrorAlertComponent, LoadingSpinnerComponent } from '../../../../shared';
-import { tamanoLegible } from '../../../seguridad-social/models/seguridad-social.model';
-import { ArchivoVisita } from '../../models/visita.model';
-import { VisitaService } from '../../services/visita.service';
+import { ToastService, extractErrorMessage } from '@semantica/core';
+import { ErrorAlertComponent, LoadingSpinnerComponent } from '@semantica/ui';
+import { ArchivoDocumental, tamanoLegible } from './archivo-documental.model';
 
 /**
- * Archivos que la empresa cargó a la visita, con su descarga
- * (`cliente_crm_visita_archivo` de terbio).
+ * Archivos que holmio cargó a un registro (`doc_archivo`), con su descarga. Cada pantalla
+ * entrega cómo consultarlos y descargarlos, porque fluor los expone por registro y valida
+ * que sean del cliente.
+ *
+ * Distinto de `ArchivosComponent`, que lista los ficheros que fluor guarda en `doc/fichero`.
  */
 @Component({
-  selector: 'app-visita-archivos',
+  selector: 'app-archivos-documentales',
   standalone: true,
   imports: [DatePipe, ButtonModule, LoadingSpinnerComponent, ErrorAlertComponent],
   template: `
@@ -23,14 +25,14 @@ import { VisitaService } from '../../services/visita.service';
     } @else if (error()) {
       <app-error-alert [message]="error()!" [retryable]="true" (retry)="cargar()" />
     } @else if (archivos().length === 0) {
-      <p class="sin-archivos">Esta visita no tiene archivos.</p>
+      <p class="sin-archivos">{{ mensajeVacio() }}</p>
     } @else {
       <ul class="archivos">
         @for (archivo of archivos(); track archivo.codigo_archivo_pk) {
           <li class="archivo">
             <i class="pi pi-file archivo__icono" aria-hidden="true"></i>
             <div class="archivo__info">
-              <span class="archivo__nombre">{{ archivo.nombre ?? 'Archivo' }}</span>
+              <span class="archivo__nombre">{{ archivo.nombre ?? nombrePorDefecto() }}</span>
               @if (archivo.descripcion) {
                 <span class="archivo__descripcion">{{ archivo.descripcion }}</span>
               }
@@ -47,7 +49,7 @@ import { VisitaService } from '../../services/visita.service';
               [text]="true"
               [rounded]="true"
               [loading]="descargando() === archivo.codigo_archivo_pk"
-              [ariaLabel]="'Descargar ' + (archivo.nombre ?? 'archivo')"
+              [ariaLabel]="'Descargar ' + (archivo.nombre ?? nombrePorDefecto())"
               (onClick)="descargar(archivo)"
             />
           </li>
@@ -108,20 +110,36 @@ import { VisitaService } from '../../services/visita.service';
     }
   `,
 })
-export class VisitaArchivosComponent implements OnInit {
-  private readonly visitaService = inject(VisitaService);
+export class ArchivosDocumentalesComponent implements OnInit {
   private readonly toastService = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly visitaId = input.required<number>();
+  /** Id del registro dueño de los archivos (visita, PQRS, aporte del empleado...). */
+  readonly registroId = input.required<number>();
+  /** Consulta los archivos del registro. */
+  readonly consultar = input.required<(registroId: number) => Observable<ArchivoDocumental[]>>();
+  /** Descarga el contenido de un archivo del registro. */
+  readonly descargarArchivo =
+    input.required<(registroId: number, archivoId: number) => Observable<Blob>>();
+  readonly mensajeVacio = input('Este registro no tiene archivos.');
+  /** Nombre que se muestra y con el que se guarda un archivo que no tiene nombre. */
+  readonly nombrePorDefecto = input('Archivo');
+  /** Mensaje cuando fluor responde 404 al descargar. */
+  readonly mensajeNoEncontrado = input('No se encuentra el archivo.');
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
-  readonly archivos = signal<ArchivoVisita[]>([]);
+  readonly archivos = signal<ArchivoDocumental[]>([]);
   /** Archivo que se está descargando, para mostrar su botón cargando. */
   readonly descargando = signal<number | null>(null);
 
   readonly tamano = tamanoLegible;
+
+  /** Nombre para guardar un archivo sin nombre: `soporte_12.pdf`. */
+  private nombreDescarga(archivo: ArchivoDocumental): string {
+    const base = `${this.nombrePorDefecto().toLowerCase()}_${archivo.codigo_archivo_pk}`;
+    return archivo.extension_original ? `${base}.${archivo.extension_original}` : base;
+  }
 
   ngOnInit(): void {
     this.cargar();
@@ -130,8 +148,7 @@ export class VisitaArchivosComponent implements OnInit {
   cargar(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.visitaService
-      .archivos(this.visitaId())
+    this.consultar()(this.registroId())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (archivos) => {
@@ -145,17 +162,16 @@ export class VisitaArchivosComponent implements OnInit {
       });
   }
 
-  descargar(archivo: ArchivoVisita): void {
+  descargar(archivo: ArchivoDocumental): void {
     this.descargando.set(archivo.codigo_archivo_pk);
-    this.visitaService
-      .descargar(this.visitaId(), archivo.codigo_archivo_pk)
+    this.descargarArchivo()(this.registroId(), archivo.codigo_archivo_pk)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (blob) => {
           const url = URL.createObjectURL(blob);
           const enlace = document.createElement('a');
           enlace.href = url;
-          enlace.download = archivo.nombre ?? `archivo_${archivo.codigo_archivo_pk}`;
+          enlace.download = archivo.nombre ?? this.nombreDescarga(archivo);
           enlace.click();
           setTimeout(() => URL.revokeObjectURL(url), 60_000);
           this.descargando.set(null);
@@ -164,7 +180,7 @@ export class VisitaArchivosComponent implements OnInit {
           this.descargando.set(null);
           // El interceptor ya avisa los errores de conexión, permisos y servidor.
           if (err.status === 404) {
-            this.toastService.error('No se pudo descargar', 'No se encuentra el archivo.');
+            this.toastService.error('No se pudo descargar', this.mensajeNoEncontrado());
           }
         },
       });

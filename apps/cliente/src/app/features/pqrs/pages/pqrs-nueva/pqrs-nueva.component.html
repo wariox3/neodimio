@@ -1,0 +1,194 @@
+<div class="page-container">
+  <app-page-header
+    title="Nueva PQRS"
+    subtitle="Registra una petición, queja, reclamo, sugerencia o felicitación"
+  >
+    <p-button
+      label="Volver"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      [routerLink]="listaRoute"
+    />
+  </app-page-header>
+
+  @if (cargandoTipos()) {
+    <app-loading-spinner message="Cargando formulario..." />
+  } @else if (errorTipos()) {
+    <app-error-alert [message]="errorTipos()!" [retryable]="true" (retry)="cargarTipos()" />
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="guardar()" novalidate class="pqrs-form card">
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+      }
+      @if (tipos().length === 0) {
+        <p-message
+          severity="warn"
+          text="La empresa no tiene tipos de PQRS habilitados para el portal."
+          styleClass="w-full"
+        />
+      }
+
+      <section class="form-section">
+        <h3 class="section-title">
+          <i class="pi pi-comments" aria-hidden="true"></i>
+          Solicitud
+        </h3>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="codigo_solicitud_tipo_fk" class="field__label">
+              Tipo <span class="form-required">*</span>
+            </label>
+            <p-select
+              inputId="codigo_solicitud_tipo_fk"
+              formControlName="codigo_solicitud_tipo_fk"
+              [options]="tipos()"
+              optionLabel="nombre"
+              optionValue="codigo_solicitud_tipo_pk"
+              placeholder="Seleccione un tipo"
+              [fluid]="true"
+              appendTo="body"
+              [invalid]="!!errorDe('codigo_solicitud_tipo_fk')"
+            />
+            @if (errorDe('codigo_solicitud_tipo_fk'); as error) {
+              <small class="form-error">{{ error }}</small>
+            }
+          </div>
+
+          <div class="field field--full">
+            <label for="descripcion" class="field__label">
+              Descripción <span class="form-required">*</span>
+            </label>
+            <textarea
+              pTextarea
+              id="descripcion"
+              formControlName="descripcion"
+              rows="8"
+              [autoResize]="true"
+              [maxlength]="max.descripcion"
+              fluid
+              placeholder="Cuéntanos con detalle qué sucedió o qué necesitas"
+              [invalid]="!!errorDe('descripcion')"
+            ></textarea>
+            @if (errorDe('descripcion'); as error) {
+              <small class="form-error">{{ error }}</small>
+            } @else {
+              <small class="field__hint">
+                {{ form.controls.descripcion.value.length }} / {{ max.descripcion }}
+              </small>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3 class="section-title">
+          <i class="pi pi-user" aria-hidden="true"></i>
+          Datos de contacto
+        </h3>
+        <p class="section-hint">Opcional: a quién contactamos para dar respuesta.</p>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="nombre_contacto" class="field__label">Nombre</label>
+            <input
+              pInputText
+              id="nombre_contacto"
+              formControlName="nombre_contacto"
+              [maxlength]="max.nombre_contacto"
+              autocomplete="name"
+              fluid
+              [invalid]="!!errorDe('nombre_contacto')"
+            />
+            @if (errorDe('nombre_contacto'); as error) {
+              <small class="form-error">{{ error }}</small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="numero_identificacion_contacto" class="field__label">Identificación</label>
+            <input
+              pInputText
+              id="numero_identificacion_contacto"
+              formControlName="numero_identificacion_contacto"
+              [maxlength]="max.numero_identificacion_contacto"
+              fluid
+              [invalid]="!!errorDe('numero_identificacion_contacto')"
+            />
+            @if (errorDe('numero_identificacion_contacto'); as error) {
+              <small class="form-error">{{ error }}</small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="cargo_contacto" class="field__label">Cargo</label>
+            <input
+              pInputText
+              id="cargo_contacto"
+              formControlName="cargo_contacto"
+              [maxlength]="max.cargo_contacto"
+              autocomplete="organization-title"
+              fluid
+              [invalid]="!!errorDe('cargo_contacto')"
+            />
+            @if (errorDe('cargo_contacto'); as error) {
+              <small class="form-error">{{ error }}</small>
+            }
+          </div>
+
+          <div class="field">
+            <label for="telefono_contacto" class="field__label">Teléfono</label>
+            <input
+              pInputText
+              id="telefono_contacto"
+              type="tel"
+              formControlName="telefono_contacto"
+              [maxlength]="max.telefono_contacto"
+              autocomplete="tel"
+              fluid
+              [invalid]="!!errorDe('telefono_contacto')"
+            />
+            @if (errorDe('telefono_contacto'); as error) {
+              <small class="form-error">{{ error }}</small>
+            }
+          </div>
+
+          <div class="field field--wide">
+            <label for="correo_contacto" class="field__label">Correo</label>
+            <input
+              pInputText
+              id="correo_contacto"
+              type="email"
+              formControlName="correo_contacto"
+              [maxlength]="max.correo_contacto"
+              autocomplete="email"
+              fluid
+              [invalid]="!!errorDe('correo_contacto')"
+            />
+            @if (errorDe('correo_contacto'); as error) {
+              <small class="form-error">{{ error }}</small>
+            }
+          </div>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [text]="true"
+          [routerLink]="listaRoute"
+        />
+        <p-button
+          type="submit"
+          label="Guardar"
+          icon="pi pi-check"
+          [loading]="guardando()"
+          [disabled]="tipos().length === 0"
+        />
+      </div>
+    </form>
+  }
+</div>

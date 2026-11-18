@@ -1,5 +1,16 @@
 <div class="page-container">
-  <app-page-header title="Cartera pendiente" subtitle="Consulta tus cuentas por pagar con saldo" />
+  <app-page-header title="Cartera pendiente" subtitle="Consulta tus cuentas por pagar con saldo">
+    <p-button
+      label="Estado de cuenta"
+      icon="pi pi-print"
+      severity="secondary"
+      [outlined]="true"
+      pTooltip="Carta con todas tus cuentas pendientes, sin aplicar los filtros"
+      tooltipPosition="bottom"
+      [loading]="imprimiendo()"
+      (onClick)="imprimirEstadoCuenta()"
+    />
+  </app-page-header>
 
   <div class="card filtros-card">
     <button

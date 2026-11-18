@@ -18,6 +18,8 @@
         </p>
       </div>
 
+      <app-invitaciones-pendientes (aceptada)="loadContenedores()" />
+
       @if (!loading() && !errorMessage() && contenedores().length > 0) {
         <p-iconfield class="contenedores__search">
           <p-inputicon class="pi pi-search" />
@@ -55,7 +57,7 @@
           <app-empty-state
             icon="pi pi-building"
             title="Sin empresas"
-            message="Tu usuario no está asociado como cliente a ninguna empresa. Comunícate con tu proveedor para que te dé acceso al portal."
+            message="Tu usuario no está habilitado como cliente en ninguna empresa. Si aceptaste una invitación, la empresa aparecerá cuando te habilite; si no, comunícate con tu proveedor para que te dé acceso al portal."
           />
         } @else if (filteredContenedores().length === 0) {
           <app-empty-state

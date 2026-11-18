@@ -1,6 +1,6 @@
 import { Component, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
@@ -21,6 +21,7 @@ import { TurnstileComponent } from '../../../shared';
   standalone: true,
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     ButtonModule,
     InputTextModule,
     PasswordModule,
@@ -39,6 +40,7 @@ export class LoginComponent {
   private readonly activeTenant = inject(ActiveTenantService);
 
   private readonly turnstile = viewChild(TurnstileComponent);
+  readonly rutas = ROUTE_PATHS.auth;
   readonly captchaToken = signal<string | null>(null);
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -80,6 +82,15 @@ export class LoginComponent {
         error: (err) => {
           this.turnstile()?.reset();
           this.captchaToken.set(null);
+
+          // Cuenta sin verificar: se ofrece reenviar el correo de verificación.
+          if (err.error?.error?.is_verified === false) {
+            this.router.navigate([ROUTE_PATHS.auth.resendVerification], {
+              queryParams: { email, unverified: true },
+            });
+            return;
+          }
+
           this.errorMessage.set(extractErrorMessage(err, 'Credenciales inválidas.'));
           this.isLoading.set(false);
         },

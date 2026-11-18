@@ -1,8 +1,10 @@
 <div class="page-container">
   <app-page-header
     title="PQRS"
-    subtitle="Consulta tus peticiones, quejas, reclamos y sugerencias"
-  />
+    subtitle="Consulta tus peticiones, quejas, reclamos y sugerencias o registra una nueva"
+  >
+    <p-button label="Nueva PQRS" icon="pi pi-plus" [routerLink]="rutas.pqrsNueva" />
+  </app-page-header>
 
   @if (loading() && registros().length === 0) {
     <app-loading-spinner message="Cargando PQRS..." />
@@ -13,7 +15,14 @@
       title="Sin PQRS"
       message="Aún no tienes peticiones, quejas, reclamos ni sugerencias registradas."
       icon="pi pi-comments"
-    />
+    >
+      <p-button
+        label="Nueva PQRS"
+        icon="pi pi-plus"
+        [outlined]="true"
+        [routerLink]="rutas.pqrsNueva"
+      />
+    </app-empty-state>
   } @else {
     @if (incompleto()) {
       <p-message severity="warn" styleClass="mb-4">
@@ -50,6 +59,7 @@
             <th>Cierre</th>
             <th>Descripción</th>
             <th>Estado</th>
+            <th></th>
           </tr>
         </ng-template>
 
@@ -78,6 +88,18 @@
             </td>
             <td>
               <p-tag [value]="estado(registro).label" [severity]="estado(registro).severity" />
+            </td>
+            <td>
+              <p-button
+                icon="pi pi-eye"
+                severity="secondary"
+                [text]="true"
+                [rounded]="true"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
+                [ariaLabel]="'Ver detalle de la PQRS ' + registro.codigo_solicitud_pk"
+                [routerLink]="rutas.pqrsDetalle(registro.codigo_solicitud_pk)"
+              />
             </td>
           </tr>
         </ng-template>

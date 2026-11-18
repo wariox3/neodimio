@@ -1,0 +1,68 @@
+<div class="login-layout">
+  <!-- ── Panel de marca ─────────────────────────────── -->
+  <div class="brand-panel" aria-hidden="true">
+    <div class="brand-panel__bg">
+      <div class="brand-panel__orb brand-panel__orb--1"></div>
+      <div class="brand-panel__orb brand-panel__orb--2"></div>
+      <div class="brand-panel__grid"></div>
+    </div>
+
+    <div class="brand-panel__content">
+      <div class="brand-panel__logo"></div>
+
+      <div class="brand-panel__bottom">
+        <div class="brand-panel__body">
+          <h1 class="brand-panel__title">Portal de<br />clientes</h1>
+          <p class="brand-panel__desc">
+            Consulta tu información, documentos y servicios con la empresa desde un solo lugar.
+          </p>
+        </div>
+
+        <div class="brand-panel__chips">
+          <div class="brand-chip"><i class="pi pi-file"></i> Documentos digitales</div>
+          <div class="brand-chip"><i class="pi pi-shield"></i> Acceso seguro</div>
+          <div class="brand-chip"><i class="pi pi-clock"></i> Acceso 24/7</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Panel de contenido ──────────────────────────── -->
+  <div class="form-panel">
+    <div class="form-panel__inner">
+      <div class="form-panel__logo">
+        <img src="fondo_transparente.png" alt="Semantica Clientes" class="form-panel__logo-img" />
+      </div>
+
+      @if (isLoading()) {
+        <div class="loading-state">
+          <div class="loading-state__spinner">
+            <i class="pi pi-spin pi-spinner"></i>
+          </div>
+          <h2 class="loading-state__title">Verificando tu cuenta...</h2>
+          <p class="loading-state__desc">
+            Por favor espera mientras confirmamos tu correo electrónico.
+          </p>
+        </div>
+      } @else if (verified()) {
+        <div class="success-state">
+          <div class="success-state__icon">
+            <i class="pi pi-check-circle"></i>
+          </div>
+          <h2 class="success-state__title">¡Cuenta verificada!</h2>
+          <p class="success-state__desc">Tu correo electrónico fue verificado correctamente.</p>
+          <a routerLink="/auth/login" class="success-state__back">Ir al login ahora</a>
+        </div>
+      } @else {
+        <div class="error-state">
+          <div class="error-state__icon">
+            <i class="pi pi-times-circle"></i>
+          </div>
+          <h2 class="error-state__title">Error de verificación</h2>
+          <p class="error-state__desc">{{ errorMessage() }}</p>
+          <a routerLink="/auth/login" class="error-state__back">Volver al login</a>
+        </div>
+      }
+    </div>
+  </div>
+</div>

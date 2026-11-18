@@ -62,3 +62,13 @@ export interface ReciboFiltros {
 export function recibosVigentes(movimientos: MovimientoCartera[]): MovimientoCartera[] {
   return movimientos.filter((m) => !!m.estado_aprobado && !m.estado_anulado);
 }
+
+/** Clases de movimiento con formato de impresión en fluor: recibo de caja y anticipo. */
+const CLASES_IMPRIMIBLES = ['RC', 'AN'];
+
+/** Si el movimiento se puede imprimir; los demás responderían 409 en fluor. */
+export function reciboImprimible(
+  movimiento: Pick<MovimientoCartera, 'codigo_movimiento_clase_fk'>,
+) {
+  return CLASES_IMPRIMIBLES.includes(movimiento.codigo_movimiento_clase_fk);
+}

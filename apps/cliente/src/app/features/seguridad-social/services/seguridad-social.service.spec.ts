@@ -3,7 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ENVIRONMENT } from '@semantica/core';
 import { MembresiaClienteService } from '../../contenedores/services/membresia-cliente.service';
-import { SeguridadSocial, tamanoLegible } from '../models/seguridad-social.model';
+import { tamanoLegible } from '../../../shared';
+import { SeguridadSocial } from '../models/seguridad-social.model';
 import { MAX_SEGURIDAD_SOCIAL, SeguridadSocialService } from './seguridad-social.service';
 
 function configurar(clienteId: number | null) {

@@ -7,10 +7,16 @@ export const API_ENDPOINTS = {
     logout: `${AUTH}/logout`,
     refresh: `${AUTH}/refresh`,
     me: `${AUTH}/me`,
+    register: `${USER}/registrar`,
     verifyEmail: `${USER}/verificar`,
     resendVerification: `${USER}/reenviar-verificacion`,
     forgotPassword: `${USER}/recuperar-clave`,
     resetPassword: `${USER}/restablecer-clave`,
+  },
+  invitacion: {
+    pendientes: '/mas/invitacion/pendientes',
+    aceptar: (id: number) => `/mas/invitacion/${id}/aceptar`,
+    rechazar: (id: number) => `/mas/invitacion/${id}/rechazar`,
   },
   userTenant: {
     lista: '/mas/user-tenant/lista',
@@ -56,6 +62,8 @@ export const API_ENDPOINTS = {
   cartera: {
     pendientes: '/car/cuenta-cobrar/pendiente',
     movimientos: '/car/movimiento/lista',
+    estadoCuenta: '/car/cuenta-cobrar/estado-cuenta-portal',
+    imprimirRecibo: (id: number) => `/car/movimiento/imprimir-portal/${id}`,
   },
   consigna: {
     lista: '/tur/consigna/lista-cliente',
@@ -77,6 +85,12 @@ export const API_ENDPOINTS = {
   },
   pqrs: {
     lista: '/crm/solicitud/lista-portal',
+    tipos: '/crm/solicitud/tipo-portal',
+    nuevo: '/crm/solicitud/nuevo-portal',
+    detalle: (id: number) => `/crm/solicitud/detalle-portal/${id}`,
+    archivos: (id: number) => `/crm/solicitud/${id}/archivos`,
+    descargar: (id: number, archivoId: number) =>
+      `/crm/solicitud/${id}/archivo/${archivoId}/descargar`,
   },
   visita: {
     lista: '/crm/visita/lista-portal',

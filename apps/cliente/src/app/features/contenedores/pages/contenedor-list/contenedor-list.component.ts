@@ -9,6 +9,7 @@ import { EmptyStateComponent, ErrorAlertComponent } from '../../../../shared';
 import { UserMenuComponent } from '../../../../shared/user-menu/user-menu.component';
 import { Contenedor, puedeIngresar } from '../../models/contenedor.model';
 import { ContenedorService } from '../../services/contenedor.service';
+import { InvitacionesPendientesComponent } from '../../components/invitaciones-pendientes/invitaciones-pendientes.component';
 
 /**
  * Selección de empresa: lista las empresas del usuario y, al elegir una,
@@ -25,6 +26,7 @@ import { ContenedorService } from '../../services/contenedor.service';
     EmptyStateComponent,
     ErrorAlertComponent,
     UserMenuComponent,
+    InvitacionesPendientesComponent,
   ],
   templateUrl: './contenedor-list.component.html',
   styleUrl: './contenedor-list.component.scss',
