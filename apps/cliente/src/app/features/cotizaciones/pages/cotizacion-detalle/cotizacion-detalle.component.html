@@ -1,0 +1,261 @@
+<div class="page-container">
+  <app-page-header
+    [title]="cotizacion() ? 'Cotización ' + cotizacion()!.codigo_cotizacion_pk : 'Cotización'"
+    [subtitle]="cotizacion()?.cotizacion_tipo_nombre ?? ''"
+  >
+    <p-button
+      label="Volver"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      [routerLink]="listaRoute"
+    />
+  </app-page-header>
+
+  @if (loading()) {
+    <app-loading-spinner message="Cargando cotización..." />
+  } @else if (error()) {
+    <app-error-alert [message]="error()!" [retryable]="true" (retry)="cargar()" />
+  } @else if (cotizacion(); as cotizacion) {
+    <div class="detalle-layout">
+      <!-- Resumen: a la derecha en escritorio, arriba en celular -->
+      <aside class="resumen">
+        <section class="card detalle-card">
+          <div class="section-header">
+            <h3 class="section-title">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              Resumen
+            </h3>
+            @if (estado(); as estado) {
+              <p-tag [value]="estado.label" [severity]="estado.severity" />
+            }
+          </div>
+
+          <dl class="datos">
+            <div>
+              <dt>Número</dt>
+              <dd>{{ cotizacion.numero || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Fecha</dt>
+              <dd>{{ cotizacion.fecha ? (cotizacion.fecha | date: 'dd/MM/yyyy') : '—' }}</dd>
+            </div>
+            <div>
+              <dt>Vence</dt>
+              <dd>
+                {{ cotizacion.vencimiento ? (cotizacion.vencimiento | date: 'dd/MM/yyyy') : '—' }}
+              </dd>
+            </div>
+            <div>
+              <dt>Sector</dt>
+              <dd>{{ sector() }}</dd>
+            </div>
+            <div>
+              <dt>Estrato</dt>
+              <dd>{{ cotizacion.estrato ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Asesor</dt>
+              <dd>{{ cotizacion.asesor_nombre ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Forma de pago</dt>
+              <dd>{{ cotizacion.forma_pago_nombre ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Negocio</dt>
+              <dd>{{ negocio(cotizacion) }}</dd>
+            </div>
+            @if (cotizacion.tiempo_entrega) {
+              <div>
+                <dt>Tiempo de entrega</dt>
+                <dd>{{ cotizacion.tiempo_entrega }}</dd>
+              </div>
+            }
+          </dl>
+
+          @if (cotizacion.comentarios) {
+            <div class="comentarios">
+              <span class="comentarios__label">Comentarios</span>
+              <p>{{ cotizacion.comentarios }}</p>
+            </div>
+          }
+        </section>
+
+        <section class="card detalle-card">
+          <h3 class="section-title">
+            <i class="pi pi-calculator" aria-hidden="true"></i>
+            Valores
+          </h3>
+
+          <dl class="totales">
+            <div>
+              <dt>Subtotal</dt>
+              <dd>$ {{ cotizacion.vr_subtotal | number: '1.0-0' }}</dd>
+            </div>
+            @if (cotizacion.vr_descuento) {
+              <div>
+                <dt>Descuento</dt>
+                <dd>− $ {{ cotizacion.vr_descuento | number: '1.0-0' }}</dd>
+              </div>
+            }
+            <div>
+              <dt>IVA</dt>
+              <dd>$ {{ cotizacion.vr_iva | number: '1.0-0' }}</dd>
+            </div>
+            @if (cotizacion.costo_envio) {
+              <div>
+                <dt>Costo de envío</dt>
+                <dd>$ {{ cotizacion.costo_envio | number: '1.0-0' }}</dd>
+              </div>
+            }
+            <div class="totales__total">
+              <dt>Total</dt>
+              <dd>$ {{ cotizacion.vr_total | number: '1.0-0' }}</dd>
+            </div>
+          </dl>
+        </section>
+      </aside>
+
+      <!-- Servicios -->
+      <section class="card detalle-card detalle-main">
+        <div class="section-header">
+          <h3 class="section-title">
+            <i class="pi pi-shield" aria-hidden="true"></i>
+            Servicios
+            <span class="section-title__count">{{ servicios().length }}</span>
+          </h3>
+
+          @if (editable()) {
+            <div class="section-header__acciones">
+              @if (seleccionados().length > 0) {
+                <p-button
+                  [label]="'Quitar (' + seleccionados().length + ')'"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  [outlined]="true"
+                  [loading]="eliminando()"
+                  (onClick)="confirmarEliminar()"
+                />
+              }
+              <p-button
+                label="Agregar servicio"
+                icon="pi pi-plus"
+                (onClick)="agregarVisible.set(true)"
+              />
+            </div>
+          }
+        </div>
+
+        @if (!editable()) {
+          <p-message
+            severity="info"
+            text="La cotización ya fue autorizada o anulada; sus servicios no se pueden cambiar."
+            styleClass="w-full"
+          />
+        }
+
+        @if (servicios().length === 0) {
+          <app-empty-state
+            title="Sin servicios"
+            message="Agrega los servicios de vigilancia que necesitas para calcular el valor."
+            icon="pi pi-shield"
+          />
+        } @else {
+          <p-table
+            [value]="servicios()"
+            [selection]="seleccionados()"
+            (selectionChange)="seleccionados.set($event)"
+            [rowHover]="true"
+            [scrollable]="true"
+            dataKey="codigo_cotizacion_detalle_pk"
+          >
+            <ng-template #header>
+              <tr>
+                @if (editable()) {
+                  <th class="col-check"><p-tableHeaderCheckbox /></th>
+                }
+                <th>ID</th>
+                <th>Modalidad</th>
+                <th>Desde</th>
+                <th>Hasta</th>
+                <th>Horario</th>
+                <th class="text-right">Cant.</th>
+                <th>Días</th>
+                <th class="text-right" pTooltip="Horas totales" tooltipPosition="top">H</th>
+                <th class="text-right" pTooltip="Horas diurnas" tooltipPosition="top">HD</th>
+                <th class="text-right" pTooltip="Horas nocturnas" tooltipPosition="top">HN</th>
+                <th class="text-right">Precio</th>
+                <th class="text-right">Subtotal</th>
+              </tr>
+            </ng-template>
+
+            <ng-template #body let-servicio>
+              <tr>
+                @if (editable()) {
+                  <td class="col-check">
+                    <p-tableCheckbox
+                      [value]="servicio"
+                      [ariaLabel]="
+                        'Seleccionar el servicio ' + servicio.codigo_cotizacion_detalle_pk
+                      "
+                    />
+                  </td>
+                }
+                <td>{{ servicio.codigo_cotizacion_detalle_pk }}</td>
+                <td class="nowrap">{{ servicio.modalidad_nombre ?? '—' }}</td>
+                <td class="nowrap">
+                  {{ servicio.fecha_desde ? (servicio.fecha_desde | date: 'dd/MM/yyyy') : '—' }}
+                </td>
+                <td class="nowrap">
+                  {{ servicio.fecha_hasta ? (servicio.fecha_hasta | date: 'dd/MM/yyyy') : '—' }}
+                </td>
+                <td class="nowrap">
+                  {{ hora(servicio.hora_desde) }} – {{ hora(servicio.hora_hasta) }}
+                </td>
+                <td class="text-right">{{ servicio.cantidad }}</td>
+                <td>
+                  <span class="dias" [attr.aria-label]="servicio.horario ?? ''">
+                    @for (dia of dias; track dia.campo) {
+                      <span
+                        class="dias__dia"
+                        [class.dias__dia--activo]="servicio[dia.campo]"
+                        [pTooltip]="dia.label"
+                        tooltipPosition="top"
+                        >{{ dia.corto }}</span
+                      >
+                    }
+                  </span>
+                </td>
+                <td class="text-right">{{ servicio.horas | number: '1.0-2' }}</td>
+                <td class="text-right">{{ servicio.horas_diurnas | number: '1.0-2' }}</td>
+                <td class="text-right">{{ servicio.horas_nocturnas | number: '1.0-2' }}</td>
+                <td class="text-right nowrap">
+                  $ {{ servicio.vr_precio_minimo | number: '1.0-0' }}
+                </td>
+                <td class="text-right nowrap">$ {{ servicio.vr_subtotal | number: '1.0-0' }}</td>
+              </tr>
+            </ng-template>
+
+            <ng-template #footer>
+              <tr>
+                <td [attr.colspan]="editable() ? 8 : 7" class="text-right">Total</td>
+                <td class="text-right">{{ totalHoras() | number: '1.0-2' }}</td>
+                <td colspan="3"></td>
+                <td class="text-right nowrap">$ {{ cotizacion.vr_subtotal | number: '1.0-0' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </section>
+    </div>
+
+    <app-servicio-nuevo
+      [cotizacionId]="cotizacion.codigo_cotizacion_pk"
+      [(visible)]="agregarVisible"
+      (agregado)="cargar(false)"
+    />
+  }
+</div>
+
+<p-confirmdialog [style]="{ width: '420px' }" [breakpoints]="{ '575px': '95vw' }" />

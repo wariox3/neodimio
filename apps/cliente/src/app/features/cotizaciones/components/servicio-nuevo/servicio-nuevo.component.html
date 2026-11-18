@@ -1,0 +1,180 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  header="Agregar servicio"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(640px, 95vw)' }"
+>
+  @if (visible()) {
+    <form [formGroup]="form" (ngSubmit)="guardar()" novalidate class="servicio-nuevo">
+      @if (errorMessage()) {
+        <p-message severity="error" [text]="errorMessage()!" styleClass="w-full" />
+      }
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="srv-modalidad" class="field__label">
+            Modalidad <span class="form-required">*</span>
+          </label>
+          <p-select
+            inputId="srv-modalidad"
+            formControlName="codigo_modalidad_fk"
+            [options]="modalidades"
+            optionLabel="label"
+            optionValue="value"
+            [fluid]="true"
+            appendTo="body"
+            [invalid]="!!errorDe('codigo_modalidad_fk')"
+          />
+          @if (errorDe('codigo_modalidad_fk'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="srv-cantidad" class="field__label">
+            Cantidad <span class="form-required">*</span>
+          </label>
+          <p-inputnumber
+            inputId="srv-cantidad"
+            formControlName="cantidad"
+            [min]="1"
+            [max]="cantidadMax"
+            [showButtons]="true"
+            [fluid]="true"
+            [invalid]="!!errorDe('cantidad')"
+          />
+          @if (errorDe('cantidad'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="srv-fecha_desde" class="field__label">
+            Fecha desde <span class="form-required">*</span>
+          </label>
+          <p-datepicker
+            inputId="srv-fecha_desde"
+            formControlName="fecha_desde"
+            dateFormat="dd/mm/yy"
+            [readonlyInput]="true"
+            [showIcon]="true"
+            [fluid]="true"
+            appendTo="body"
+            [invalid]="!!errorDe('fecha_desde')"
+          />
+          @if (errorDe('fecha_desde'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="srv-fecha_hasta" class="field__label">
+            Fecha hasta <span class="form-required">*</span>
+          </label>
+          <p-datepicker
+            inputId="srv-fecha_hasta"
+            formControlName="fecha_hasta"
+            dateFormat="dd/mm/yy"
+            [minDate]="form.controls.fecha_desde.value"
+            [readonlyInput]="true"
+            [showIcon]="true"
+            [fluid]="true"
+            appendTo="body"
+            [invalid]="!!errorDe('fecha_hasta')"
+          />
+          @if (errorDe('fecha_hasta'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="srv-hora_desde" class="field__label">
+            Hora desde <span class="form-required">*</span>
+          </label>
+          <p-datepicker
+            inputId="srv-hora_desde"
+            formControlName="hora_desde"
+            [timeOnly]="true"
+            hourFormat="24"
+            [showIcon]="true"
+            iconDisplay="input"
+            [fluid]="true"
+            appendTo="body"
+            [invalid]="!!errorDe('hora_desde')"
+          >
+            <ng-template #inputicon let-clickCallBack="clickCallBack">
+              <i class="pi pi-clock" (click)="clickCallBack($event)" aria-hidden="true"></i>
+            </ng-template>
+          </p-datepicker>
+          @if (errorDe('hora_desde'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="srv-hora_hasta" class="field__label">
+            Hora hasta <span class="form-required">*</span>
+          </label>
+          <p-datepicker
+            inputId="srv-hora_hasta"
+            formControlName="hora_hasta"
+            [timeOnly]="true"
+            hourFormat="24"
+            [showIcon]="true"
+            iconDisplay="input"
+            [fluid]="true"
+            appendTo="body"
+            [invalid]="!!errorDe('hora_hasta')"
+          >
+            <ng-template #inputicon let-clickCallBack="clickCallBack">
+              <i class="pi pi-clock" (click)="clickCallBack($event)" aria-hidden="true"></i>
+            </ng-template>
+          </p-datepicker>
+          @if (errorDe('hora_hasta'); as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </div>
+
+        <small class="field__hint field--full">
+          De 00:00 a 00:00 es un servicio de 24 horas. Si la hora hasta es menor, el turno termina
+          al día siguiente.
+        </small>
+
+        <fieldset class="dias field--full" formGroupName="dias">
+          <legend class="field__label">
+            Días del servicio <span class="form-required">*</span>
+          </legend>
+          <div class="dias__grid">
+            @for (dia of dias; track dia.campo) {
+              <div class="dias__item">
+                <p-checkbox
+                  [inputId]="'srv-' + dia.campo"
+                  [formControlName]="dia.campo"
+                  [binary]="true"
+                />
+                <label [for]="'srv-' + dia.campo">{{ dia.label }}</label>
+              </div>
+            }
+          </div>
+          @if (errorDias; as error) {
+            <small class="form-error">{{ error }}</small>
+          }
+        </fieldset>
+      </div>
+
+      <div class="form-actions">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [text]="true"
+          (onClick)="visible.set(false)"
+        />
+        <p-button type="submit" label="Agregar" icon="pi pi-check" [loading]="guardando()" />
+      </div>
+    </form>
+  }
+</p-dialog>

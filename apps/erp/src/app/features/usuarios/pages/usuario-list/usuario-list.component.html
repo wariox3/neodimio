@@ -379,6 +379,20 @@
             <span class="field-hint">Déjalo vacío para usar la ciudad de su operación.</span>
           }
         </div>
+        <div class="form-field">
+          <label for="user-item-cotizacion" class="form-label">Ítem para cotizar</label>
+          <p-inputnumber
+            inputId="user-item-cotizacion"
+            formControlName="codigoItemCotizacion"
+            [useGrouping]="false"
+            [min]="1"
+            [fluid]="true"
+            placeholder="Código del ítem"
+          />
+          <span class="field-hint">
+            Ítem con el que cotiza servicios de vigilancia desde el portal cliente.
+          </span>
+        </div>
 
         <fieldset class="permisos" formGroupName="permisos">
           <legend class="permisos__titulo">Permisos en guías</legend>

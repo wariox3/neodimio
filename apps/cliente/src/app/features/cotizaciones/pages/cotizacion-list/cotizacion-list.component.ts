@@ -1,9 +1,12 @@
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { TableModule, TablePageEvent } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
 import { extractErrorMessage } from '@semantica/core';
 import {
   EmptyStateComponent,
@@ -11,7 +14,7 @@ import {
   LoadingSpinnerComponent,
   PageHeaderComponent,
 } from '../../../../shared';
-import { EstadoListaService } from '../../../../core';
+import { EstadoListaService, ROUTE_PATHS } from '../../../../core';
 import { Cotizacion, estadoCotizacion, negocioCotizacion } from '../../models/cotizacion.model';
 import { CotizacionService, MAX_COTIZACIONES } from '../../services/cotizacion.service';
 
@@ -20,7 +23,7 @@ const ESTADO_LISTA = 'cotizaciones';
 
 /**
  * Cotizaciones del cliente (`cliente_crm_contratacion_lista` de terbio), de la más
- * reciente a la más antigua.
+ * reciente a la más antigua. Desde aquí se solicita una nueva y se abre su detalle.
  */
 @Component({
   selector: 'app-cotizacion-list',
@@ -28,9 +31,12 @@ const ESTADO_LISTA = 'cotizaciones';
   imports: [
     DatePipe,
     DecimalPipe,
+    RouterLink,
+    ButtonModule,
     MessageModule,
     TableModule,
     TagModule,
+    TooltipModule,
     PageHeaderComponent,
     LoadingSpinnerComponent,
     EmptyStateComponent,
@@ -44,6 +50,7 @@ export class CotizacionListComponent implements OnInit {
   private readonly estadoLista = inject(EstadoListaService);
   private readonly destroyRef = inject(DestroyRef);
 
+  readonly rutas = ROUTE_PATHS.dashboard.crm;
   readonly maxConsulta = MAX_COTIZACIONES;
   readonly estado = estadoCotizacion;
   readonly negocio = negocioCotizacion;

@@ -68,6 +68,12 @@ export const API_ENDPOINTS = {
   },
   cotizacion: {
     lista: '/crm/cotizacion/lista-portal',
+    tipos: '/crm/cotizacion/tipo-portal',
+    nuevo: '/crm/cotizacion/nuevo-portal',
+    detalle: (id: number) => `/crm/cotizacion/detalle-portal/${id}`,
+    servicios: (id: number) => `/crm/cotizacion/${id}/detalles-portal`,
+    servicioNuevo: (id: number) => `/crm/cotizacion/${id}/detalle-nuevo-portal`,
+    serviciosEliminar: (id: number) => `/crm/cotizacion/${id}/detalle-eliminar-portal`,
   },
   pqrs: {
     lista: '/crm/solicitud/lista-portal',

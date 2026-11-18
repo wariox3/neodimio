@@ -51,3 +51,123 @@ export function negocioCotizacion(
     ? `${cotizacion.codigo_negocio_fk} - ${cotizacion.negocio_nombre}`
     : String(cotizacion.codigo_negocio_fk);
 }
+
+/** Encabezado de la cotización en su detalle (`CotizacionPortalDetalleResponse` de fluor). */
+export interface CotizacionDetalle extends Cotizacion {
+  codigo_sector_fk: string | null;
+  estrato: number | null;
+  tiempo_entrega: string | null;
+  comentarios: string | null;
+  vr_descuento: number;
+  costo_envio: number | null;
+}
+
+/** Tipo de cotización que el cliente puede solicitar (`CotizacionTipoPortalResponse`). */
+export interface CotizacionTipo {
+  codigo_cotizacion_tipo_pk: string;
+  nombre: string;
+}
+
+/** Días de la semana en que se presta un servicio, más los festivos. */
+export type DiaServicio =
+  | 'lunes'
+  | 'martes'
+  | 'miercoles'
+  | 'jueves'
+  | 'viernes'
+  | 'sabado'
+  | 'domingo'
+  | 'festivo';
+
+/** Servicio cotizado con las horas y valores que liquidó fluor (`CotizacionDetallePortalResponse`). */
+export interface CotizacionServicio extends Record<DiaServicio, boolean> {
+  codigo_cotizacion_detalle_pk: number;
+  codigo_item_fk: number;
+  item_nombre: string | null;
+  codigo_modalidad_fk: string | null;
+  modalidad_nombre: string | null;
+  cantidad: number;
+  fecha_desde: string | null;
+  fecha_hasta: string | null;
+  /** `HH:mm:ss`; 00:00 a 00:00 es un servicio de 24 horas. */
+  hora_desde: string | null;
+  hora_hasta: string | null;
+  horario: string | null;
+  horas: number;
+  horas_diurnas: number;
+  horas_nocturnas: number;
+  vr_precio_minimo: number | null;
+  vr_subtotal: number | null;
+  vr_iva: number | null;
+  vr_total_detalle: number;
+}
+
+/** Sectores que ofrecía terbio al cotizar. */
+export type SectorCotizacion = 'COM' | 'RES';
+
+/** Modalidades que ofrecía terbio al agregar un servicio. */
+export type ModalidadServicio = 'SAR' | 'CAR' | 'CAN';
+
+/** Cuerpo de `POST /crm/cotizacion/nuevo-portal`; el tercero lo pone fluor según la membresía. */
+export interface CotizacionNuevaRequest {
+  codigo_cotizacion_tipo_fk: string;
+  codigo_sector_fk: SectorCotizacion;
+  estrato: number | null;
+  comentarios: string | null;
+}
+
+/** Cuerpo de `POST /crm/cotizacion/{id}/detalle-nuevo-portal`. */
+export interface ServicioNuevoRequest extends Record<DiaServicio, boolean> {
+  codigo_modalidad_fk: ModalidadServicio;
+  cantidad: number;
+  /** `YYYY-MM-DD`. */
+  fecha_desde: string;
+  fecha_hasta: string;
+  /** `HH:mm`. */
+  hora_desde: string;
+  hora_hasta: string;
+}
+
+export const SECTORES: readonly { value: SectorCotizacion; label: string }[] = [
+  { value: 'COM', label: 'Comercial' },
+  { value: 'RES', label: 'Residencial' },
+];
+
+export const MODALIDADES: readonly { value: ModalidadServicio; label: string }[] = [
+  { value: 'SAR', label: 'Sin arma' },
+  { value: 'CAR', label: 'Con arma' },
+  { value: 'CAN', label: 'Canino' },
+];
+
+/** Días del servicio en el orden de terbio, con la abreviatura de su columna (L, M, X…). */
+export const DIAS_SERVICIO: readonly { campo: DiaServicio; label: string; corto: string }[] = [
+  { campo: 'lunes', label: 'Lunes', corto: 'L' },
+  { campo: 'martes', label: 'Martes', corto: 'M' },
+  { campo: 'miercoles', label: 'Miércoles', corto: 'X' },
+  { campo: 'jueves', label: 'Jueves', corto: 'J' },
+  { campo: 'viernes', label: 'Viernes', corto: 'V' },
+  { campo: 'sabado', label: 'Sábado', corto: 'S' },
+  { campo: 'domingo', label: 'Domingo', corto: 'D' },
+  { campo: 'festivo', label: 'Festivo', corto: 'F' },
+];
+
+/** Estrato con el que terbio proponía la cotización nueva. */
+export const ESTRATO_POR_DEFECTO = 3;
+
+/** Largo máximo de los comentarios que acepta fluor. */
+export const COMENTARIOS_MAX_LENGTH = 500;
+
+/**
+ * Como holmio, una cotización autorizada o anulada ya no cambia sus servicios; fluor
+ * también lo valida.
+ */
+export function cotizacionEditable(
+  cotizacion: Pick<Cotizacion, 'estado_autorizado' | 'estado_anulado'>,
+): boolean {
+  return !cotizacion.estado_autorizado && !cotizacion.estado_anulado;
+}
+
+/** Hora `HH:mm` de un valor `HH:mm:ss` de fluor. */
+export function horaCorta(hora: string | null): string {
+  return hora ? hora.slice(0, 5) : '—';
+}

@@ -3,7 +3,13 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ENVIRONMENT } from '@semantica/core';
 import { MembresiaClienteService } from '../../contenedores/services/membresia-cliente.service';
-import { Cotizacion, estadoCotizacion, negocioCotizacion } from '../models/cotizacion.model';
+import {
+  Cotizacion,
+  cotizacionEditable,
+  estadoCotizacion,
+  horaCorta,
+  negocioCotizacion,
+} from '../models/cotizacion.model';
 import { CotizacionService, CotizacionesResultado, MAX_COTIZACIONES } from './cotizacion.service';
 
 function configurar(clienteId: number | null) {
@@ -90,6 +96,66 @@ describe('Cotizaciones', () => {
     http.expectNone(() => true);
     expect(error).toBeInstanceOf(Error);
     http.verify();
+  });
+});
+
+describe('Cotización del portal', () => {
+  it('detalle y servicios filtran por el cliente de la membresía', () => {
+    const { service, http } = configurar(20);
+
+    service.detalle(39).subscribe();
+    service.servicios(39).subscribe();
+
+    const detalle = http.expectOne((r) => r.url === '/api/crm/cotizacion/detalle-portal/39');
+    expect(detalle.request.params.get('tercero_id')).toBe('20');
+    const servicios = http.expectOne((r) => r.url === '/api/crm/cotizacion/39/detalles-portal');
+    expect(servicios.request.params.get('tercero_id')).toBe('20');
+    http.verify();
+  });
+
+  it('al crear no envía el tercero: fluor lo toma de la membresía', () => {
+    const { service, http } = configurar(20);
+
+    service
+      .crear({
+        codigo_cotizacion_tipo_fk: '1',
+        codigo_sector_fk: 'COM',
+        estrato: 3,
+        comentarios: null,
+      })
+      .subscribe();
+
+    const req = http.expectOne('/api/crm/cotizacion/nuevo-portal');
+    expect(req.request.method).toBe('POST');
+    expect('tercero_id' in req.request.body).toBe(false);
+    http.verify();
+  });
+
+  it('quita los servicios seleccionados por id', () => {
+    const { service, http } = configurar(20);
+
+    service.eliminarServicios(39, [5, 7]).subscribe();
+
+    const req = http.expectOne('/api/crm/cotizacion/39/detalle-eliminar-portal');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ ids: [5, 7] });
+    http.verify();
+  });
+});
+
+describe('cotizacionEditable', () => {
+  it('solo mientras no esté autorizada ni anulada', () => {
+    expect(cotizacionEditable({ estado_autorizado: false, estado_anulado: false })).toBe(true);
+    expect(cotizacionEditable({ estado_autorizado: null, estado_anulado: null })).toBe(true);
+    expect(cotizacionEditable({ estado_autorizado: true, estado_anulado: false })).toBe(false);
+    expect(cotizacionEditable({ estado_autorizado: false, estado_anulado: true })).toBe(false);
+  });
+});
+
+describe('horaCorta', () => {
+  it('quita los segundos de la hora de fluor', () => {
+    expect(horaCorta('06:30:00')).toBe('06:30');
+    expect(horaCorta(null)).toBe('—');
   });
 });
 
